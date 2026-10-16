@@ -101,6 +101,7 @@ class AccountController extends Controller
         $nombre_de_archivoDeVista = 'login';
         $parametros_de_vista = [
             "head"      => SiteController::head(),
+            "footer"    => SiteController::footer(),
             "ruta"      => self::$path,
             "error"     => $error,
             "error_msg" => $error_msg,
