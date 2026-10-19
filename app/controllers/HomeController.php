@@ -31,6 +31,7 @@ class HomeController extends Controller
             "topbar" => SiteController::topbar(),
             "menu" => SiteController::menu(),
             "menu_res" => SiteController::menu_res(),
+            "footer" => SiteController::footer(),
 			"ruta" => $ruta,
         ]; 
         Response::render($this->viewDir(__NAMESPACE__), $nombre_de_archivoDeVista, $parametros_de_vista);
