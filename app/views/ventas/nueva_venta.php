@@ -1,9 +1,7 @@
 <?= $head ?>
 <?= $topbar ?>
-        </a>
-      </div>
-    </div>
-  </nav>
+
+
 
   <!-- Formulario -->
   <div class="container py-2" style="max-width: 850px;">

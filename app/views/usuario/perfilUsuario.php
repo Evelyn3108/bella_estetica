@@ -8,17 +8,17 @@
         <div class="card card-custom p-4 mb-4">
             <div class="d-flex flex-column flex-md-row align-items-center gap-4">
                 <div class="avatar-circle shadow-sm">
-                    MG
+                    <?=strtoupper(substr($_SESSION['USER']['name'],0,1).substr($_SESSION['USER']['lastName'],0,1))?>
                 </div>
                 <div class="text-center text-md-start">
-                    <h2 class="fw-bold mb-1">¡Hola, María González!</h2>
+                    <h2 class="fw-bold mb-1">¡Hola, <?=$_SESSION['USER']['name'].' '.$_SESSION['USER']['lastName']?>!</h2>
                     <p class="text-muted mb-0 small">
-                        <i class="bi bi-envelope me-1"></i> maria.gonzalez@correo.com &nbsp;|&nbsp;
+                        <i class="bi bi-envelope me-1"></i> <?=$_SESSION['USER']['mail']?> &nbsp;|&nbsp;
                         <i class="bi bi-telephone me-1"></i> +54 341 6123456
                     </p>
                 </div>
                 <div class="ms-md-auto">
-                    <a href="home.php" class="btn btn-brand">
+                    <a href="#PATH#home" class="btn btn-brand">
                         <i class="bi bi-plus-circle me-1"></i> Agendar Nuevo Turno
                     </a>
                 </div>
@@ -61,7 +61,7 @@
                                     <div class="small text-muted">2026</div>
                                 </div>
                                 <div>
-                                    <h5 class="fw-bold mb-1">Manicura Completa</h5>
+                                                                    <h5 class="fw-bold mb-1">Manicura Completa</h5>
                                     <div class="text-muted small mb-2">
                                         <span><i class="bi bi-clock me-1"></i> 15:00 hs</span> &bull;
                                         <span><i class="bi bi-geo-alt me-1"></i> Consultorio Sala 1</span> &bull;
@@ -90,7 +90,7 @@
                                     <div class="small text-muted">2026</div>
                                 </div>
                                 <div>
-                                    <h5 class="fw-bold mb-1">Lifting de Pestañas</h5>
+                                                                    <h5 class="fw-bold mb-1">Lifting de Pestañas</h5>
                                     <div class="text-muted small mb-2">
                                         <span><i class="bi bi-clock me-1"></i> 11:00 hs</span> &bull;
                                         <span><i class="bi bi-geo-alt me-1"></i> Consultorio Sala 2</span> &bull;
@@ -115,4 +115,11 @@
             <!-- 2. PESTAÑA: HISTORIAL ANTERIOR -->
             <div class="tab-pane fade" id="historial" role="tabpanel">
                 <div class="card card-custom p-4">
-                    <h<?= $footer ?>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Bootstrap 5 JS Bundle -->
+<?= $footer ?>

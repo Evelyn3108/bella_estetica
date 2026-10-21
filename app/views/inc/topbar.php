@@ -15,7 +15,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-secondary" href="perfil_turnos.php">
+                        <a class="nav-link text-secondary" href="#PATH#usuario/perfil">
                             <i class="bi bi-person-circle me-1"></i> Mi Perfil
                         </a>
                     </li>

@@ -1,11 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recuperar Contraseña - Estética</title>
-</head>
-<body style="background-color: #fdf5f5; font-family: sans-serif; margin: 0; padding: 0;">
+<?= $head ?>
 
     <div class="container-recuperar" style="max-width: 400px; margin: 100px auto; padding: 30px; background-color: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
 
@@ -40,5 +33,4 @@
 
     </div>
 
-</body>
-</html>
+<?= $footer ?>
