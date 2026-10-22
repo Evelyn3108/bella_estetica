@@ -6,7 +6,6 @@
         
         <!-- ENCABEZADO DE BIENVENIDA -->
         <div class="text-center mb-5">
-            <span class="badge-chip text-uppercase mb-2 d-inline-block">Experiencia & Bienestar</span>
             <h1 class="fw-bold mt-2 mb-2" style="color: var(--texto-oscuro);">Nuestros Servicios</h1>
             <p class="text-muted mx-auto" style="max-width: 600px;">
                 Elegí el tratamiento ideal para vos, consultá los detalles de atención y reservá tu horario en sencillos pasos.
@@ -112,7 +111,7 @@
                                 </span>
                             </div>
                             <div class="text-center">
-                                <a href="detalle_servicio.php" class="btn btn-brand w-100">
+                                <a href="detalleServicio.php" class="btn btn-brand w-100">
                                     <i class="bi bi-calendar-plus me-1"></i> Reservar Turno
                                 </a>
                             </div>

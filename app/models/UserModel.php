@@ -7,7 +7,7 @@ use \Model;
 
 class UserModel extends Model
 {
-	protected $table = "usuarios";
+	protected $table = "usuario";
 	protected $primaryKey = "id_usuario";
 	protected $secundaryKey = "email";
 	public $email;
@@ -15,7 +15,7 @@ class UserModel extends Model
 	public static function getAllUsers()
 	{
 		$model = new static();
-		$sql = "SELECT * FROM usuarios";
+		$sql = "SELECT * FROM usuario";
 		$result = DataBase::query($sql);
 
 		return $result;
