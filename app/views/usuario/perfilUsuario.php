@@ -3,104 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Perfil - Estética Bella</title>
-    <!-- Bootstrap 5 CSS -->
+    <title>Mi Perfil - Bella Estética</title>
+    
+    <!-- Bootstrap 5 CSS e Iconos -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Iconos de Bootstrap -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <style>
-        :root {
-            --rosa-principal: #e5989b;
-            --rosa-hover: #b5838d;
-            --rosa-fondo: #fff5f5;
-            --texto-oscuro: #4a3b3c;
-        }
-        body {
-            background-color: var(--rosa-fondo);
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            color: var(--texto-oscuro);
-        }
-        .navbar-brand {
-            font-weight: 700;
-            letter-spacing: 1px;
-            color: var(--texto-oscuro) !important;
-        }
-        .btn-brand {
-            background-color: var(--rosa-principal);
-            border-color: var(--rosa-principal);
-            color: white;
-            font-weight: 600;
-            border-radius: 8px;
-            padding: 8px 20px;
-            transition: all 0.2s ease;
-        }
-        .btn-brand:hover {
-            background-color: var(--rosa-hover);
-            border-color: var(--rosa-hover);
-            color: white;
-            transform: translateY(-1px);
-        }
-        .card-custom {
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(74, 59, 60, 0.05);
-            background: #ffffff;
-        }
-        .nav-pills .nav-link {
-            color: #7d6b6c;
-            font-weight: 600;
-            border-radius: 10px;
-            padding: 10px 18px;
-            margin-right: 8px;
-        }
-        .nav-pills .nav-link.active {
-            background-color: var(--rosa-principal);
-            color: #ffffff;
-            box-shadow: 0 4px 12px rgba(229, 152, 155, 0.35);
-        }
-        .badge-pendiente {
-            background-color: #fff3cd;
-            color: #856404;
-            font-weight: 600;
-            border-radius: 30px;
-            padding: 6px 12px;
-        }
-        .badge-confirmado {
-            background-color: #d1e7dd;
-            color: #0f5132;
-            font-weight: 600;
-            border-radius: 30px;
-            padding: 6px 12px;
-        }
-        .date-box {
-            background-color: var(--rosa-fondo);
-            border: 1px solid #f1dede;
-            border-radius: 12px;
-            min-width: 80px;
-            text-align: center;
-            padding: 10px;
-        }
-        .avatar-circle {
-            width: 70px;
-            height: 70px;
-            background: linear-gradient(135deg, #e5989b, #b5838d);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 26px;
-            font-weight: bold;
-        }
-    </style>
+    
+    <!-- Hoja de estilos centralizada en tonos Terracota y Cacao -->
+    <link rel="stylesheet" href="../css/estilos.css?v=28">
 </head>
-<body class="d-flex flex-column min-vh-100">
+<body class="bg-light d-flex flex-column min-vh-100">
 
     <!-- BARRA DE NAVEGACIÓN -->
     <nav class="navbar navbar-expand-lg bg-white shadow-sm sticky-top py-3">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="home_servicios.php">
-                <i class="bi bi-flower1 fs-4 me-2" style="color: var(--rosa-principal);"></i> ESTÉTICA Bella
+            <a class="navbar-brand fw-bold text-dark d-flex align-items-center" href="../home/homeServicios">
+                <i class="bi bi-flower1 me-2" style="color: var(--terracota-principal);"></i> Bella Estética
             </a>
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navPerfil">
                 <span class="navbar-toggler-icon"></span>
@@ -108,17 +26,17 @@
             <div class="collapse navbar-collapse" id="navPerfil">
                 <ul class="navbar-nav ms-auto align-items-lg-center gap-2">
                     <li class="nav-item">
-                        <a class="nav-link text-secondary" href="home.php">
+                        <a class="nav-link text-secondary" href="../home/homeServicios">
                             <i class="bi bi-grid me-1"></i> Catálogo de Servicios
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active fw-bold" style="color: var(--rosa-principal);" href="#">
+                        <a class="nav-link active fw-bold" style="color: var(--terracota-principal);" href="perfilUsuario">
                             <i class="bi bi-person-circle me-1"></i> Mi Perfil
                         </a>
                     </li>
-                    <li class="nav-item ms-lg-2">
-                        <a class="btn btn-outline-danger btn-sm px-3 rounded-pill" href="login.php">
+                    <li class="nav-item ms-lg-3">
+                        <a class="btn btn-outline-secondary btn-sm px-3 rounded-pill" href="../account/salir">
                             <i class="bi bi-box-arrow-right me-1"></i> Salir
                         </a>
                     </li>
@@ -127,45 +45,46 @@
         </div>
     </nav>
 
-    <!-- CONTENEDOR PRINCIPAL -->
+    <!-- CONTENIDO PRINCIPAL -->
     <main class="container my-5">
         
-        <!-- ENCABEZADO DE PERFIL -->
-        <div class="card card-custom p-4 mb-4">
+        <!-- TARJETA CABECERA DEL CLIENTE -->
+        <div class="landing-canvas-card p-4 mb-4">
             <div class="d-flex flex-column flex-md-row align-items-center gap-4">
-                <div class="avatar-circle shadow-sm">
-                    MG
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fs-3 fw-bold shadow-sm" 
+                     style="width: 70px; height: 70px; background-color: var(--terracota-principal);">
+                    EF
                 </div>
                 <div class="text-center text-md-start">
-                    <h2 class="fw-bold mb-1">¡Hola, María González!</h2>
+                    <h2 class="fw-bold mb-1" style="color: var(--texto-oscuro);">¡Hola, Evelyn Franco!</h2>
                     <p class="text-muted mb-0 small">
-                        <i class="bi bi-envelope me-1"></i> maria.gonzalez@correo.com &nbsp;|&nbsp; 
-                        <i class="bi bi-telephone me-1"></i> +54 341 6123456
+                        <i class="bi bi-envelope me-1"></i> elyn.fco@gmail.com &nbsp;|&nbsp; 
+                        <i class="bi bi-telephone me-1"></i> 3413059231
                     </p>
                 </div>
                 <div class="ms-md-auto">
-                    <a href="home.php" class="btn btn-brand">
-                        <i class="bi bi-plus-circle me-1"></i> Agendar Nuevo Turno
+                    <a href="../home/homeServicios" class="btn-solid-terracota py-2 px-3 small text-decoration-none shadow-sm rounded-3">
+                        <i class="bi bi-plus-circle me-1"></i> Reservar Turno
                     </a>
                 </div>
             </div>
         </div>
 
-        <!-- PESTAÑAS DE NAVEGACIÓN (TABS) -->
-        <ul class="nav nav-pills mb-4" id="perfilTabs" role="tablist">
+        <!-- PESTAÑAS: TURNOS / HISTORIAL / DATOS -->
+        <ul class="nav nav-pills mb-4 gap-2" id="perfilTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="turnos-tab" data-bs-toggle="pill" data-bs-target="#turnos" type="button" role="tab">
-                    <i class="bi bi-calendar-check me-2"></i> Próximos Turnos
+                <button class="nav-link active rounded-pill px-4 fw-semibold" id="turnos-tab" data-bs-toggle="pill" data-bs-target="#turnos" type="button" role="tab" style="color: var(--texto-oscuro);">
+                    <i class="bi bi-calendar-check me-2"></i> Mis Turnos
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="historial-tab" data-bs-toggle="pill" data-bs-target="#historial" type="button" role="tab">
-                    <i class="bi bi-clock-history me-2"></i> Historial Pasado
+                <button class="nav-link rounded-pill px-4 fw-semibold text-secondary" id="historial-tab" data-bs-toggle="pill" data-bs-target="#historial" type="button" role="tab">
+                    <i class="bi bi-clock-history me-2"></i> Historial
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="datos-tab" data-bs-toggle="pill" data-bs-target="#datos" type="button" role="tab">
-                    <i class="bi bi-pencil-square me-2"></i> Datos de Contacto
+                <button class="nav-link rounded-pill px-4 fw-semibold text-secondary" id="datos-tab" data-bs-toggle="pill" data-bs-target="#datos" type="button" role="tab">
+                    <i class="bi bi-person-gear me-2"></i> Modificar Datos
                 </button>
             </li>
         </ul>
@@ -173,72 +92,140 @@
         <!-- CONTENIDO DE LAS PESTAÑAS -->
         <div class="tab-content" id="perfilTabsContent">
 
-            <!-- 1. PESTAÑA: TURNOS NUEVOS / ACTIVOS -->
+            <!-- 1. PESTAÑA: TURNOS ACTIVOS -->
             <div class="tab-pane fade show active" id="turnos" role="tabpanel">
-                <div class="d-flex flex-column gap-3">
+                <div class="landing-canvas-card p-4 p-md-5">
+                    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom" style="border-color: var(--borde-suave) !important;">
+                        <h4 class="fw-bold mb-0" style="color: var(--texto-oscuro);">
+                            <i class="bi bi-calendar2-heart me-2" style="color: var(--terracota-principal);"></i> Próximas Citas Agendadas
+                        </h4>
+                        <span class="badge rounded-pill px-3 py-1" style="background-color: #d1e7dd; color: #0f5132; font-weight: 600;">
+                            Activos
+                        </span>
+                    </div>
 
-                    <!-- Turno 1 -->
-                    <div class="card card-custom p-3 p-md-4">
-                        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                    <div class="d-flex flex-column gap-3">
+                        <!-- Turno 1 -->
+                        <div class="p-3 p-md-4 rounded-4 bg-white border d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 shadow-sm" style="border-color: var(--borde-suave) !important;">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="date-box shadow-sm">
-                                    <div class="small text-uppercase fw-bold text-muted">OCT</div>
-                                    <div class="fs-3 fw-bold" style="color: var(--rosa-principal);">18</div>
-                                    <div class="small text-muted">2026</div>
+                                <div class="text-center px-3 py-2 rounded-3 border" style="background-color: var(--caja-suave); border-color: var(--borde-suave) !important; min-width: 75px;">
+                                    <span class="small fw-bold text-uppercase d-block text-muted">OCT</span>
+                                    <span class="fs-3 fw-bold d-block lh-1 my-1" style="color: var(--terracota-principal);">28</span>
+                                    <span class="small text-muted d-block">2026</span>
                                 </div>
                                 <div>
-                                    <h5 class="fw-bold mb-1">Manicura Completa</h5>
+                                    <h5 class="fw-bold mb-1" style="color: var(--texto-oscuro);">Spa de Manos y Esmaltado</h5>
                                     <div class="text-muted small mb-2">
                                         <span><i class="bi bi-clock me-1"></i> 15:00 hs</span> &bull; 
-                                        <span><i class="bi bi-geo-alt me-1"></i> Consultorio Sala 1</span> &bull;
+                                        <span><i class="bi bi-geo-alt me-1"></i> Sala 1</span> &bull; 
                                         <span><i class="bi bi-person me-1"></i> Esp. Romina Paz</span>
                                     </div>
-                                    <span class="badge-pendiente small">
+                                    <span class="badge rounded-pill px-2 py-1 small" style="background-color: #fff3cd; color: #856404; font-weight: 600;">
                                         <i class="bi bi-hourglass-split me-1"></i> Pendiente de atención
                                     </span>
                                 </div>
                             </div>
-                            <div class="text-md-end">
-                                <button type="button" class="btn btn-outline-danger btn-sm px-3 rounded-pill" onclick="return confirm('¿Seguro que deseas cancelar tu turno?');">
+                            <div>
+                                <button type="button" class="btn btn-outline-danger btn-sm px-3 rounded-pill fw-semibold" onclick="return confirm('¿Estás seguro de que deseas cancelar este turno?');">
                                     <i class="bi bi-x-circle me-1"></i> Cancelar Cita
                                 </button>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Turno 2 -->
-                    <div class="card card-custom p-3 p-md-4">
-                        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="date-box shadow-sm">
-                                    <div class="small text-uppercase fw-bold text-muted">OCT</div>
-                                    <div class="fs-3 fw-bold" style="color: var(--rosa-principal);">24</div>
-                                    <div class="small text-muted">2026</div>
-                                </div>
-                                <div>
-                                    <h5 class="fw-bold mb-1">Lifting de Pestañas</h5>
-                                    <div class="text-muted small mb-2">
-                                        <span><i class="bi bi-clock me-1"></i> 11:00 hs</span> &bull; 
-                                        <span><i class="bi bi-geo-alt me-1"></i> Consultorio Sala 2</span> &bull;
-                                        <span><i class="bi bi-person me-1"></i> Esp. Laura Ríos</span>
-                                    </div>
-                                    <span class="badge-confirmado small">
-                                        <i class="bi bi-check2-circle me-1"></i> Turno Confirmado
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="text-md-end">
-                                <button type="button" class="btn btn-outline-danger btn-sm px-3 rounded-pill" onclick="return confirm('¿Seguro que deseas cancelar tu turno?');">
-                                    <i class="bi bi-x-circle me-1"></i> Cancelar Cita
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
             </div>
 
-            <!-- 2. PESTAÑA: HISTORIAL ANTERIOR -->
+            <!-- 2. PESTAÑA: HISTORIAL -->
             <div class="tab-pane fade" id="historial" role="tabpanel">
-                <div class="card card-custom p-4">
-                    <h
+                <div class="landing-canvas-card p-4 p-md-5">
+                    <div class="mb-4 pb-2 border-bottom" style="border-color: var(--borde-suave) !important;">
+                        <h4 class="fw-bold mb-1" style="color: var(--texto-oscuro);">
+                            <i class="bi bi-clock-history me-2" style="color: var(--terracota-principal);"></i> Historial de Tratamientos
+                        </h4>
+                        <p class="text-muted small mb-0">Registro de las sesiones realizadas o canceladas con anterioridad.</p>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr class="text-muted small text-uppercase">
+                                    <th class="py-3">Tratamiento</th>
+                                    <th class="py-3">Fecha</th>
+                                    <th class="py-3">Horario</th>
+                                    <th class="py-3">Consultorio</th>
+                                    <th class="py-3">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="fw-bold text-dark py-3">Limpieza Facial Profunda</td>
+                                    <td class="text-muted py-3">05/09/2026</td>
+                                    <td class="text-muted py-3">16:00 hs</td>
+                                    <td class="text-muted py-3">Sala 1</td>
+                                    <td class="py-3"><span class="badge bg-secondary rounded-pill px-3 py-1">Asistido</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. PESTAÑA: MODIFICAR DATOS DE CONTACTO -->
+            <div class="tab-pane fade" id="datos" role="tabpanel">
+                <div class="landing-canvas-card p-4 p-md-5">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-8">
+                            <h4 class="fw-bold mb-1" style="color: var(--texto-oscuro);">
+                                <i class="bi bi-pencil-square me-2" style="color: var(--terracota-principal);"></i> Modificar Datos de Contacto
+                            </h4>
+                            <p class="text-muted small mb-4">Mantené tu teléfono y correo actualizados para recibir los recordatorios de tus citas.</p>
+
+                            <form action="" method="POST">
+                                <div class="row g-3">
+                                    <!-- Nombre (Readonly para preservar identidad) -->
+                                    <div class="col-md-6 text-start">
+                                        <label class="form-label small fw-bold text-muted">Nombre</label>
+                                        <input type="text" class="form-control bg-light" name="nombre" value="Evelyn" readonly>
+                                    </div>
+                                    <!-- Apellido (Readonly) -->
+                                    <div class="col-md-6 text-start">
+                                        <label class="form-label small fw-bold text-muted">Apellido</label>
+                                        <input type="text" class="form-control bg-light" name="apellido" value="Franco" readonly>
+                                    </div>
+                                    <!-- Teléfono (Editable) -->
+                                    <div class="col-md-6 text-start">
+                                        <label for="telefono" class="form-label small fw-bold text-dark">Teléfono / WhatsApp *</label>
+                                        <div class="input-group login-input-group">
+                                            <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                            <input type="tel" id="telefono" name="telefono" class="form-control" value="3413059231" required>
+                                        </div>
+                                    </div>
+                                    <!-- Email (Editable) -->
+                                    <div class="col-md-6 text-start">
+                                        <label for="email" class="form-label small fw-bold text-dark">Correo Electrónico *</label>
+                                        <div class="input-group login-input-group">
+                                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                            <input type="email" id="email" name="email" class="form-control" value="elyn.fco@gmail.com" required>
+                                        </div>
+                                    </div>
+                                    <!-- Botón Guardar -->
+                                    <div class="col-12 text-center mt-4">
+                                        <button type="submit" class="btn-solid-terracota px-4 py-2 fs-6 shadow-sm">
+                                            <i class="bi bi-check-lg me-1"></i> Guardar Cambios
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

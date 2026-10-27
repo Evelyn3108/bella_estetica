@@ -36,4 +36,20 @@ class HomeController extends Controller
         ]; 
         Response::render($this->viewDir(__NAMESPACE__), $nombre_de_archivoDeVista, $parametros_de_vista);
 	}
+
+   public function actionHomeServicios()
+    {
+        static::path();
+
+        $nombre_de_archivoDeVista = 'homeServicios';
+        $parametros_de_vista = [
+            "head"   => SiteController::head(),
+            "footer" => SiteController::footer(),
+            "ruta"   => self::$path
+        ];
+
+        Response::render($this->viewDir(__NAMESPACE__), $nombre_de_archivoDeVista, $parametros_de_vista);
+    }
+
+
 }

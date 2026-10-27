@@ -287,4 +287,24 @@ class UserController extends Controller
 	{
 		unset($_SESSION['acceso_valido']);
 	}
+
+
+	public function actionPerfilUsuario()
+    {
+        static::path();
+
+        $nombre_de_archivoDeVista = 'perfilUsuario';
+        $parametros_de_vista = [
+            "head"   => SiteController::head(),
+            "footer" => SiteController::footer(),
+            "ruta"   => self::$path
+        ];
+
+        Response::render($this->viewDir(__NAMESPACE__), $nombre_de_archivoDeVista, $parametros_de_vista);
+    }
+
+    public function actionPerfilusuario()
+    {
+        $this->actionPerfilUsuario();
+    }
 }

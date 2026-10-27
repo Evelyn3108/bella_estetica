@@ -39,5 +39,30 @@ class UserModel extends Model
 		return $result;
 	}
 	
+	public static function registrarCliente($nombre, $apellido, $email, $password, $telefono = '')
+{
+    $model = new static();
+    
+    // Hasheamos la contraseña de forma segura
+    $passwordHash = password_hash($password, PASSWORD_BCRYPT);
+
+    // Sentencia SQL preparada para insertar el nuevo cliente
+    $sql = "INSERT INTO {$model->table} (nombre, apellido, email, password, telefono, rol) 
+            VALUES (:nombre, :apellido, :email, :password, :telefono, 'cliente')";
+
+    $params = [
+        "nombre"   => $nombre,
+        "apellido" => $apellido,
+        "email"    => $email,
+        "password" => $passwordHash,
+        "telefono" => $telefono
+    ];
+
+    // Ejecutamos la consulta a través de la clase DataBase
+    $result = DataBase::query($sql, $params);
+
+    // Si la consulta fue exitosa, retornamos true explícito
+    return $result ? true : false;
+}
 
 }
