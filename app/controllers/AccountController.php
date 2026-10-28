@@ -252,9 +252,11 @@ class AccountController extends Controller
     {
         session_destroy();
         static::path();
-        $ruta = self::$path . 'account/login/';
+        $ruta = self::$path . 'account/login';
         $_SESSION['SESSION']['STATUS'] = false;
         header("Location: $ruta");
         $offline = UserModel::offline($_SESSION["USER"]["mail"]);
+
+        
     }
 }

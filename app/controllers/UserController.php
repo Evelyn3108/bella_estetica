@@ -302,9 +302,4 @@ class UserController extends Controller
 
         Response::render($this->viewDir(__NAMESPACE__), $nombre_de_archivoDeVista, $parametros_de_vista);
     }
-
-    public function actionPerfilusuario()
-    {
-        $this->actionPerfilUsuario();
-    }
 }

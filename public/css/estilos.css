@@ -279,3 +279,34 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
     color: var(--terracota-hover);
     text-decoration: underline;
 }
+
+/* ==========================================================================
+   BOTÓN CERRAR SESIÓN / SALIR (Hover personalizado)
+   ========================================================================== */
+.btn-salir {
+    background-color: transparent;
+    color: #7d6b6c !important;
+    border: 1px solid #dcd6d6 !important;
+    transition: all 0.25s ease-in-out;
+}
+
+.btn-salir i {
+    color: #7d6b6c;
+    transition: color 0.25s ease-in-out;
+}
+
+/* Al pasar el mouse por encima (Hover) */
+.btn-salir:hover,
+.btn-salir:focus,
+.btn-salir:active {
+    background-color: var(--caja-suave, #fbf4f2) !important;
+    border-color: var(--terracota-principal, #b2614a) !important;
+    color: var(--terracota-principal, #b2614a) !important;
+    box-shadow: 0 2px 8px rgba(178, 97, 74, 0.15);
+}
+
+.btn-salir:hover i,
+.btn-salir:focus i,
+.btn-salir:active i {
+    color: var(--terracota-principal, #b2614a) !important;
+}
