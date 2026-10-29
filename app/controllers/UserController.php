@@ -39,24 +39,33 @@ class UserController extends Controller
 
 	#----------------Valicaciones de campos de formularios
 
-	/*Validad si el e-mail asociado a un Usuario se encuentra en estado Activo*/
-	public static function checkActivo($userEmail)
-	{
-		$datosUsuario = UserModel::findEmail($userEmail);
-		// var_dump($datosUsuario);
-		if ($datosUsuario) {
-			if ($datosUsuario->estado == '1') {
-				$result =  true;
-			} else {
-				// $result = 'El Usuario no se encuentra activo!';
-				$result = 'Problemas al acceder a la cuenta! <br>(UC-#42)';
-			}
-		} else {
-			$result = false;
-		}
-		// var_dump ($result);
-		return $result;
-	}
+	/* Valida si el e-mail asociado a un Usuario se encuentra en estado Activo */
+    public static function checkActivo($userEmail)
+    {
+        $datosUsuario = UserModel::findEmail($userEmail);
+
+        if ($datosUsuario) {
+            // 1. Si tu base de datos tiene columna 'fecha_baja':
+            if (isset($datosUsuario->fecha_baja) && !empty($datosUsuario->fecha_baja)) {
+                return 'El usuario se encuentra dado de baja';
+            }
+
+            // 2. Si tu base de datos tiene columna 'estado':
+            if (isset($datosUsuario->estado) && $datosUsuario->estado != '1') {
+                return 'El usuario no se encuentra activo';
+            }
+
+            // 3. Si tu base de datos tiene 'estado_logico':
+            if (isset($datosUsuario->estado_logico) && $datosUsuario->estado_logico != '1') {
+                return 'El usuario no se encuentra activo';
+            }
+
+            // Si el registro existe y no está dado de baja, retorna true
+            return true;
+        }
+
+        return false;
+    }
 
 	/*Validar de campo E-mail, Email valído, comprobar email duplicado y comprobar existencia en db*/
 	public static function checkEmail($email, bool $verifyDuplicate = null, bool $verifyExistDB = null)

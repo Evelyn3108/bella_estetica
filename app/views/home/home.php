@@ -5,13 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bella Estética - Centro de Cuidado & Bienestar</title>
     
-    <!-- Enlace a estilos unificados externos -->
+    <!-- Enlace a estilos -->
     <link rel="stylesheet" href="css/estilos.css?v=12">
 </head>
 <body class="d-flex flex-column min-vh-100">
 
-    <!-- 1. NAVBAR SUPERIOR CON LA FLOR ORIGINAL -->
-    <!-- 1. NAVBAR SUPERIOR CON LA FLOR EN TERRACOTA Y BOTÓN REGISTRARSE -->
+    <!--  NAVBAR -->
     <nav class="navbar navbar-expand-lg bg-white shadow-sm py-3 mb-4">
         <div class="container" style="max-width: 1200px;">
             <a class="navbar-brand d-flex align-items-center text-dark text-decoration-none gap-2" href="home">
@@ -59,9 +58,6 @@
                 
                 <!-- Columna Izquierda: Texto -->
                 <div class="col-lg-6 pe-lg-4">
-                    <div class="badge-pill-soft text-uppercase mb-3">
-                        <i class="bi bi-flower1 me-1"></i> Cuidado Integral Unisex
-                    </div>
                     
                     <h1 class="display-5 fw-extrabold mb-3" style="font-weight: 800; line-height: 1.2;">
                         Tu bienestar y cuidado <br>

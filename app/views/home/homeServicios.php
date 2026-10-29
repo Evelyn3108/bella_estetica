@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Catálogo de Servicios - Bella Estética</title>
     
-    <!-- Bootstrap 5 CSS e Iconos -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    
     <!-- Hoja de estilos centralizada -->
     <link rel="stylesheet" href="../css/estilos.css?v=31">
 </head>
@@ -17,11 +13,14 @@
     <!-- BARRA DE NAVEGACIÓN (Estilo sobrio y limpio como la captura) -->
     <nav class="navbar navbar-expand-lg bg-white py-3 border-bottom" style="border-color: #f0ebeb !important;">
         <div class="container">
-            <!-- Marca -->
-            <a class="navbar-brand fw-bold text-dark d-flex align-items-center" href="homeServicios">
-                <i class="bi bi-flower1 me-2" style="color: var(--terracota-principal); font-size: 1.3rem;"></i> Bella Estética
+            
+           <a class="navbar-brand d-flex align-items-center text-dark text-decoration-none gap-2" href="home">
+                <i class="bi bi-flower1 fs-2" style="color: var(--terracota-principal) !important;"></i>
+                <div class="d-flex flex-column justify-content-center">
+                    <span class="brand-title">BELLA ESTÉTICA</span>
+                    <small class="brand-subtitle text-uppercase">Salud & Bienestar</small>
+                </div>
             </a>
-
             <!-- Botón responsive -->
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navCliente">
                 <span class="navbar-toggler-icon"></span>
@@ -77,8 +76,8 @@
                 <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-white d-flex flex-column justify-content-between">
                     <div>
                         <div style="height: 170px; overflow: hidden;">
-                            <img src="https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&w=600&q=80" 
-                                 alt="Spa de Manos" 
+                            <img src="../img/manicura.jpg" 
+                                 alt="Esmaltado Semipermanente" 
                                  class="w-100 h-100" 
                                  style="object-fit: cover;">
                         </div>
@@ -89,16 +88,16 @@
                                 </span>
                                 <span class="text-muted small"><i class="bi bi-clock me-1"></i> 45 min</span>
                             </div>
-                            <h5 class="fw-bold mb-2" style="color: var(--texto-oscuro);">Spa de Manos</h5>
+                            <h5 class="fw-bold mb-2" style="color: var(--texto-oscuro);">Esmaltado Semipermanente</h5>
                             <p class="text-muted small mb-0">
-                                Cutículas, exfoliación suave, hidratación y esmaltado semipermanente de larga duración.
+                               Preparacion de manos, exfoliación suave, hidratación y esmaltado semipermanente de larga duración.
                             </p>
                         </div>
                     </div>
                     <div class="p-4 pt-3 border-top d-flex align-items-center justify-content-between" style="border-color: #f5eded !important;">
                         <div>
                             <span class="text-muted small d-block">Precio</span>
-                            <strong class="fs-5" style="color: var(--texto-oscuro);">$2.500</strong>
+                            <strong class="fs-5" style="color: var(--texto-oscuro);">$20.500</strong>
                         </div>
                         <a href="detalleServicio?id=1" class="btn-solid-terracota py-2 px-3 small text-decoration-none shadow-sm rounded-3">
                             Agendar &rarr;
@@ -112,7 +111,7 @@
                 <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-white d-flex flex-column justify-content-between">
                     <div>
                         <div style="height: 170px; overflow: hidden;">
-                            <img src="https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=600&q=80" 
+                            <img src="../img/limpiezaFacial.jpg" 
                                  alt="Limpieza Facial" 
                                  class="w-100 h-100" 
                                  style="object-fit: cover;">
@@ -133,7 +132,7 @@
                     <div class="p-4 pt-3 border-top d-flex align-items-center justify-content-between" style="border-color: #f5eded !important;">
                         <div>
                             <span class="text-muted small d-block">Precio</span>
-                            <strong class="fs-5" style="color: var(--texto-oscuro);">$3.200</strong>
+                            <strong class="fs-5" style="color: var(--texto-oscuro);">$30.000</strong>
                         </div>
                         <a href="detalleServicio?id=2" class="btn-solid-terracota py-2 px-3 small text-decoration-none shadow-sm rounded-3">
                             Agendar &rarr;
@@ -147,7 +146,7 @@
                 <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-white d-flex flex-column justify-content-between">
                     <div>
                         <div style="height: 170px; overflow: hidden;">
-                            <img src="https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=600&q=80" 
+                            <img src="../img/masaje.jpg" 
                                  alt="Masaje Corporal" 
                                  class="w-100 h-100" 
                                  style="object-fit: cover;">
@@ -168,7 +167,7 @@
                     <div class="p-4 pt-3 border-top d-flex align-items-center justify-content-between" style="border-color: #f5eded !important;">
                         <div>
                             <span class="text-muted small d-block">Precio</span>
-                            <strong class="fs-5" style="color: var(--texto-oscuro);">$4.000</strong>
+                            <strong class="fs-5" style="color: var(--texto-oscuro);">$35.000</strong>
                         </div>
                         <a href="detalleServicio?id=3" class="btn-solid-terracota py-2 px-3 small text-decoration-none shadow-sm rounded-3">
                             Agendar &rarr;
@@ -182,7 +181,7 @@
                 <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-white d-flex flex-column justify-content-between">
                     <div>
                         <div style="height: 170px; overflow: hidden;">
-                            <img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80" 
+                            <img src="../img/lifting.jpg" 
                                  alt="Lifting Pestañas" 
                                  class="w-100 h-100" 
                                  style="object-fit: cover;">
@@ -203,7 +202,7 @@
                     <div class="p-4 pt-3 border-top d-flex align-items-center justify-content-between" style="border-color: #f5eded !important;">
                         <div>
                             <span class="text-muted small d-block">Precio</span>
-                            <strong class="fs-5" style="color: var(--texto-oscuro);">$2.800</strong>
+                            <strong class="fs-5" style="color: var(--texto-oscuro);">$25.000</strong>
                         </div>
                         <a href="detalleServicio?id=4" class="btn-solid-terracota py-2 px-3 small text-decoration-none shadow-sm rounded-3">
                             Agendar &rarr;
@@ -216,7 +215,7 @@
     </main>
 
     <!-- FOOTER INSTITUCIONAL DISCRETO -->
-    <footer class="bg-white border-top py-4 mt-auto" style="border-color: #f0ebeb !important;">
+    <footer class="bg-white border-top py-4 mt-auto" style="border-color: #8a8383 !important;">
         <div class="container text-center">
             <p class="mb-1 fw-semibold text-dark small">
                 <i class="bi bi-flower1 me-1" style="color: var(--terracota-principal);"></i> Bella Estética

@@ -27,44 +27,38 @@ class SessionController extends Controller
         return $status;
     }
 
-    public static function setSessionData($userEmailOrID){
+   public static function setSessionData($userEmailOrID)
+    {
+        // 1. Buscamos el usuario en el modelo
+        if (method_exists(UserModel::class, 'getUserByEmail')) {
+            $resultado = UserModel::getUserByEmail($userEmailOrID);
+        } else {
+            $resultado = UserModel::findEmail($userEmailOrID);
+        }
 
-        $usuario = UserModel::getUserByEmail($userEmailOrID);
-        if (isset($usuario[0]->nombre) && isset($usuario[0]->apellido) && isset($usuario[0]->email)  && isset($usuario[0]->id_user)) {
+        // Si vino en array indexado [0], tomamos el primer elemento
+        $usr = (is_array($resultado) && isset($resultado[0])) ? $resultado[0] : $resultado;
+
+        // 2. Extraemos los campos contemplando objeto o array asociativo
+        $id       = is_object($usr) ? ($usr->id ?? $usr->id_user ?? $usr->id_usuario ?? null) : ($usr['id'] ?? $usr['id_user'] ?? $usr['id_usuario'] ?? null);
+        $nombre   = is_object($usr) ? ($usr->nombre ?? '') : ($usr['nombre'] ?? '');
+        $apellido = is_object($usr) ? ($usr->apellido ?? '') : ($usr['apellido'] ?? '');
+        $email    = is_object($usr) ? ($usr->email ?? '') : ($usr['email'] ?? '');
+        $rol      = is_object($usr) ? ($usr->rol ?? 'cliente') : ($usr['rol'] ?? 'cliente');
+
+        // 3. Verificamos que al menos existan nombre, email e ID
+        if (!empty($nombre) && !empty($email) && !empty($id)) {
             $_SESSION['SESSION']['STATUS'] = true;
-            $_SESSION['USER']['name']       = $usuario[0]->nombre;
-            $_SESSION['USER']['lastName']   = $usuario[0]->apellido;
-            $_SESSION['USER']['mail']   = $usuario[0]->email;     
-            $_SESSION['USER']['id_usuario'] = $usuario[0]->id_user;
-            $result = true;
-        }else{
-            $result = false;
+            $_SESSION['USER']['name']       = $nombre;
+            $_SESSION['USER']['lastName']   = $apellido;
+            $_SESSION['USER']['mail']       = $email;
+            $_SESSION['USER']['id_usuario'] = $id;
+            $_SESSION['USER']['type']       = $rol;
+
+            return true;
         }
 
-        return $result;
-     }
-
-     public static function getType(){
-         return  $_SESSION['USER']['type'];
-     }
-
-
-    public static function onlyAdmins(){
-        static::path();
-        $continuar = false;
-        $ruta = self::$path.'home/404';
-        if (self::$sessionStatus === 'OffLine') {
-            header("Location: $ruta");
-        }elseif(self::$sessionStatus === 'Online'){
-            if ($_SESSION['USER']['type'] !=  'administrador') {
-                header("Location: $ruta");
-            }else{
-                $continuar = true;
-            }
-        }
-        return $continuar;
-
-        
+        return false;
     }
 
     public static function onlyUsers(){

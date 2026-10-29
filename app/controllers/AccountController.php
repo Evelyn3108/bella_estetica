@@ -20,7 +20,7 @@ class AccountController extends Controller
     {
         if (self::$sessionStatus === "Online") {
             static::path();
-            $ruta = self::$path . 'productos';
+            $ruta = self::$path . 'home/homeServicios';
             header("Location: $ruta");
             exit;
         }
@@ -40,9 +40,9 @@ class AccountController extends Controller
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-            // Validación Email
+            // 1. Validación de formato de Email
             $email = trim($datos['email']);
-            $emailValidation = UserController::checkEmpty($email, 'e-mail', 5, 30);
+            $emailValidation = UserController::checkEmpty($email, 'e-mail', 5, 50);
 
             if ($emailValidation !== true) {
                 $error_msg['email'] = $emailValidation;
@@ -55,40 +55,54 @@ class AccountController extends Controller
                 }
             }
 
-            // Validación Contraseña
-            $passwordValidation = UserController::checkEmpty($datos['pass'], 'contraseña', 8, 15);
+            // 2. Validación de Contraseña
+            $passwordValidation = UserController::checkEmpty($datos['pass'], 'contraseña', 6, 60);
             if ($passwordValidation !== true) {
                 $error_msg['pass'] = 'El correo o la contraseña son incorrectos.';
                 $error = true;
             }
 
-            // Verificación de credenciales en DB si no hay errores previos
+            // 3. Verificación de credenciales en Base de Datos
             if (!$error) {
                 $checkUsuario = UserController::getUser($email);
 
-                if ($checkUsuario === false) {
+                // Verificamos si existe el usuario
+                if ($checkUsuario === false || empty($checkUsuario)) {
                     $error = true;
                     $error_msg['email'] = 'El correo o la contraseña son incorrectos.';
-                } elseif (!password_verify($datos['pass'], $checkUsuario->password)) {
-                    $error = true;
-                    $error_msg['pass'] = 'El correo o la contraseña son incorrectos.';
                 } else {
-                    $emailValidation = UserController::checkActivo($email);
-                    if ($emailValidation !== true) {
-                        $error_msg['email'] = $emailValidation;
+                    // Tomamos el hash de contraseña (sea que la columna se llame password o pass)
+                    $hashGuardado = $checkUsuario->password ?? $checkUsuario->pass ?? '';
+
+                    if (!password_verify($datos['pass'], $hashGuardado)) {
                         $error = true;
+                        $error_msg['pass'] = 'El correo o la contraseña son incorrectos.';
+                    } else {
+                        // Verificamos si está activo
+                        $activoValidation = UserController::checkActivo($email);
+                        if ($activoValidation !== true) {
+                            $error_msg['email'] = is_string($activoValidation) ? $activoValidation : 'La cuenta se encuentra inactiva.';
+                            $error = true;
+                        }
                     }
                 }
             }
 
-            // Inicio de Sesión y Redirección
+            // 4. Inicio de Sesión y Redirección al Catálogo
             if (!$error) {
                 $_POST['email'] = trim($_POST['email']);
                 $logueo = SessionController::setSessionData($_POST['email']);
 
                 if ($logueo === true) {
                     static::path();
-                    $ruta = self::$path . 'productos';
+                    
+                    // Si es administrador puede ir a su panel, si es cliente a su catálogo
+                    if (isset($_SESSION['USER']['type']) && $_SESSION['USER']['type'] === 'administrador') {
+                        $ruta = self::$path . 'admin/panelServicio';
+                    } else {
+                        $ruta = self::$path . 'home/homeServicios';
+                    }
+
                     header("Location: $ruta");
                     exit;
                 }
