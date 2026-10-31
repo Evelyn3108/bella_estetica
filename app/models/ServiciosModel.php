@@ -1,9 +1,15 @@
 <?php
 // app/models/ServiciosModel.php
 
-class ServiciosModel {
+namespace app\models;
 
-    public static function getServiciosActivos() {
+use \Model;
+use \DataBase;
+
+class ServiciosModel extends Model
+{
+    public static function getServiciosActivos()
+    {
         $sql = "SELECT 
                     s.id, 
                     s.nombre_servicio, 
@@ -20,12 +26,24 @@ class ServiciosModel {
         return DataBase::query($sql);
     }
 
-    public static function getServicioById($id) {
-        $sql = "SELECT s.*, e.nombre AS esp_nombre, e.apellido AS esp_apellido 
+    public static function getServicioById($id)
+    {
+        $sql = "SELECT s.*, 
+                       e.nombre AS esp_nombre, 
+                       e.apellido AS esp_apellido,
+                       e.especialidad 
                 FROM servicios s
                 INNER JOIN especialista e ON s.id_especialista = e.id
                 WHERE s.id = :id AND s.estado = 1";
 
         return DataBase::getRecord($sql, [':id' => $id]);
+    }
+
+    /**
+     * Alias para compatibilidad con el controlador
+     */
+    public static function obtenerPorId($id)
+    {
+        return self::getServicioById($id);
     }
 }

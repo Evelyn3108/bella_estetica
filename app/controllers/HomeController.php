@@ -6,6 +6,8 @@ use \Controller;
 use \Response;
 use \DataBase;
 use app\models\UserModel;
+use app\models\ServiciosModel;
+
 
 class HomeController extends Controller
 {
@@ -51,5 +53,42 @@ class HomeController extends Controller
         Response::render($this->viewDir(__NAMESPACE__), $nombre_de_archivoDeVista, $parametros_de_vista);
     }
 
+    // Alias por si el enlace se llama en singular
+    public function actionDetalleServicio()
+    {
+        $this->actionDetalleServicios();
+    }
+
+   public function actionDetalleServicios()
+    {
+        SessionController::onlyUsers();
+
+        static::path();
+
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+
+        if (!$id) {
+            header("Location: " . self::$path . "home/homeServicios");
+            exit;
+        }
+
+        // Usamos el método nativo del modelo
+        $servicio = ServiciosModel::getServicioById($id);
+
+        if (!$servicio) {
+            header("Location: " . self::$path . "home/homeServicios");
+            exit;
+        }
+
+        $nombre_de_archivoDeVista = 'detalleServicios';
+        $parametros_de_vista = [
+            "head"      => SiteController::head(),
+            "footer"    => SiteController::footer(),
+            "ruta"      => self::$path,
+            "servicio"  => $servicio
+        ];
+
+        Response::render($this->viewDir(__NAMESPACE__), $nombre_de_archivoDeVista, $parametros_de_vista);
+    }
 
 }

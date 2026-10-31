@@ -300,15 +300,188 @@ class UserController extends Controller
 
 	public function actionPerfilUsuario()
     {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
         static::path();
+
+        // Control de autenticación
+        if (empty($_SESSION['USER']['id_usuario']) && empty($_SESSION['USER']['mail']) && empty($_SESSION['USER']['email'])) {
+            header("Location: " . self::$path . "account/login");
+            exit;
+        }
+
+        $id_usuario = $_SESSION['USER']['id_usuario'] ?? null;
+        $email      = $_SESSION['USER']['mail'] ?? $_SESSION['USER']['email'] ?? null;
+
+        $nombre   = $_SESSION['USER']['name'] ?? $_SESSION['USER']['nombre'] ?? '';
+        $apellido = $_SESSION['USER']['lastName'] ?? $_SESSION['USER']['apellido'] ?? '';
+        $telefono = $_SESSION['USER']['telefono'] ?? '';
+
+        // Consultamos la base de datos para traer el teléfono y datos actualizados
+        if ($email) {
+            try {
+                $host = 'localhost';
+                $db   = 'estetica_bd';
+                $user = 'root';
+                $pass = '';
+                $dsn  = "mysql:host=$host;dbname=$db;charset=utf8mb4";
+                $pdo  = new \PDO($dsn, $user, $pass, [
+                    \PDO::ATTR_ERRMODE            => \PDO::ERRMODE_EXCEPTION,
+                    \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_OBJ
+                ]);
+
+                $stmt = $pdo->prepare("SELECT * FROM usuario WHERE email = :email LIMIT 1");
+                $stmt->execute([':email' => $email]);
+                $userRow = $stmt->fetch();
+
+                if ($userRow) {
+                    $id_usuario = $userRow->id ?? $id_usuario;
+                    $nombre     = !empty($userRow->nombre) ? $userRow->nombre : $nombre;
+                    $apellido   = !empty($userRow->apellido) ? $userRow->apellido : $apellido;
+                    // Asignamos el teléfono directo desde la base de datos
+                    $telefono   = !empty($userRow->telefono) ? $userRow->telefono : $telefono;
+
+                    // Actualizamos la sesión activa
+                    $_SESSION['USER']['id_usuario'] = $id_usuario;
+                    $_SESSION['USER']['name']       = $nombre;
+                    $_SESSION['USER']['lastName']   = $apellido;
+                    $_SESSION['USER']['telefono']   = $telefono;
+                }
+            } catch (\Throwable $e) {
+                // En caso de falla, continúa con los datos de sesión
+            }
+        }
+
+        $usuarioFinal = [
+            'id'       => $id_usuario ?? 1,
+            'nombre'   => !empty($nombre) ? $nombre : 'Usuario',
+            'apellido' => $apellido,
+            'email'    => $email ?? 'correo@ejemplo.com',
+            'telefono' => $telefono
+        ];
+
+        // Obtener turnos
+        $turnosActivos = [];
+        $historial     = [];
+        if (class_exists(\app\models\TurnosModel::class)) {
+            if (method_exists(\app\models\TurnosModel::class, 'obtenerTurnosActivos')) {
+                $turnosActivos = \app\models\TurnosModel::obtenerTurnosActivos($usuarioFinal['id']);
+            }
+            if (method_exists(\app\models\TurnosModel::class, 'obtenerHistorialTurnos')) {
+                $historial = \app\models\TurnosModel::obtenerHistorialTurnos($usuarioFinal['id']);
+            }
+        }
 
         $nombre_de_archivoDeVista = 'perfilUsuario';
         $parametros_de_vista = [
-            "head"   => SiteController::head(),
-            "footer" => SiteController::footer(),
-            "ruta"   => self::$path
+            "ruta"          => self::$path,
+            "usuario"       => $usuarioFinal,
+            "turnosActivos" => $turnosActivos,
+            "historial"     => $historial,
+            "reservaOk"     => isset($_GET['reserva']) && $_GET['reserva'] === 'ok',
+            "passwordOk"    => isset($_GET['pass']) && $_GET['pass'] === 'ok',
+            "errorPass"     => isset($_GET['error_pass']) ? 'La contraseña actual no es correcta o las nuevas no coinciden.' : null
         ];
 
-        Response::render($this->viewDir(__NAMESPACE__), $nombre_de_archivoDeVista, $parametros_de_vista);
+        \Response::render('usuario/', $nombre_de_archivoDeVista, $parametros_de_vista);
+    }
+	/**
+     * Procesa la actualización de datos personales (email y teléfono)
+     */
+    public function actionActualizarDatos()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        static::path();
+
+        if (empty($_SESSION['USER']['id_usuario']) && empty($_SESSION['USER']['mail'])) {
+            header("Location: " . self::$path . "account/login");
+            exit;
+        }
+
+        $id_usuario = $_SESSION['USER']['id_usuario'] ?? 1;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $email    = trim($_POST['email'] ?? '');
+            $telefono = trim($_POST['telefono'] ?? '');
+
+            if (!empty($email)) {
+                \app\models\UserModel::actualizarContacto($id_usuario, $email, $telefono);
+
+                // Actualizamos los datos en la sesión activa
+                $_SESSION['USER']['mail']     = $email;
+                $_SESSION['USER']['email']    = $email;
+                $_SESSION['USER']['telefono'] = $telefono;
+
+                header("Location: " . self::$path . "user/perfilUsuario?datos=ok");
+                exit;
+            }
+        }
+
+        header("Location: " . self::$path . "user/perfilUsuario");
+        exit;
+    }
+
+    /**
+     * Procesa el cambio de contraseña con validación de requisitos
+     */
+    public function actionCambiarContrasenia()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        static::path();
+
+        if (empty($_SESSION['USER']['id_usuario']) && empty($_SESSION['USER']['mail'])) {
+            header("Location: " . self::$path . "account/login");
+            exit;
+        }
+
+        $id_usuario = $_SESSION['USER']['id_usuario'] ?? 1;
+        $email      = $_SESSION['USER']['mail'] ?? $_SESSION['USER']['email'] ?? '';
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $pass_actual = $_POST['pass_actual'] ?? '';
+            $pass_nueva  = $_POST['pass_nueva'] ?? '';
+            $pass_rep    = $_POST['pass_rep'] ?? '';
+
+            // 1. Obtener contraseña actual de la BD
+            $usuarioBD = \app\models\UserModel::findEmail($email);
+            if (is_array($usuarioBD) && isset($usuarioBD[0])) {
+                $usuarioBD = $usuarioBD[0];
+            }
+            $hashActual = is_object($usuarioBD) ? ($usuarioBD->password ?? '') : ($usuarioBD['password'] ?? '');
+
+            // 2. Validar que la contraseña actual sea correcta
+            if (!password_verify($pass_actual, $hashActual)) {
+                header("Location: " . self::$path . "user/perfilUsuario?error_pass=actual");
+                exit;
+            }
+
+            // 3. Validar que las dos nuevas coincidan
+            if ($pass_nueva !== $pass_rep) {
+                header("Location: " . self::$path . "user/perfilUsuario?error_pass=coincidencia");
+                exit;
+            }
+
+            // 4. Validar requisitos de complejidad (8 a 15 caracteres, 1 mayúscula, 1 número, 1 símbolo)
+            if (!preg_match('/^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,15}$/', $pass_nueva)) {
+                header("Location: " . self::$path . "user/perfilUsuario?error_pass=formato");
+                exit;
+            }
+
+            // 5. Guardar nueva contraseña
+            \app\models\UserModel::actualizarPassword($id_usuario, $pass_nueva);
+            header("Location: " . self::$path . "user/perfilUsuario?pass=ok");
+            exit;
+        }
+
+        header("Location: " . self::$path . "user/perfilUsuario");
+        exit;
     }
 }

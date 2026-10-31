@@ -40,7 +40,7 @@ class UserModel extends Model
 	}
 	
 	public static function registrarCliente($nombre, $apellido, $email, $password, $telefono = '')
-{
+	{
     $model = new static();
     
     // Hasheamos la contraseña de forma segura
@@ -64,5 +64,88 @@ class UserModel extends Model
     // Si la consulta fue exitosa, retornamos true explícito
     return $result ? true : false;
 }
+/**
+     * Actualiza el correo y teléfono del usuario
+     */
+    public static function actualizarContacto($id, $email, $telefono)
+    {
+        try {
+            $sql = "UPDATE usuario 
+                    SET email = :email, telefono = :telefono 
+                    WHERE id = :id";
+            
+            \DataBase::query($sql, [
+                ':email'    => $email,
+                ':telefono' => $telefono,
+                ':id'       => $id
+            ]);
+            return true;
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Actualiza la contraseña hasheada del usuario
+     */
+    public static function actualizarPassword($id, $nuevaPassword)
+    {
+        try {
+            $hash = password_hash($nuevaPassword, PASSWORD_BCRYPT);
+            $sql = "UPDATE usuario 
+                    SET password = :password 
+                    WHERE id = :id";
+
+            \DataBase::query($sql, [
+                ':password' => $hash,
+                ':id'       => $id
+            ]);
+            return true;
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+	/**
+     * Actualiza el correo y teléfono del usuario
+     */
+    public static function actualizarContacto($id, $email, $telefono)
+    {
+        try {
+            $sql = "UPDATE usuario 
+                    SET email = :email, telefono = :telefono 
+                    WHERE id = :id";
+            
+            \DataBase::query($sql, [
+                ':email'    => $email,
+                ':telefono' => $telefono,
+                ':id'       => $id
+            ]);
+            return true;
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Actualiza la contraseña hasheada del usuario
+     */
+    public static function actualizarPassword($id, $nuevaPassword)
+    {
+        try {
+            $hash = password_hash($nuevaPassword, PASSWORD_BCRYPT);
+            $sql = "UPDATE usuario 
+                    SET password = :password 
+                    WHERE id = :id";
+
+            \DataBase::query($sql, [
+                ':password' => $hash,
+                ':id'       => $id
+            ]);
+            return true;
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
 
 }

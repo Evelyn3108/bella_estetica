@@ -19,34 +19,28 @@ class DataBase
 
 	private function __construct() {}
     
-	public static function connection(){
-		self::$host   = $_ENV['DB_HOST'];
-        self::$dbname = $_ENV['DB_NAME'];
-        self::$dbuser = $_ENV['DB_USER'];
-        self::$dbpass = $_ENV['DB_PASS'];
-		// //Configurar la conexion
-		$dsn = "mysql:host=".self::$host.";dbname=".self::$dbname;
-		$opciones = array(
-			PDO::ATTR_PERSISTENT => true,
-			PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-		);
+	public static function connection()
+    {
+        self::$host   = !empty($_ENV['DB_HOST']) ? $_ENV['DB_HOST'] : 'localhost';
+        self::$dbname = !empty($_ENV['DB_NAME']) ? $_ENV['DB_NAME'] : 'estetica_bd';
+        self::$dbuser = !empty($_ENV['DB_USER']) ? $_ENV['DB_USER'] : 'root';
+        self::$dbpass = isset($_ENV['DB_PASS'])   ? $_ENV['DB_PASS'] : '';
 
-		//Crear una instancia de PDO
-		try {
-			$conexion = new PDO($dsn, self::$dbuser, self::$dbpass, $opciones);
-			$conexion->exec('set names utf8');
-			$conexion->exec('SET time_zone = "-03:00";');
-			$conexion->exec('SET @@session.time_zone = "-03:00";');
-			
+        $dsn = "mysql:host=" . self::$host . ";dbname=" . self::$dbname . ";charset=utf8mb4";
+        $opciones = [
+            \PDO::ATTR_PERSISTENT => false,
+            \PDO::ATTR_ERRMODE    => \PDO::ERRMODE_EXCEPTION
+        ];
 
-		} catch (PDOException $e) {
-			self::$error = $e->getMessage();
-			return self::$error;
-
-		}
-		return $conexion;
-	}
-
+        try {
+            $conexion = new \PDO($dsn, self::$dbuser, self::$dbpass, $opciones);
+            $conexion->exec('SET NAMES utf8mb4');
+            $conexion->exec("SET time_zone = '-03:00'");
+            return $conexion;
+        } catch (\PDOException $e) {
+            die("<strong>Error crítico de conexión a la base de datos:</strong> " . $e->getMessage());
+        }
+    }
 	public static function query($sql, $params = []){
 		$statement = static::connection()->prepare($sql);
 		$statement->execute($params);

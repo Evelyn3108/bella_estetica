@@ -133,7 +133,7 @@
                             <img src="img/manicura.jpg" alt="Spa de Manos">
                         </div>
                         <div class="p-4">
-                           <h5 class="fw-bold mb-2">Manicura Completa</h5>
+                           <h5 class="fw-bold mb-2">Manicuria</h5>
                             <p class="text-muted small mb-0" style="line-height: 1.6;">
                                 Belleza y cuidado de uñas, tratamiento de cutículas y esmaltado semipermanente de larga duración.
                             </p>

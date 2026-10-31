@@ -37,9 +37,8 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-secondary fw-normal d-flex align-items-center gap-1" 
-                           href="../usuario/perfilUsuario">
-                            <i class="bi bi-person-circle"></i> Mi Perfil
+                        <a class="nav-link text-secondary" href="<?= $ruta; ?>user/perfilUsuario">
+                         <i class="bi bi-person-circle me-1"></i> Mi Perfil
                         </a>
                     </li>
                    <!-- Botón Cerrar Sesión con hover suave en terracota -->
@@ -99,8 +98,8 @@
                             <span class="text-muted small d-block">Precio</span>
                             <strong class="fs-5" style="color: var(--texto-oscuro);">$20.500</strong>
                         </div>
-                        <a href="detalleServicio?id=1" class="btn-solid-terracota py-2 px-3 small text-decoration-none shadow-sm rounded-3">
-                            Agendar &rarr;
+                        <a href="<?= $ruta; ?>home/detalleServicios?id=1" class="btn-solid-terracota py-2 px-3 small text-decoration-none shadow-sm rounded-3">
+                            Agendar <i class="bi bi-arrow-right ms-1"></i>
                         </a>
                     </div>
                 </div>
@@ -134,8 +133,8 @@
                             <span class="text-muted small d-block">Precio</span>
                             <strong class="fs-5" style="color: var(--texto-oscuro);">$30.000</strong>
                         </div>
-                        <a href="detalleServicio?id=2" class="btn-solid-terracota py-2 px-3 small text-decoration-none shadow-sm rounded-3">
-                            Agendar &rarr;
+                        <a href="<?= $ruta; ?>home/detalleServicios?id=2" class="btn-solid-terracota py-2 px-3 small text-decoration-none shadow-sm rounded-3">
+                            Agendar <i class="bi bi-arrow-right ms-1"></i>
                         </a>
                     </div>
                 </div>
@@ -169,8 +168,8 @@
                             <span class="text-muted small d-block">Precio</span>
                             <strong class="fs-5" style="color: var(--texto-oscuro);">$35.000</strong>
                         </div>
-                        <a href="detalleServicio?id=3" class="btn-solid-terracota py-2 px-3 small text-decoration-none shadow-sm rounded-3">
-                            Agendar &rarr;
+                        <a href="<?= $ruta; ?>home/detalleServicios?id=3" class="btn-solid-terracota py-2 px-3 small text-decoration-none shadow-sm rounded-3">
+                            Agendar <i class="bi bi-arrow-right ms-1"></i>
                         </a>
                     </div>
                 </div>
@@ -204,8 +203,8 @@
                             <span class="text-muted small d-block">Precio</span>
                             <strong class="fs-5" style="color: var(--texto-oscuro);">$25.000</strong>
                         </div>
-                        <a href="detalleServicio?id=4" class="btn-solid-terracota py-2 px-3 small text-decoration-none shadow-sm rounded-3">
-                            Agendar &rarr;
+                        <a href="<?= $ruta; ?>home/detalleServicios?id=4" class="btn-solid-terracota py-2 px-3 small text-decoration-none shadow-sm rounded-3">
+                            Agendar <i class="bi bi-arrow-right ms-1"></i>
                         </a>
                     </div>
                 </div>
