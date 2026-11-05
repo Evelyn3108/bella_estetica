@@ -34,9 +34,8 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-secondary fw-semibold d-flex align-items-center gap-1" href="../usuario/perfilUsuario">
+                        <a class="nav-link text-secondary fw-semibold d-flex align-items-center gap-1" href="<?= $ruta; ?>user/perfilUsuario">
                             <i class="bi bi-person-circle"></i> Mi Perfil
-                        </a>
                     </li>
                     <li class="nav-item ms-lg-2">
                         <a href="../account/salir" 
@@ -112,7 +111,6 @@
             </div>
 
             <!-- MITAD DERECHA: Datos de atención y formulario de reserva -->
-            <!-- COLUMNA DERECHA: Idéntica a la imagen de referencia -->
                 <div class="col-md-6 p-4 p-lg-5 d-flex flex-column justify-content-between bg-white">
                     <div>
                         <!-- Encabezado con Badge -->
@@ -151,6 +149,32 @@
                             <input type="hidden" name="id_servicio" value="<?= htmlspecialchars($servicio->id ?? '4'); ?>">
                             <input type="hidden" name="id_especialista" value="<?= htmlspecialchars($servicio->id_especialista ?? '4'); ?>">
 
+                           <!-- MODAL EMERGENTE EN PANTALLA -->
+                            <div class="modal fade" id="modalErrorTurno" tabindex="-1" aria-labelledby="modalErrorTurnoLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+                                    <div class="modal-content border-0 rounded-4 shadow-lg text-center p-3">
+                                        <div class="modal-body pt-4 pb-2">
+                                            <!-- Icono circular en tono terracota suave -->
+                                            <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" 
+                                                style="width: 65px; height: 65px; background-color: #fdf2f2; color: var(--terracota-principal, #a05a42);">
+                                                <i class="bi bi-calendar-x fs-1"></i>
+                                            </div>
+                                            
+                                            <h5 class="fw-bold text-dark mb-2" id="modalErrorTurnoLabel">Horario no disponible</h5>
+                                            <p class="text-muted small mb-4" id="textoMensajeError">
+                                                <?= !empty($error) ? htmlspecialchars($error) : ''; ?>
+                                            </p>
+
+                                            <button type="button" class="btn text-white fw-semibold px-4 py-2 w-100 rounded-3 shadow-sm" 
+                                                    style="background-color: var(--terracota-principal, #a05a42);" 
+                                                    data-bs-dismiss="modal">
+                                                Entendido, elegir otro horario
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- 1. Seleccioná el Día -->
                             <div class="mb-3 text-start">
                                 <label for="fecha" class="form-label small fw-bold text-dark">
@@ -179,9 +203,10 @@
                                 </select>
                             </div>
 
-                            <button type="submit" class="btn w-100 py-3 text-white fw-bold shadow-sm" style="background-color: #a05a42; border-radius: 8px;">
-                                <i class="bi bi-calendar-check me-2"></i> Confirmar y Agendar Turno
+                            <button type="button" id="btnConfirmarTurno" class="btn text-white w-100 py-3 fw-bold rounded-3 shadow-sm" style="background-color: var(--terracota-principal, #a05a42);">
+                             <i class="bi bi-calendar-check me-2"></i> Confirmar y Agendar Turno
                             </button>
+
                         </form>
                     </div>
 
@@ -248,5 +273,83 @@
         }
     </script>
     
+ <!-- SweetAlert2 para mensajes emergentes estéticos -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // 1. ALERTA DEL SERVIDOR (Si el horario está ocupado o ya tiene turno)
+        <?php if (!empty($error)): ?>
+            Swal.fire({
+                icon: 'warning',
+                title: 'Horario no disponible',
+                text: '<?= addslashes($error); ?>',
+                confirmButtonText: 'Elegir otro horario',
+                confirmButtonColor: '#a05a42',
+                background: '#ffffff',
+                customClass: {
+                    popup: 'rounded-4 shadow-lg p-3',
+                    confirmButton: 'rounded-3 px-4 py-2 fw-semibold'
+                }
+            });
+        <?php endif; ?>
+
+        // 2. DIÁLOGO DE CONFIRMACIÓN AL CLIQUEAR EL BOTÓN
+        const btnConfirmar = document.getElementById('btnConfirmarTurno');
+        if (btnConfirmar) {
+            btnConfirmar.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                const form = document.getElementById('formReservaTurno');
+                const fechaInput = document.getElementById('fecha');
+                const horaInput = document.getElementById('hora');
+
+                // Validar selección antes de abrir confirmación
+                if (!fechaInput || !horaInput || !fechaInput.value || !horaInput.value) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Completá los datos',
+                        text: 'Por favor, seleccioná el día y un horario disponible para agendar tu cita.',
+                        confirmButtonText: 'Entendido',
+                        confirmButtonColor: '#a05a42',
+                        customClass: {
+                            popup: 'rounded-4 shadow p-3',
+                            confirmButton: 'rounded-3 px-4 py-2'
+                        }
+                    });
+                    return;
+                }
+
+                // Formatear fecha y hora
+                const partesFecha = fechaInput.value.split('-');
+                const fechaFormateada = `${partesFecha[2]}/${partesFecha[1]}/${partesFecha[0]}`;
+                const horaFormateada = horaInput.value.substring(0, 5) + ' hs';
+
+                // Modal de confirmación en tono terracota
+                Swal.fire({
+                    title: '¿Confirmar tu reserva?',
+                    html: `Estás por agendar tu turno para el día <strong>${fechaFormateada}</strong> a las <strong>${horaFormateada}</strong>.`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: '<i class="bi bi-check-lg me-1"></i> Sí, agendar turno',
+                    cancelButtonText: 'Revisar datos',
+                    confirmButtonColor: '#a05a42',
+                    cancelButtonColor: '#6c757d',
+                    reverseButtons: true,
+                    background: '#ffffff',
+                    customClass: {
+                        popup: 'rounded-4 shadow-lg p-3',
+                        title: 'fw-bold text-dark fs-5',
+                        confirmButton: 'rounded-3 px-4 py-2 fw-semibold shadow-sm',
+                        cancelButton: 'rounded-3 px-4 py-2 fw-semibold'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        }
+    </script>
+
 </body>
 </html>

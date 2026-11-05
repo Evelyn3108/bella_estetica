@@ -158,4 +158,73 @@ class TurnosModel extends Model
             return false;
         }
     }
+
+   /**
+     * Obtiene la agenda para el Admin:
+     * - Si se pasa una fecha (YYYY-MM-DD), filtra por ese día.
+     * - Si viene vacío o null, trae todos los turnos.
+     */
+    public static function obtenerAgendaAdmin($fecha = null)
+    {
+        try {
+            $sql = "SELECT t.id, 
+                           t.fecha, 
+                           t.hora, 
+                           t.estado,
+                           COALESCE(u.nombre, 'Cliente') AS cliente_nombre, 
+                           COALESCE(u.apellido, '') AS cliente_apellido, 
+                           COALESCE(u.telefono, '-') AS cliente_telefono,
+                           COALESCE(s.nombre_servicio, 'Tratamiento') AS nombre_servicio, 
+                           COALESCE(s.consultorio, 'Consultorio 1') AS consultorio,
+                           COALESCE(e.nombre, '') AS esp_nombre, 
+                           COALESCE(e.apellido, '') AS esp_apellido
+                    FROM turnos t
+                    LEFT JOIN usuario u ON t.id_usuario = u.id
+                    LEFT JOIN servicios s ON t.id_servicio = s.id
+                    LEFT JOIN especialista e ON t.id_especialista = e.id";
+
+            $params = [];
+
+            if (!empty($fecha)) {
+                $sql .= " WHERE DATE(t.fecha) = :fecha";
+                $params[':fecha'] = $fecha;
+            }
+
+            $sql .= " ORDER BY t.fecha DESC, t.hora ASC";
+
+            $res = \DataBase::getRecords($sql, $params);
+
+            if (is_array($res) && isset($res['resultado'])) {
+                $res = $res['resultado'];
+            }
+
+            return is_array($res) ? $res : [];
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Actualiza el estado de un turno con auditoría
+     */
+    public static function actualizarEstadoTurno($id_turno, $nuevo_estado, $id_admin)
+    {
+        try {
+            $sql = "UPDATE TURNOS 
+                    SET estado = :estado, 
+                        modificado_por = :id_admin,
+                        fecha_modificacion = NOW()
+                    WHERE id = :id";
+
+            \DataBase::query($sql, [
+                ':estado'   => $nuevo_estado,
+                ':id_admin' => $id_admin,
+                ':id'       => $id_turno
+            ]);
+            return true;
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
 }
