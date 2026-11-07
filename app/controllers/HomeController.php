@@ -60,9 +60,19 @@ class HomeController extends Controller
         Response::render($this->viewDir(__NAMESPACE__), $nombre_de_archivoDeVista, $parametros_de_vista);
     }
 
-    public function actionHomeservicios()
+    public function actionHomeServicios()
     {
-        $this->actionHome_servicios();
+        static::path();
+
+        // Solo trae tratamientos con estado = 1 y especialista activo = 1
+        $servicios = \app\models\ServiciosModel::getServiciosActivos();
+
+        $parametros = [
+            "ruta"      => self::$path,
+            "servicios" => $servicios
+        ];
+
+        Response::render('home/', 'homeServicios', $parametros);
     }
     // Alias por si el enlace se llama en singular
     public function actionDetalleServicio()

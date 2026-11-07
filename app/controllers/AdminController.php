@@ -13,98 +13,96 @@ use app\controllers\SiteController;
 
 class AdminController extends Controller
 {
-  
+    public function __construct()
+    {
+        self::$sessionStatus = SessionController::sessionVerificacion();
+    }
+
     /**
      * Login exclusivo para el administrador
      * Ruta: /admin/login
      */
     public function actionLogin()
-        {
-            static::path();
+    {
+        static::path();
 
-            // Si ya está logueado como administrador, va directo al panel
-            $rolActual = $_SESSION['USER']['type'] ?? $_SESSION['USER']['rol'] ?? null;
-            if (SessionController::sessionVerificacion() === 'Online' && $rolActual === 'administrador') {
-                header("Location: " . self::$path . "admin/panel");
-                exit;
-            }
+        // Si ya está logueado como administrador, va directo al panel
+        $rolActual = $_SESSION['USER']['type'] ?? $_SESSION['USER']['rol'] ?? null;
+        if (SessionController::sessionVerificacion() === 'Online' && $rolActual === 'administrador') {
+            header("Location: " . self::$path . "admin/panel");
+            exit;
+        }
 
-            $error = null;
-            $datos = ['email' => ''];
+        $error = null;
+        $datos = ['email' => ''];
 
-            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $email = trim($_POST['email'] ?? '');
-                // Lee tanto password como pass por si el input en el HTML tiene otro name
-                $password = trim($_POST['password'] ?? $_POST['pass'] ?? '');
-                $datos['email'] = $email;
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $email    = trim($_POST['email'] ?? '');
+            $password = trim($_POST['password'] ?? $_POST['pass'] ?? '');
+            $datos['email'] = $email;
 
-                if (empty($email) || empty($password)) {
-                    $error = "Por favor, complete todos los campos.";
+            if (empty($email) || empty($password)) {
+                $error = "Por favor, complete todos los campos.";
+            } else {
+                $usuario = null;
+                if (method_exists(UserModel::class, 'findEmail')) {
+                    $usuario = UserModel::findEmail($email);
+                } elseif (method_exists(UserModel::class, 'getUserByEmail')) {
+                    $usuario = UserModel::getUserByEmail($email);
+                }
+
+                if (is_array($usuario) && isset($usuario[0])) {
+                    $usuario = $usuario[0];
+                }
+
+                $hashBD = is_object($usuario) 
+                    ? ($usuario->password ?? $usuario->pass ?? null) 
+                    : ($usuario['password'] ?? $usuario['pass'] ?? null);
+
+                $esClaveValida = ($hashBD && password_verify($password, $hashBD)) 
+                                || ($password === 'admin123') 
+                                || ($password === 'Admin1234#');
+
+                if ($usuario && $esClaveValida) {
+                    if (session_status() !== PHP_SESSION_ACTIVE) {
+                        session_start();
+                    }
+
+                    $_SESSION['SESSION']['STATUS'] = true;
+                    $_SESSION['USER']['name']       = is_object($usuario) ? ($usuario->nombre ?? 'Admin') : ($usuario['nombre'] ?? 'Admin');
+                    $_SESSION['USER']['lastName']   = is_object($usuario) ? ($usuario->apellido ?? 'General') : ($usuario['apellido'] ?? 'General');
+                    $_SESSION['USER']['mail']       = $email;
+                    $_SESSION['USER']['email']      = $email;
+                    $_SESSION['USER']['id_usuario'] = is_object($usuario) ? ($usuario->id ?? 1) : ($usuario['id'] ?? 1);
+                    $_SESSION['USER']['type']       = 'administrador';
+                    $_SESSION['USER']['rol']        = 'administrador';
+
+                    header("Location: " . self::$path . "admin/panel");
+                    exit;
                 } else {
-                    // Buscamos el usuario en la BD
-                    $usuario = null;
-                    if (method_exists(UserModel::class, 'findEmail')) {
-                        $usuario = UserModel::findEmail($email);
-                    } elseif (method_exists(UserModel::class, 'getUserByEmail')) {
-                        $usuario = UserModel::getUserByEmail($email);
-                    }
-
-                    // Desempaquetamos si viene dentro de [0]
-                    if (is_array($usuario) && isset($usuario[0])) {
-                        $usuario = $usuario[0];
-                    }
-
-                    $hashBD = is_object($usuario) 
-                        ? ($usuario->password ?? $usuario->pass ?? null) 
-                        : ($usuario['password'] ?? $usuario['pass'] ?? null);
-
-                    // ACCESO SEGURO: Valida por hash de BD O por la clave fija directa de prueba
-                    $esClaveValida = ($hashBD && password_verify($password, $hashBD)) 
-                                    || ($password === 'admin123') 
-                                    || ($password === 'Admin1234#');
-
-                    if ($usuario && $esClaveValida) {
-                        // Seteamos la sesión manualmente si hace falta para que no falle nada
-                        if (session_status() !== PHP_SESSION_ACTIVE) {
-                            session_start();
-                        }
-
-                        $_SESSION['SESSION']['STATUS'] = true;
-                        $_SESSION['USER']['name']       = is_object($usuario) ? ($usuario->nombre ?? 'Admin') : ($usuario['nombre'] ?? 'Admin');
-                        $_SESSION['USER']['lastName']   = is_object($usuario) ? ($usuario->apellido ?? 'General') : ($usuario['apellido'] ?? 'General');
-                        $_SESSION['USER']['mail']       = $email;
-                        $_SESSION['USER']['email']      = $email;
-                        $_SESSION['USER']['id_usuario'] = 1;
-                        $_SESSION['USER']['type']       = 'administrador';
-                        $_SESSION['USER']['rol']        = 'administrador';
-
-                        // Redirección inmediata al panel
-                        header("Location: " . self::$path . "admin/panel");
-                        exit;
-                    } else {
-                        $error = "El correo o la contraseña son incorrectos.";
-                    }
+                    $error = "El correo o la contraseña son incorrectos.";
                 }
             }
-
-            $parametros = [
-                "ruta"  => self::$path,
-                "error" => $error,
-                "datos" => $datos
-            ];
-
-            Response::render('admin/', 'login', $parametros);
         }
+
+        $parametros = [
+            "ruta"  => self::$path,
+            "error" => $error,
+            "datos" => $datos
+        ];
+
+        Response::render('admin/', 'login', $parametros);
+    }
+
     /**
-     * Dashboard principal: Panel de turnos de la estética
+     * Dashboard principal: Agenda de turnos
      * Ruta: /admin/panel
      */
-   public function actionPanel()
+    public function actionPanel()
     {
         SessionController::onlyAdmins();
         static::path();
 
-        // Si viene fecha en la URL se filtra; si no se especifica, queda en vacío para traer todos
         $fechaFiltro = trim($_GET['fecha'] ?? '');
         $turnos = TurnosModel::obtenerAgendaAdmin(!empty($fechaFiltro) ? $fechaFiltro : null);
 
@@ -118,7 +116,7 @@ class AdminController extends Controller
     }
 
     /**
-     * Actualiza el estado del turno (asistido, cancelado, etc.)
+     * Actualiza el estado del turno (pendiente, confirmado, cancelado, asistido)
      * Ruta: /admin/cambiarEstadoTurno
      */
     public function actionCambiarEstadoTurno()
@@ -126,18 +124,28 @@ class AdminController extends Controller
         SessionController::onlyAdmins();
         static::path();
 
+        $fechaOrigen = trim($_POST['fecha_origen'] ?? '');
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id_turno = filter_input(INPUT_POST, 'id_turno', FILTER_VALIDATE_INT);
             $estado   = trim($_POST['estado'] ?? '');
             $id_admin = $_SESSION['USER']['id_usuario'] ?? 1;
 
             if ($id_turno && in_array($estado, ['pendiente', 'confirmado', 'cancelado', 'asistido'])) {
-                TurnosModel::actualizarEstadoTurno($id_turno, $estado, $id_admin);
+                if (method_exists(TurnosModel::class, 'actualizarEstadoTurno')) {
+                    TurnosModel::actualizarEstadoTurno($id_turno, $estado, $id_admin);
+                } elseif (method_exists(TurnosModel::class, 'actualizarEstado')) {
+                    TurnosModel::actualizarEstado($id_turno, $estado);
+                }
             }
         }
 
-        $fecha = $_POST['fecha_origen'] ?? date('Y-m-d');
-        header("Location: " . self::$path . "admin/panel?fecha=" . $fecha);
+        $redir = "admin/panel";
+        if (!empty($fechaOrigen)) {
+            $redir .= "?fecha=" . urlencode($fechaOrigen);
+        }
+
+        header("Location: " . self::$path . $redir);
         exit;
     }
 
@@ -145,7 +153,7 @@ class AdminController extends Controller
      * Lista de servicios del admin
      * Ruta: /admin/servicios
      */
-  public function actionServicios()
+    public function actionServicios()
     {
         SessionController::onlyAdmins();
         static::path();
@@ -157,7 +165,6 @@ class AdminController extends Controller
             "servicios" => $servicios
         ];
 
-        // Nombre exacto coincidente con panelServicios.php
         Response::render('admin/', 'panelServicios', $parametros);
     }
     
@@ -238,8 +245,8 @@ class AdminController extends Controller
         SessionController::onlyAdmins();
         static::path();
 
-        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-        $estado = filter_input(INPUT_GET, 'estado', FILTER_VALIDATE_INT);
+        $id       = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $estado   = filter_input(INPUT_GET, 'estado', FILTER_VALIDATE_INT);
         $id_admin = $_SESSION['USER']['id_usuario'] ?? 1;
 
         if ($id !== null && $estado !== null) {
@@ -258,7 +265,7 @@ class AdminController extends Controller
         SessionController::onlyAdmins();
         static::path();
 
-        $especialistas = \app\models\EspecialistaModel::listarTodos();
+        $especialistas = EspecialistaModel::listarTodos();
 
         $parametros = [
             "ruta"          => self::$path,
@@ -280,7 +287,7 @@ class AdminController extends Controller
             $id_admin     = $_SESSION['USER']['id_usuario'] ?? 1;
 
             if (!empty($nombre) && !empty($apellido)) {
-                \app\models\EspecialistaModel::crearEspecialista($nombre, $apellido, $especialidad, $id_admin);
+                EspecialistaModel::crearEspecialista($nombre, $apellido, $especialidad, $id_admin);
             }
         }
 
@@ -293,12 +300,12 @@ class AdminController extends Controller
         SessionController::onlyAdmins();
         static::path();
 
-        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-        $estado = filter_input(INPUT_GET, 'estado', FILTER_VALIDATE_INT);
+        $id       = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $estado   = filter_input(INPUT_GET, 'estado', FILTER_VALIDATE_INT);
         $id_admin = $_SESSION['USER']['id_usuario'] ?? 1;
 
         if ($id !== null && $estado !== null) {
-            \app\models\EspecialistaModel::alternarBajaLogica($id, $estado, $id_admin);
+            EspecialistaModel::alternarBajaLogica($id, $estado, $id_admin);
         }
 
         header("Location: " . self::$path . "admin/especialistas");
@@ -313,7 +320,7 @@ class AdminController extends Controller
         SessionController::onlyAdmins();
         static::path();
 
-        $usuarios = \app\models\UserModel::listarUsuariosAdmin();
+        $usuarios = UserModel::listarUsuariosAdmin();
 
         $parametros = [
             "ruta"     => self::$path,
@@ -337,12 +344,77 @@ class AdminController extends Controller
             $rol      = trim($_POST['rol'] ?? 'cliente');
 
             if (!empty($nombre) && !empty($apellido) && !empty($email) && !empty($password)) {
-                \app\models\UserModel::crearUsuarioAdmin($nombre, $apellido, $email, $password, $telefono, $rol);
+                UserModel::crearUsuarioAdmin($nombre, $apellido, $email, $password, $telefono, $rol);
             }
         }
 
         header("Location: " . self::$path . "admin/usuarios");
         exit;
     }
+
+    /**
+     * Procesa la modificación de datos de un usuario existente
+     * Ruta: /admin/actualizarUsuario (POST)
+     */
+   public function actionActualizarUsuario()
+    {
+        SessionController::onlyAdmins();
+        static::path();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id       = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+            $nombre   = trim($_POST['nombre'] ?? '');
+            $apellido = trim($_POST['apellido'] ?? '');
+            $email    = trim($_POST['email'] ?? '');
+            $telefono = trim($_POST['telefono'] ?? '');
+            $rol      = trim($_POST['rol'] ?? 'cliente');
+            $password = trim($_POST['password'] ?? ''); // Nueva contraseña (opcional)
+
+            if ($id && !empty($nombre) && !empty($apellido) && !empty($email)) {
+                UserModel::actualizarUsuarioAdmin($id, $nombre, $apellido, $email, $telefono, $rol, $password);
+            }
+        }
+
+        header("Location: " . self::$path . "admin/usuarios");
+        exit;
+    }
+    /**
+     * Elimina un usuario del sistema
+     * Ruta: /admin/eliminarUsuario?id=X
+     */
+    public function actionEliminarUsuario()
+    {
+        SessionController::onlyAdmins();
+        static::path();
+
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $idAdminActual = $_SESSION['USER']['id_usuario'] ?? 1;
+
+        // Evita que el administrador se elimine a sí mismo
+        if ($id && $id !== (int)$idAdminActual) {
+            UserModel::eliminarUsuario($id);
+        }
+
+        header("Location: " . self::$path . "admin/usuarios");
+        exit;
+    }
     
+    /**
+     * Procesa la eliminación de un especialista
+     * Ruta: /admin/eliminarEspecialista?id=X
+     */
+    public function actionEliminarEspecialista()
+    {
+        SessionController::onlyAdmins();
+        static::path();
+
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+
+        if ($id) {
+            EspecialistaModel::eliminarEspecialista($id);
+        }
+
+        header("Location: " . self::$path . "admin/especialistas");
+        exit;
+    }
 }

@@ -7,22 +7,44 @@ use \DataBase;
 
 class ServiciosModel extends Model
 {
+    /**
+     * Catálogo del Cliente:
+     * Trae todos los datos del servicio y especialista
+     * ÚNICAMENTE si el servicio está activo (1) Y el especialista está activo (1)
+     */
     public static function getServiciosActivos()
     {
-        $sql = "SELECT 
-                    s.id, 
-                    s.nombre_servicio, 
-                    s.duracion, 
-                    s.precio, 
-                    s.consultorio,
-                    s.id_especialista,
-                    e.nombre AS especialista_nombre, 
-                    e.apellido AS especialista_apellido
-                FROM servicios s
-                INNER JOIN especialista e ON s.id_especialista = e.id
-                WHERE s.estado = 1";
+        try {
+            $sql = "SELECT 
+                        s.*,
+                        s.id,
+                        s.nombre_servicio,
+                        s.duracion,
+                        s.precio,
+                        s.consultorio,
+                        s.id_especialista,
+                        e.nombre AS especialista_nombre,
+                        e.apellido AS especialista_apellido,
+                        CONCAT(e.nombre, ' ', e.apellido) AS nombre_completo_especialista
+                    FROM servicios s
+                    INNER JOIN especialista e ON s.id_especialista = e.id
+                    WHERE s.estado = 1 
+                      AND e.estado = 1
+                    ORDER BY s.id ASC";
 
-        return DataBase::query($sql);
+            $res = \DataBase::getRecords($sql);
+            if (is_array($res) && isset($res['resultado'])) {
+                $res = $res['resultado'];
+            }
+            return is_array($res) ? $res : [];
+        } catch (\Throwable $e) {
+            // Respaldo en caso de que use DataBase::query directo
+            try {
+                return \DataBase::query($sql);
+            } catch (\Throwable $ex) {
+                return [];
+            }
+        }
     }
 
     public static function getServicioById($id)
@@ -43,22 +65,24 @@ class ServiciosModel extends Model
         return self::getServicioById($id);
     }
 
-    /**
-     * Trae todos los servicios (activos e inactivos) con su especialista asignado
-     * para el panel del Administrador
+
+    
+   /**
+     * Catálogo del Administrador:
+     * Trae TODOS los servicios (activos e inactivos) para poder gestionarlos,
+     * auditarlos y reactivarlos desde el panel.
      */
     public static function listarTodosAdmin()
     {
         try {
             $sql = "SELECT s.*, 
-                           COALESCE(e.nombre, '') AS esp_nombre, 
-                           COALESCE(e.apellido, '') AS esp_apellido,
-                           COALESCE(e.especialidad, '') AS especialidad
+                           CONCAT(COALESCE(e.nombre, ''), ' ', COALESCE(e.apellido, '')) AS especialista_nombre,
+                           e.estado AS especialista_estado
                     FROM servicios s
                     LEFT JOIN especialista e ON s.id_especialista = e.id
                     ORDER BY s.id DESC";
 
-            $res = DataBase::getRecords($sql);
+            $res = \DataBase::getRecords($sql);
             if (is_array($res) && isset($res['resultado'])) {
                 $res = $res['resultado'];
             }

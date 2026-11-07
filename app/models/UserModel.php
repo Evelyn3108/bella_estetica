@@ -14,56 +14,45 @@ class UserModel extends Model
 
     public static function getAllUsers()
     {
-        $model = new static();
         $sql = "SELECT * FROM usuario";
-        $result = DataBase::query($sql);
-
-        return $result;
+        return DataBase::query($sql);
     }
 
     public static function findEmail($email)
     {
-        $model = new static();
-        $sql = "SELECT * FROM {$model->table} WHERE {$model->secundaryKey} = :email";
-        $params = ["email" => $email];
-        $result = DataBase::getRecord($sql, $params);
-        return $result;
+        $sql = "SELECT * FROM usuario WHERE email = :email LIMIT 1";
+        $params = [":email" => $email];
+        return DataBase::getRecord($sql, $params);
     }
 
     public static function getUserByEmail($email)
     {
-        $model = new static();
-        $sql = "SELECT * FROM " . $model->table . " WHERE email = '$email'";
-        $result = DataBase::query($sql);
-
-        return $result;
+        $sql = "SELECT * FROM usuario WHERE email = :email LIMIT 1";
+        $params = [":email" => $email];
+        return DataBase::getRecords($sql, $params);
     }
+
+    /**
+     * Registra un nuevo cliente desde la web pública
+     */
     public static function registrarCliente($nombre, $apellido, $email, $password, $telefono = '')
     {
         try {
-            $model = new static();
-            
-            // Hasheamos la contraseña de forma segura
             $passwordHash = password_hash($password, PASSWORD_BCRYPT);
 
-            // Sentencia SQL preparada para insertar el nuevo cliente
-            $sql = "INSERT INTO {$model->table} (nombre, apellido, email, password, telefono, rol) 
-                    VALUES (:nombre, :apellido, :email, :password, :telefono, 'cliente')";
+            $sql = "INSERT INTO usuario (nombre, apellido, email, password, telefono, rol, fecha_creacion) 
+                    VALUES (:nombre, :apellido, :email, :password, :telefono, 'cliente', NOW())";
 
             $params = [
-                "nombre"   => $nombre,
-                "apellido" => $apellido,
-                "email"    => $email,
-                "password" => $passwordHash,
-                "telefono" => $telefono
+                ":nombre"   => $nombre,
+                ":apellido" => $apellido,
+                ":email"    => $email,
+                ":password" => $passwordHash,
+                ":telefono" => $telefono
             ];
 
-            // Ejecutamos la consulta a través de la clase DataBase
             DataBase::query($sql, $params);
-
-            // Si llegó hasta acá sin disparar una excepción y se guardó en MySQL, retornamos true explícito
             return true;
-
         } catch (\Throwable $e) {
             return false;
         }
@@ -80,7 +69,7 @@ class UserModel extends Model
                     SET password = :password 
                     WHERE id = :id";
 
-            \DataBase::query($sql, [
+            DataBase::query($sql, [
                 ':password' => $hash,
                 ':id'       => $id
             ]);
@@ -100,7 +89,7 @@ class UserModel extends Model
                     SET email = :email, telefono = :telefono 
                     WHERE id = :id";
             
-            \DataBase::query($sql, [
+            DataBase::query($sql, [
                 ':email'    => $email,
                 ':telefono' => $telefono,
                 ':id'       => $id
@@ -112,17 +101,17 @@ class UserModel extends Model
     }
 
     /**
-     * Permite al administrador crear cualquier tipo de usuario
+     * Permite al administrador crear cualquier tipo de usuario (cliente o administrador)
      */
     public static function crearUsuarioAdmin($nombre, $apellido, $email, $password, $telefono, $rol = 'cliente')
     {
         try {
-            $passwordHash = password_hash($password, PASSWORD_BCRYPT);[cite: 8, 15]
+            $passwordHash = password_hash($password, PASSWORD_BCRYPT);
 
-            $sql = "INSERT INTO USUARIO (nombre, apellido, email, password, telefono, rol, fecha_creacion)
-                    VALUES (:nombre, :apellido, :email, :password, :telefono, :rol, NOW())";[cite: 7, 9]
+            $sql = "INSERT INTO usuario (nombre, apellido, email, password, telefono, rol, fecha_creacion)
+                    VALUES (:nombre, :apellido, :email, :password, :telefono, :rol, NOW())";
 
-            return DataBase::query($sql, [
+            DataBase::query($sql, [
                 ':nombre'   => $nombre,
                 ':apellido' => $apellido,
                 ':email'    => $email,
@@ -130,6 +119,7 @@ class UserModel extends Model
                 ':telefono' => $telefono,
                 ':rol'      => $rol
             ]);
+            return true;
         } catch (\Throwable $e) {
             return false;
         }
@@ -141,17 +131,96 @@ class UserModel extends Model
     public static function listarUsuariosAdmin()
     {
         try {
-            $sql = "SELECT id, nombre, apellido, email, telefono, rol, fecha_creacion 
-                    FROM USUARIO 
-                    ORDER BY id DESC";[cite: 7, 9]
+            $sql = "SELECT id, nombre, apellido, email, telefono, rol, fecha_alta 
+                    FROM usuario 
+                    ORDER BY id DESC";
 
-            $res = DataBase::getRecords($sql);
+            $res = \DataBase::getRecords($sql);
             if (is_array($res) && isset($res['resultado'])) {
                 $res = $res['resultado'];
             }
             return is_array($res) ? $res : [];
         } catch (\Throwable $e) {
             return [];
+        }
+    }
+
+    /**
+     * Obtiene los datos de un usuario por su ID
+     */
+    public static function getUsuarioById($id)
+    {
+        try {
+            $sql = "SELECT id, nombre, apellido, email, telefono, rol 
+                    FROM usuario 
+                    WHERE id = :id LIMIT 1";
+            return \DataBase::getRecord($sql, [':id' => $id]);
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+   /**
+     * Permite al administrador editar los datos de un usuario y opcionalmente su contraseña
+     */
+    public static function actualizarUsuarioAdmin($id, $nombre, $apellido, $email, $telefono, $rol, $passwordNueva = null)
+    {
+        try {
+            if (!empty($passwordNueva)) {
+                // Si el administrador escribió una nueva clave, la hasheamos y actualizamos
+                $hash = password_hash($passwordNueva, PASSWORD_BCRYPT);
+                $sql = "UPDATE usuario 
+                        SET nombre = :nombre, 
+                            apellido = :apellido, 
+                            email = :email, 
+                            telefono = :telefono, 
+                            rol = :rol,
+                            password = :password 
+                        WHERE id = :id";
+
+                return \DataBase::query($sql, [
+                    ':nombre'   => $nombre,
+                    ':apellido' => $apellido,
+                    ':email'    => $email,
+                    ':telefono' => $telefono,
+                    ':rol'      => $rol,
+                    ':password' => $hash,
+                    ':id'       => $id
+                ]);
+            } else {
+                // Si la dejó vacía, se conservan los datos sin alterar la clave actual
+                $sql = "UPDATE usuario 
+                        SET nombre = :nombre, 
+                            apellido = :apellido, 
+                            email = :email, 
+                            telefono = :telefono, 
+                            rol = :rol 
+                        WHERE id = :id";
+
+                return \DataBase::query($sql, [
+                    ':nombre'   => $nombre,
+                    ':apellido' => $apellido,
+                    ':email'    => $email,
+                    ':telefono' => $telefono,
+                    ':rol'      => $rol,
+                    ':id'       => $id
+                ]);
+            }
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Elimina un usuario por su ID
+     */
+    public static function eliminarUsuario($id)
+    {
+        try {
+            $sql = "DELETE FROM usuario WHERE id = :id";
+            return \DataBase::query($sql, [':id' => $id]);
+        } catch (\Throwable $e) {
+            return false;
         }
     }
 }
