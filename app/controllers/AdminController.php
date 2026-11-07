@@ -162,6 +162,33 @@ class AdminController extends Controller
     }
     
     /**
+     * Muestra el formulario para crear o editar un servicio
+     * Ruta: /admin/formServicio o /admin/formServicio?id=X
+     */
+    public function actionFormServicio()
+    {
+        SessionController::onlyAdmins();
+        static::path();
+
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $servicio = null;
+
+        if ($id) {
+            $servicio = ServiciosModel::getServicioById($id);
+            if (is_array($servicio) && isset($servicio[0])) {
+                $servicio = $servicio[0];
+            }
+        }
+
+        $parametros = [
+            "ruta"     => self::$path,
+            "servicio" => $servicio
+        ];
+
+        Response::render('admin/', 'cargarServicio', $parametros);
+    }
+
+    /**
      * Guarda la creación o modificación enviada por POST
      * Ruta: /admin/guardarServicio
      */
@@ -171,15 +198,15 @@ class AdminController extends Controller
         static::path();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+            $id       = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
             $id_admin = $_SESSION['USER']['id_usuario'] ?? 1;
 
             $datos = [
                 'nombre_servicio' => trim($_POST['nombre_servicio'] ?? ''),
-                'id_especialista' => (int)($_POST['id_especialista'] ?? 0),
-                'duracion'        => (int)($_POST['duracion'] ?? 30),
+                'id_especialista' => (int)($_POST['id_especialista'] ?? 1),
+                'duracion'        => (int)($_POST['duracion'] ?? 45),
                 'precio'          => (float)($_POST['precio'] ?? 0.00),
-                'consultorio'     => trim($_POST['consultorio'] ?? ''),
+                'consultorio'     => trim($_POST['consultorio'] ?? 'Consultorio 1'),
                 'hora_inicio'     => $_POST['hora_inicio'] ?? '09:00',
                 'hora_fin'        => $_POST['hora_fin'] ?? '18:00',
                 'fecha_desde'     => $_POST['fecha_desde'] ?? date('Y-m-d'),
@@ -187,10 +214,15 @@ class AdminController extends Controller
             ];
 
             if ($id) {
-                ServiciosModel::actualizarServicio($id, $datos, $id_admin);
+                $resultado = ServiciosModel::actualizarServicio($id, $datos, $id_admin);
+                $mensaje = $resultado ? 'editado_ok' : 'error';
             } else {
-                ServiciosModel::guardarServicio($datos, $id_admin);
+                $resultado = ServiciosModel::guardarServicio($datos, $id_admin);
+                $mensaje = $resultado ? 'creado_ok' : 'error';
             }
+
+            header("Location: " . self::$path . "admin/servicios?status=" . $mensaje);
+            exit;
         }
 
         header("Location: " . self::$path . "admin/servicios");
@@ -217,4 +249,100 @@ class AdminController extends Controller
         header("Location: " . self::$path . "admin/servicios");
         exit;
     }
+
+    /* ========================================================
+       MÓDULO: GESTIÓN DE ESPECIALISTAS
+       ======================================================== */
+    public function actionEspecialistas()
+    {
+        SessionController::onlyAdmins();
+        static::path();
+
+        $especialistas = \app\models\EspecialistaModel::listarTodos();
+
+        $parametros = [
+            "ruta"          => self::$path,
+            "especialistas" => $especialistas
+        ];
+
+        Response::render('admin/', 'panelEspecialistas', $parametros);
+    }
+
+    public function actionGuardarEspecialista()
+    {
+        SessionController::onlyAdmins();
+        static::path();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $nombre       = trim($_POST['nombre'] ?? '');
+            $apellido     = trim($_POST['apellido'] ?? '');
+            $especialidad = trim($_POST['especialidad'] ?? '');
+            $id_admin     = $_SESSION['USER']['id_usuario'] ?? 1;
+
+            if (!empty($nombre) && !empty($apellido)) {
+                \app\models\EspecialistaModel::crearEspecialista($nombre, $apellido, $especialidad, $id_admin);
+            }
+        }
+
+        header("Location: " . self::$path . "admin/especialistas");
+        exit;
+    }
+
+    public function actionBajaEspecialista()
+    {
+        SessionController::onlyAdmins();
+        static::path();
+
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $estado = filter_input(INPUT_GET, 'estado', FILTER_VALIDATE_INT);
+        $id_admin = $_SESSION['USER']['id_usuario'] ?? 1;
+
+        if ($id !== null && $estado !== null) {
+            \app\models\EspecialistaModel::alternarBajaLogica($id, $estado, $id_admin);
+        }
+
+        header("Location: " . self::$path . "admin/especialistas");
+        exit;
+    }
+
+    /* ========================================================
+       MÓDULO: GESTIÓN DE USUARIOS
+       ======================================================== */
+    public function actionUsuarios()
+    {
+        SessionController::onlyAdmins();
+        static::path();
+
+        $usuarios = \app\models\UserModel::listarUsuariosAdmin();
+
+        $parametros = [
+            "ruta"     => self::$path,
+            "usuarios" => $usuarios
+        ];
+
+        Response::render('admin/', 'panelUsuarios', $parametros);
+    }
+
+    public function actionGuardarUsuario()
+    {
+        SessionController::onlyAdmins();
+        static::path();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $nombre   = trim($_POST['nombre'] ?? '');
+            $apellido = trim($_POST['apellido'] ?? '');
+            $email    = trim($_POST['email'] ?? '');
+            $password = trim($_POST['password'] ?? '');
+            $telefono = trim($_POST['telefono'] ?? '');
+            $rol      = trim($_POST['rol'] ?? 'cliente');
+
+            if (!empty($nombre) && !empty($apellido) && !empty($email) && !empty($password)) {
+                \app\models\UserModel::crearUsuarioAdmin($nombre, $apellido, $email, $password, $telefono, $rol);
+            }
+        }
+
+        header("Location: " . self::$path . "admin/usuarios");
+        exit;
+    }
+    
 }

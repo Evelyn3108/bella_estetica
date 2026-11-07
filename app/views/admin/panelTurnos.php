@@ -26,15 +26,25 @@
             </button>
 
             <div class="collapse navbar-collapse" id="navAdmin">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4 gap-2">
+               <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4 gap-2">
                     <li class="nav-item">
-                        <a class="nav-link nav-link-custom active fw-bold border-bottom border-2 pb-1" style="border-color: var(--terracota-principal) !important; color: var(--terracota-principal) !important;" href="<?= $ruta; ?>admin/panel">
-                            <i class="bi bi-calendar3 me-1"></i> Agenda de Turnos
+                        <a class="nav-link nav-link-custom" href="<?= $ruta; ?>admin/panel">
+                            <i class="bi bi-calendar3 me-1"></i> Agenda
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link nav-link-custom fw-semibold" href="<?= $ruta; ?>admin/servicios">
-                            <i class="bi bi-card-checklist me-1"></i> Gestión de Servicios
+                        <a class="nav-link nav-link-custom" href="<?= $ruta; ?>admin/servicios">
+                            <i class="bi bi-card-checklist me-1"></i> Servicios
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom" href="<?= $ruta; ?>admin/especialistas">
+                            <i class="bi bi-person-badge me-1"></i> Especialistas
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom" href="<?= $ruta; ?>admin/usuarios">
+                            <i class="bi bi-people me-1"></i> Usuarios
                         </a>
                     </li>
                 </ul>

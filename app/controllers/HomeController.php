@@ -39,20 +39,31 @@ class HomeController extends Controller
         Response::render($this->viewDir(__NAMESPACE__), $nombre_de_archivoDeVista, $parametros_de_vista);
 	}
 
-   public function actionHomeServicios()
+    public function actionHome_servicios()
     {
         static::path();
 
+        // Trae todos los servicios activos (estado = 1) desde la base de datos
+        $servicios = \app\models\ServiciosModel::getServiciosActivos();
+        if (is_array($servicios) && isset($servicios['resultado'])) {
+            $servicios = $servicios['resultado'];
+        }
+
         $nombre_de_archivoDeVista = 'homeServicios';
         $parametros_de_vista = [
-            "head"   => SiteController::head(),
-            "footer" => SiteController::footer(),
-            "ruta"   => self::$path
+            "head"      => SiteController::head(),
+            "footer"    => SiteController::footer(),
+            "ruta"      => self::$path,
+            "servicios" => is_array($servicios) ? $servicios : []
         ];
 
         Response::render($this->viewDir(__NAMESPACE__), $nombre_de_archivoDeVista, $parametros_de_vista);
     }
 
+    public function actionHomeservicios()
+    {
+        $this->actionHome_servicios();
+    }
     // Alias por si el enlace se llama en singular
     public function actionDetalleServicio()
     {

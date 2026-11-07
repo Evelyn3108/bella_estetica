@@ -15,6 +15,7 @@
             <a class="navbar-brand d-flex align-items-center text-dark text-decoration-none gap-2 fw-bold" href="<?= $ruta; ?>home/homeServicios">
                 <i class="bi bi-flower1 fs-3" style="color: var(--terracota-principal, #a05a42);"></i>
                 <span>BELLA ESTÉTICA</span>
+                 <small class="brand-subtitle text-uppercase">Salud & Bienestar</small>
             </a>
             <div class="ms-auto d-flex gap-3 align-items-center">
                 <a href="<?= $ruta; ?>home/homeServicios" class="text-secondary small text-decoration-none">

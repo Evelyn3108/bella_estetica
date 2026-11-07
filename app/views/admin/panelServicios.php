@@ -9,51 +9,63 @@
 <body class="d-flex flex-column min-vh-100">
 
     <!-- NAVBAR ADMINISTRADOR -->
-    <nav class="navbar navbar-expand-lg bg-white shadow-sm py-3 mb-4 border-bottom" style="border-color: var(--borde-suave) !important;">
-        <div class="container-fluid px-4">
-            <a class="navbar-brand d-flex align-items-center gap-2 text-decoration-none" href="<?= $ruta; ?>admin/panel">
-                <i class="bi bi-flower1 fs-3" style="color: var(--terracota-principal) !important;"></i>
-                <div class="d-flex flex-column">
-                    <span class="brand-title text-dark">BELLA ESTÉTICA</span>
-                    <span class="badge rounded-pill text-uppercase" style="background-color: var(--caja-suave); color: var(--terracota-principal); font-size: 0.65rem; width: fit-content; padding: 2px 8px;">
-                        Administración
-                    </span>
-                </div>
-            </a>
+   <nav class="navbar navbar-expand-lg bg-white shadow-sm py-3 mb-4 border-bottom">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="<?= $ruta; ?>admin/panel">
+            <i class="bi bi-flower1 fs-3" style="color: var(--terracota-principal);"></i>
+            <span class="brand-title text-dark">BELLA ESTÉTICA</span>
+            <span class="badge rounded-pill" style="background-color: var(--caja-suave); color: var(--terracota-principal);">
+                Administración
+            </span>
+        </a>
 
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navAdmin">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navAdmin">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4 gap-2">
-                    <li class="nav-item">
-                        <a class="nav-link nav-link-custom fw-semibold" href="<?= $ruta; ?>admin/panel">
-                            <i class="bi bi-calendar3 me-1"></i> Agenda de Turnos
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link nav-link-custom active fw-bold border-bottom border-2 pb-1" style="border-color: var(--terracota-principal) !important; color: var(--terracota-principal) !important;" href="<?= $ruta; ?>admin/servicios">
-                            <i class="bi bi-card-checklist me-1"></i> Gestión de Servicios
-                        </a>
-                    </li>
-                </ul>
-
-                <div class="d-flex align-items-center gap-3">
-                    <span class="small fw-semibold text-muted d-flex align-items-center">
-                        <i class="bi bi-person-circle fs-5 me-2" style="color: var(--terracota-principal);"></i>
-                        <?= htmlspecialchars($_SESSION['USER']['name'] ?? 'Administrador'); ?>
-                    </span>
-                    <a href="<?= $ruta; ?>session/logout" class="btn btn-sm px-3 rounded-pill fw-semibold text-decoration-none" 
-                       style="background-color: transparent; border: 1px solid var(--borde-suave); color: var(--texto-muted); transition: all 0.2s;"
-                       onmouseenter="this.style.backgroundColor='var(--caja-suave)'; this.style.borderColor='var(--terracota-principal)'; this.style.color='var(--terracota-principal)';"
-                       onmouseleave="this.style.backgroundColor='transparent'; this.style.borderColor='var(--borde-suave)'; this.style.color='var(--texto-muted)';">
-                        <i class="bi bi-box-arrow-right me-1"></i> Cerrar Sesión
+        <div class="collapse navbar-collapse" id="navAdmin">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4 gap-2">
+                <!-- Pestaña 1: Agenda de citas y clientes -->
+                <li class="nav-item">
+                    <a class="nav-link nav-link-custom" href="<?= $ruta; ?>admin/panel">
+                        <i class="bi bi-calendar3 me-1"></i> Agenda de Turnos
                     </a>
-                </div>
+                </li>
+                <!-- Pestaña 2: Servicios, Especialistas y Consultorios -->
+                <li class="nav-item">
+                    <a class="nav-link nav-link-custom" href="<?= $ruta; ?>admin/servicios">
+                        <i class="bi bi-card-checklist me-1"></i> Gestión de Servicios
+                    </a>
+                </li>
+            </ul>
+
+            <div class="d-flex align-items-center gap-3">
+                <span class="small fw-semibold text-muted">
+                    <i class="bi bi-person-circle fs-5 me-1" style="color: var(--terracota-principal);"></i>
+                    <?= htmlspecialchars($_SESSION['USER']['name'] ?? 'Administrador'); ?>
+                </span>
+                <a href="<?= $ruta; ?>session/logout" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                    <i class="bi bi-box-arrow-right me-1"></i> Salir
+                </a>
             </div>
         </div>
-    </nav>
+    </div>
+</nav>
+
+    <!-- Mensajes de estado -->
+        <?php $status = $_GET['status'] ?? null; ?>
+        <?php if ($status === 'creado_ok'): ?>
+            <div class="alert alert-success alert-dismissible fade show rounded-3 small py-2 px-3 border-0 shadow-sm mb-4" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i> Servicio registrado y agregado al catálogo correctamente.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php elseif ($status === 'editado_ok'): ?>
+            <div class="alert alert-success alert-dismissible fade show rounded-3 small py-2 px-3 border-0 shadow-sm mb-4" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i> Los datos del servicio fueron modificados con éxito.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php elseif ($status === 'error'): ?>
+            <div class="alert alert-danger alert-dismissible fade show rounded-3 small py-2 px-3 border-0 shadow-sm mb-4" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> Ocurrió un error al intentar guardar el servicio.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
 
     <!-- CONTENEDOR PRINCIPAL -->
     <main class="container-fluid px-4 mb-5 flex-grow-1">

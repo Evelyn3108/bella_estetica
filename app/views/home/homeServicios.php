@@ -67,149 +67,74 @@
             </p>
         </div>
 
-        <!-- GRILLA DE SERVICIOS (Tal cual tu imagen de referencia) -->
-        <div class="row g-4">
-            
-            <!-- Tarjeta 1: Spa de Manos -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-white d-flex flex-column justify-content-between">
-                    <div>
-                        <div style="height: 170px; overflow: hidden;">
-                            <img src="../img/manicura.jpg" 
-                                 alt="Esmaltado Semipermanente" 
-                                 class="w-100 h-100" 
-                                 style="object-fit: cover;">
-                        </div>
-                        <div class="p-4 pb-2">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="badge rounded-pill px-2 py-1" style="background-color: var(--caja-suave); color: var(--terracota-principal); font-size: 0.75rem;">
-                                    Uñas & Manos
-                                </span>
-                                <span class="text-muted small"><i class="bi bi-clock me-1"></i> 45 min</span>
-                            </div>
-                            <h5 class="fw-bold mb-2" style="color: var(--texto-oscuro);">Esmaltado Semipermanente</h5>
-                            <p class="text-muted small mb-0">
-                               Preparacion de manos, exfoliación suave, hidratación y esmaltado semipermanente de larga duración.
-                            </p>
-                        </div>
-                    </div>
-                    <div class="p-4 pt-3 border-top d-flex align-items-center justify-content-between" style="border-color: #f5eded !important;">
-                        <div>
-                            <span class="text-muted small d-block">Precio</span>
-                            <strong class="fs-5" style="color: var(--texto-oscuro);">$20.500</strong>
-                        </div>
-                        <a href="<?= $ruta; ?>home/detalleServicios?id=1" class="btn-solid-terracota py-2 px-3 small text-decoration-none shadow-sm rounded-3">
-                            Agendar <i class="bi bi-arrow-right ms-1"></i>
-                        </a>
-                    </div>
+       <!-- GRILLA DINÁMICA DE SERVICIOS -->
+        <div class="row g-4 justify-content-center">
+            <?php if (empty($servicios)): ?>
+                <div class="col-12 text-center py-5 text-muted">
+                    <i class="bi bi-flower1 fs-1 d-block mb-3" style="color: var(--terracota-principal);"></i>
+                    <p class="fs-5">No hay servicios disponibles en este momento.</p>
                 </div>
-            </div>
-
-            <!-- Tarjeta 2: Limpieza Facial -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-white d-flex flex-column justify-content-between">
-                    <div>
-                        <div style="height: 170px; overflow: hidden;">
-                            <img src="../img/limpiezaFacial.jpg" 
-                                 alt="Limpieza Facial" 
-                                 class="w-100 h-100" 
-                                 style="object-fit: cover;">
-                        </div>
-                        <div class="p-4 pb-2">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="badge rounded-pill px-2 py-1" style="background-color: var(--caja-suave); color: var(--terracota-principal); font-size: 0.75rem;">
-                                    Rostro
-                                </span>
-                                <span class="text-muted small"><i class="bi bi-clock me-1"></i> 50 min</span>
+            <?php else: ?>
+                <?php foreach ($servicios as $s): ?>
+                    <?php 
+                        $srv = is_object($s) ? (array)$s : (is_array($s) ? $s : []);
+                        $idServicio   = $srv['id'] ?? 0;
+                        $nombreServ   = $srv['nombre_servicio'] ?? 'Tratamiento';
+                        $duracion     = $srv['duracion'] ?? '45';
+                        $precio       = number_format((float)($srv['precio'] ?? 0), 2, ',', '.');
+                        
+                        // Selección de foto temática según el nombre del servicio cargado
+                        $nombreMin = strtolower($nombreServ);
+                        $foto = 'limpiezaFacial.jpg'; // Imagen por defecto
+                        if (str_contains($nombreMin, 'manicur') || str_contains($nombreMin, 'mano') || str_contains($nombreMin, 'uña')) {
+                            $foto = 'manicura.jpg';
+                        } elseif (str_contains($nombreMin, 'masaje') || str_contains($nombreMin, 'corporal')) {
+                            $foto = 'masaje.jpg';
+                        } elseif (str_contains($nombreMin, 'lifting') || str_contains($nombreMin, 'pestaña') || str_contains($nombreMin, 'ceja')) {
+                            $foto = 'Lifting.jpg';
+                        }
+                    ?>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card card-service h-100 d-flex flex-column border-0 shadow-sm rounded-4 overflow-hidden">
+                            <!-- Imagen del Tratamiento -->
+                            <div class="service-icon-box" style="height: 190px; overflow: hidden;">
+                                <img src="<?= $ruta; ?>img/<?= $foto; ?>" 
+                                     alt="<?= htmlspecialchars($nombreServ); ?>" 
+                                     style="width: 100%; height: 100%; object-fit: cover;">
                             </div>
-                            <h5 class="fw-bold mb-2" style="color: var(--texto-oscuro);">Limpieza Facial</h5>
-                            <p class="text-muted small mb-0">
-                                Espátula ultrasónica, extracción de impurezas, máscara descongestiva y sérum hidratante.
-                            </p>
-                        </div>
-                    </div>
-                    <div class="p-4 pt-3 border-top d-flex align-items-center justify-content-between" style="border-color: #f5eded !important;">
-                        <div>
-                            <span class="text-muted small d-block">Precio</span>
-                            <strong class="fs-5" style="color: var(--texto-oscuro);">$30.000</strong>
-                        </div>
-                        <a href="<?= $ruta; ?>home/detalleServicios?id=2" class="btn-solid-terracota py-2 px-3 small text-decoration-none shadow-sm rounded-3">
-                            Agendar <i class="bi bi-arrow-right ms-1"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Tarjeta 3: Masaje Corporal -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-white d-flex flex-column justify-content-between">
-                    <div>
-                        <div style="height: 170px; overflow: hidden;">
-                            <img src="../img/masaje.jpg" 
-                                 alt="Masaje Corporal" 
-                                 class="w-100 h-100" 
-                                 style="object-fit: cover;">
-                        </div>
-                        <div class="p-4 pb-2">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="badge rounded-pill px-2 py-1" style="background-color: var(--caja-suave); color: var(--terracota-principal); font-size: 0.75rem;">
-                                    Corporal
-                                </span>
-                                <span class="text-muted small"><i class="bi bi-clock me-1"></i> 60 min</span>
+                            <!-- Cuerpo de la Tarjeta -->
+                            <div class="card-body p-4 d-flex flex-column justify-content-between flex-grow-1 bg-white">
+                                <div>
+                                    <h5 class="fw-bold mb-2 text-dark"><?= htmlspecialchars($nombreServ); ?></h5>
+                                    <p class="text-muted small mb-3" style="line-height: 1.5;">
+                                        Tratamiento estético profesional personalizado en consultorios exclusivos.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-center border-top pt-3 mb-3" style="border-color: #f7f1ee !important;">
+                                        <div>
+                                            <span class="text-muted small d-block">Inversión</span>
+                                            <span class="fw-bold fs-5" style="color: var(--terracota-principal);">$<?= htmlspecialchars($precio); ?></span>
+                                        </div>
+                                        <span class="badge rounded-pill px-2 py-1 small" style="background-color: var(--caja-suave); color: var(--terracota-principal); font-size: 0.75rem;">
+                                            <i class="bi bi-clock me-1"></i> <?= htmlspecialchars($duracion); ?> min
+                                        </span>
+                                    </div>
+
+                                    <!-- Botón dinámico que traslada el ID exacto al detalle -->
+                                    <div class="text-center">
+                                        <a href="<?= $ruta; ?>home/detalleServicios?id=<?= $idServicio; ?>" class="btn-solid-terracota w-100 py-2 small rounded-3 text-decoration-none d-block">
+                                            Agendar <i class="bi bi-arrow-right ms-1"></i>
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
-                            <h5 class="fw-bold mb-2" style="color: var(--texto-oscuro);">Masaje Corporal</h5>
-                            <p class="text-muted small mb-0">
-                                Alivio de contracturas en cuello, espalda y hombros con aceites esenciales relajantes.
-                            </p>
                         </div>
                     </div>
-                    <div class="p-4 pt-3 border-top d-flex align-items-center justify-content-between" style="border-color: #f5eded !important;">
-                        <div>
-                            <span class="text-muted small d-block">Precio</span>
-                            <strong class="fs-5" style="color: var(--texto-oscuro);">$35.000</strong>
-                        </div>
-                        <a href="<?= $ruta; ?>home/detalleServicios?id=3" class="btn-solid-terracota py-2 px-3 small text-decoration-none shadow-sm rounded-3">
-                            Agendar <i class="bi bi-arrow-right ms-1"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tarjeta 4: Lifting Pestañas -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-white d-flex flex-column justify-content-between">
-                    <div>
-                        <div style="height: 170px; overflow: hidden;">
-                            <img src="../img/lifting.jpg" 
-                                 alt="Lifting Pestañas" 
-                                 class="w-100 h-100" 
-                                 style="object-fit: cover;">
-                        </div>
-                        <div class="p-4 pb-2">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="badge rounded-pill px-2 py-1" style="background-color: var(--caja-suave); color: var(--terracota-principal); font-size: 0.75rem;">
-                                    Mirada
-                                </span>
-                                <span class="text-muted small"><i class="bi bi-clock me-1"></i> 40 min</span>
-                            </div>
-                            <h5 class="fw-bold mb-2" style="color: var(--texto-oscuro);">Lifting Pestañas</h5>
-                            <p class="text-muted small mb-0">
-                                Curvatura natural desde la raíz, nutrición con keratina y tinte para realzar la mirada.
-                            </p>
-                        </div>
-                    </div>
-                    <div class="p-4 pt-3 border-top d-flex align-items-center justify-content-between" style="border-color: #f5eded !important;">
-                        <div>
-                            <span class="text-muted small d-block">Precio</span>
-                            <strong class="fs-5" style="color: var(--texto-oscuro);">$25.000</strong>
-                        </div>
-                        <a href="<?= $ruta; ?>home/detalleServicios?id=4" class="btn-solid-terracota py-2 px-3 small text-decoration-none shadow-sm rounded-3">
-                            Agendar <i class="bi bi-arrow-right ms-1"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
+                <?php endforeach; ?>
+            <?php endif; ?>
         </div>
     </main>
 

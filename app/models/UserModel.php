@@ -110,4 +110,48 @@ class UserModel extends Model
             return false;
         }
     }
+
+    /**
+     * Permite al administrador crear cualquier tipo de usuario
+     */
+    public static function crearUsuarioAdmin($nombre, $apellido, $email, $password, $telefono, $rol = 'cliente')
+    {
+        try {
+            $passwordHash = password_hash($password, PASSWORD_BCRYPT);[cite: 8, 15]
+
+            $sql = "INSERT INTO USUARIO (nombre, apellido, email, password, telefono, rol, fecha_creacion)
+                    VALUES (:nombre, :apellido, :email, :password, :telefono, :rol, NOW())";[cite: 7, 9]
+
+            return DataBase::query($sql, [
+                ':nombre'   => $nombre,
+                ':apellido' => $apellido,
+                ':email'    => $email,
+                ':password' => $passwordHash,
+                ':telefono' => $telefono,
+                ':rol'      => $rol
+            ]);
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Lista todos los usuarios registrados para el panel de administración
+     */
+    public static function listarUsuariosAdmin()
+    {
+        try {
+            $sql = "SELECT id, nombre, apellido, email, telefono, rol, fecha_creacion 
+                    FROM USUARIO 
+                    ORDER BY id DESC";[cite: 7, 9]
+
+            $res = DataBase::getRecords($sql);
+            if (is_array($res) && isset($res['resultado'])) {
+                $res = $res['resultado'];
+            }
+            return is_array($res) ? $res : [];
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
 }

@@ -48,7 +48,7 @@
                                        id="email" 
                                        name="email" 
                                        value="<?= htmlspecialchars($datos['email'] ?? ''); ?>" 
-                                       placeholder="admin@bella.com" 
+                                       placeholder="cuenta@bella.com" 
                                        required>
                             </div>
                         </div>
