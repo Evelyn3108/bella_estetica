@@ -15,38 +15,32 @@ class TurnosController extends Controller
         self::$sessionStatus = SessionController::sessionVerificacion();
     }
 
-   /**
-     * Procesa la reserva del turno enviada desde detalleServicios.php
-     */
     public function actionReservar()
     {
-        // 1. Asegurar sesión activa
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
 
         static::path();
 
-        // 2. Obtener el ID del usuario buscando en las variantes de sesión
-        $id_usuario = $_SESSION['USER']['id_usuario'] 
-                    ?? $_SESSION['id_usuario'] 
-                    ?? $_SESSION['USER']['id'] 
-                    ?? $_SESSION['id'] 
-                    ?? null;
+        // 1. Verificación de sesión de usuario
+        if (empty($_SESSION['USER']['id_usuario']) && empty($_SESSION['USER']['mail'])) {
+            header("Location: " . self::$path . "account/login");
+            exit;
+        }
 
-        $email = $_SESSION['USER']['mail'] ?? $_SESSION['mail'] ?? $_SESSION['email'] ?? null;
-        if (!$id_usuario && $email) {
+        $id_usuario = $_SESSION['USER']['id_usuario'] ?? null;
+        if (!$id_usuario && isset($_SESSION['USER']['mail'])) {
             $user = null;
             if (method_exists(\app\models\UserModel::class, 'findEmail')) {
-                $user = \app\models\UserModel::findEmail($email);
+                $user = \app\models\UserModel::findEmail($_SESSION['USER']['mail']);
             } elseif (method_exists(\app\models\UserModel::class, 'getUserByEmail')) {
-                $user = \app\models\UserModel::getUserByEmail($email);
+                $user = \app\models\UserModel::getUserByEmail($_SESSION['USER']['mail']);
             }
 
-            if ($user) {
-                $usr = (is_array($user) && isset($user[0])) ? $user[0] : $user;
-                $id_usuario = is_object($usr) ? ($usr->id ?? $usr->id_user ?? 1) : ($usr['id'] ?? $usr['id_user'] ?? 1);
-            }
+            $usr = (is_array($user) && isset($user[0])) ? $user[0] : $user;
+            $id_usuario = is_object($usr) ? ($usr->id ?? 1) : ($usr['id'] ?? 1);
+            $_SESSION['USER']['id_usuario'] = $id_usuario;
         }
 
         if (!$id_usuario) {
@@ -54,65 +48,63 @@ class TurnosController extends Controller
         }
 
         $error = null;
-        $id_servicio = filter_input(INPUT_POST, 'id_servicio', FILTER_VALIDATE_INT) ?: (filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT) ?: 1);
 
-        // 3. Procesar el formulario por POST
+        // 2. Procesamiento del formulario por POST
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id_servicio     = filter_input(INPUT_POST, 'id_servicio', FILTER_VALIDATE_INT) ?: 1;
             $id_especialista = filter_input(INPUT_POST, 'id_especialista', FILTER_VALIDATE_INT) ?: 1;
             $fecha           = trim($_POST['fecha'] ?? '');
             $hora            = trim($_POST['hora'] ?? '');
 
-            if (empty($fecha) || empty($hora)) {
+            if (empty($fecha) || empty($hora) || empty($id_servicio)) {
                 $error = "Por favor, seleccioná una fecha y un horario disponible.";
             } else {
-                // Validar que no sea domingo
+                // Validación 1: Bloquear domingos (0 = Domingo)
                 $diaSemana = (int) date('w', strtotime($fecha));
                 if ($diaSemana === 0) {
-                    $error = "Los domingos la estética se encuentra cerrada. Por favor, seleccioná otra fecha.";
-                } 
-                // Validar si el cliente ya tiene un turno registrado en esa fecha y horario
+                    $error = "Los domingos la estética permanece cerrada. Por favor, seleccioná una fecha de lunes a sábado.";
+                }
+                // Validación 2: Comprobar si el cliente ya tiene un turno reservado para esa fecha y hora
                 elseif (\app\models\TurnosModel::tieneTurnoMismoHorario($id_usuario, $fecha, $hora)) {
                     $error = "Ya tenés un turno registrado para este horario.";
-                } else {
-                    // Comprobar disponibilidad con la especialista asignada
+                }
+                else {
+                    // Validación 3: Comprobar disponibilidad de la especialista
                     $disponible = \app\models\TurnosModel::comprobarDisponibilidad($id_especialista, $fecha, $hora);
 
                     if (!$disponible) {
-                        $error = "El horario seleccionado ya está ocupado para esa especialista. Por favor elegí otro horario.";
+                        $error = "El horario seleccionado ya no se encuentra disponible para esta especialista. Por favor, elegí otro.";
                     } else {
-                        // Insertar turno
-                        $insertado = \app\models\TurnosModel::insertarTurno($id_usuario, $id_servicio, $id_especialista, $fecha, $hora);
+                        // Inserción segura
+                        $guardado = \app\models\TurnosModel::insertarTurno($id_usuario, $id_servicio, $id_especialista, $fecha, $hora);
 
-                        if ($insertado) {
-                            header("Location: " . self::$path . "user/perfilUsuario?reserva=ok");
+                        if ($guardado) {
+                            header("Location: " . self::$path . "usuario/perfilUsuario?reserva=ok");
                             exit;
                         } else {
-                            $error = "Ocurrió un error al procesar la reserva en la base de datos.";
+                            $error = "Ocurrió un error al registrar el turno. Intentalo nuevamente.";
                         }
                     }
                 }
             }
         }
 
-        // 4. Si hubo error o si entró por GET, renderiza la vista pasando la variable $error
-        $servicio = null;
-        if (class_exists(\app\models\ServiciosModel::class) && method_exists(\app\models\ServiciosModel::class, 'getServicioById')) {
-            $servData = \app\models\ServiciosModel::getServicioById($id_servicio);
-            if (is_array($servData) && isset($servData['resultado'])) {
-                $servicio = $servData['resultado'][0] ?? null;
-            } else {
-                $servicio = is_array($servData) && isset($servData[0]) ? $servData[0] : $servData;
-            }
+        // Si falló o hubo colisión, se vuelve a cargar la vista pasando el mensaje de error
+        $idServicio = $_POST['id_servicio'] ?? ($_GET['id'] ?? 1);
+        $servicio   = \app\models\ServiciosModel::getServicioById($idServicio);
+        if (is_array($servicio) && isset($servicio[0])) {
+            $servicio = $servicio[0];
         }
 
-        $parametros_de_vista = [
+        $parametros = [
             "ruta"        => self::$path,
             "servicio"    => $servicio,
             "error"       => $error,
-            "id_servicio" => $id_servicio
+            "id_servicio" => $idServicio
         ];
 
-        \Response::render('home/', 'detalleServicios', $parametros_de_vista);
+        // Se renderiza detalleServicios.php (o detalleServicio.php según tu archivo)
+        \Response::render('home/', 'detalleServicios', $parametros);
     }
 
     /**

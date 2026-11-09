@@ -120,64 +120,111 @@ class ServiciosModel extends Model
     public static function guardarServicio($datos, $id_admin = 1)
     {
         try {
-            $sql = "INSERT INTO servicios (
-                        nombre_servicio, id_especialista, duracion, precio, consultorio,
-                        hora_inicio, hora_fin, fecha_desde, fecha_hasta, estado, fecha_alta
-                    ) VALUES (
-                        :nombre_servicio, :id_especialista, :duracion, :precio, :consultorio,
-                        :hora_inicio, :hora_fin, :fecha_desde, :fecha_hasta, 1, NOW()
-                    )";
+            $sql = "INSERT INTO servicios (id_especialista, nombre_servicio, duracion, precio, consultorio, dias_atencion, hora_inicio, hora_fin, fecha_desde, fecha_hasta, estado, creado_por, fecha_alta)
+                    VALUES (:id_especialista, :nombre_servicio, :duracion, :precio, :consultorio, :dias_atencion, :hora_inicio, :hora_fin, :fecha_desde, :fecha_hasta, 1, :creado_por, NOW())";
 
-            DataBase::query($sql, [
-                ':nombre_servicio' => $datos['nombre_servicio'],
+            return \DataBase::query($sql, [
                 ':id_especialista' => $datos['id_especialista'],
+                ':nombre_servicio' => $datos['nombre_servicio'],
                 ':duracion'        => $datos['duracion'],
                 ':precio'          => $datos['precio'],
                 ':consultorio'     => $datos['consultorio'],
+                ':dias_atencion'   => $datos['dias_atencion'],
                 ':hora_inicio'     => $datos['hora_inicio'],
                 ':hora_fin'        => $datos['hora_fin'],
                 ':fecha_desde'     => $datos['fecha_desde'],
-                ':fecha_hasta'     => $datos['fecha_hasta']
+                ':fecha_hasta'     => $datos['fecha_hasta'],
+                ':creado_por'      => $id_admin
             ]);
-            return true;
         } catch (\Throwable $e) {
-            return false;
+            // Si la columna dias_atencion aún no existe en tu tabla, intenta guardar sin ella como respaldo
+            try {
+                $sqlSinDias = "INSERT INTO servicios (id_especialista, nombre_servicio, duracion, precio, consultorio, hora_inicio, hora_fin, fecha_desde, fecha_hasta, estado, creado_por, fecha_alta)
+                               VALUES (:id_especialista, :nombre_servicio, :duracion, :precio, :consultorio, :hora_inicio, :hora_fin, :fecha_desde, :fecha_hasta, 1, :creado_por, NOW())";
+                return \DataBase::query($sqlSinDias, [
+                    ':id_especialista' => $datos['id_especialista'],
+                    ':nombre_servicio' => $datos['nombre_servicio'],
+                    ':duracion'        => $datos['duracion'],
+                    ':precio'          => $datos['precio'],
+                    ':consultorio'     => $datos['consultorio'],
+                    ':hora_inicio'     => $datos['hora_inicio'],
+                    ':hora_fin'        => $datos['hora_fin'],
+                    ':fecha_desde'     => $datos['fecha_desde'],
+                    ':fecha_hasta'     => $datos['fecha_hasta'],
+                    ':creado_por'      => $id_admin
+                ]);
+            } catch (\Throwable $ex) {
+                return false;
+            }
         }
     }
 
-    /**
-     * Actualiza un servicio existente
-     */
     public static function actualizarServicio($id, $datos, $id_admin = 1)
     {
         try {
-            $sql = "UPDATE servicios SET
-                        nombre_servicio = :nombre_servicio,
-                        id_especialista = :id_especialista,
-                        duracion        = :duracion,
-                        precio          = :precio,
-                        consultorio     = :consultorio,
-                        hora_inicio     = :hora_inicio,
-                        hora_fin        = :hora_fin,
-                        fecha_desde     = :fecha_desde,
-                        fecha_hasta     = :fecha_hasta
+            $sql = "UPDATE servicios 
+                    SET id_especialista    = :id_especialista,
+                        nombre_servicio    = :nombre_servicio,
+                        duracion           = :duracion,
+                        precio             = :precio,
+                        consultorio        = :consultorio,
+                        dias_atencion      = :dias_atencion,
+                        hora_inicio        = :hora_inicio,
+                        hora_fin           = :hora_fin,
+                        fecha_desde        = :fecha_desde,
+                        fecha_hasta        = :fecha_hasta,
+                        modificado_por     = :id_admin,
+                        fecha_modificacion = NOW()
                     WHERE id = :id";
 
-            DataBase::query($sql, [
-                ':id'              => $id,
-                ':nombre_servicio' => $datos['nombre_servicio'],
+            return \DataBase::query($sql, [
                 ':id_especialista' => $datos['id_especialista'],
+                ':nombre_servicio' => $datos['nombre_servicio'],
                 ':duracion'        => $datos['duracion'],
                 ':precio'          => $datos['precio'],
                 ':consultorio'     => $datos['consultorio'],
+                ':dias_atencion'   => $datos['dias_atencion'],
                 ':hora_inicio'     => $datos['hora_inicio'],
                 ':hora_fin'        => $datos['hora_fin'],
                 ':fecha_desde'     => $datos['fecha_desde'],
-                ':fecha_hasta'     => $datos['fecha_hasta']
+                ':fecha_hasta'     => $datos['fecha_hasta'],
+                ':id_admin'        => $id_admin,
+                ':id'              => $id
             ]);
-            return true;
         } catch (\Throwable $e) {
-            return false;
+            // Respaldo sin la columna dias_atencion
+            try {
+                $sqlSinDias = "UPDATE servicios 
+                               SET id_especialista    = :id_especialista,
+                                   nombre_servicio    = :nombre_servicio,
+                                   duracion           = :duracion,
+                                   precio             = :precio,
+                                   consultorio        = :consultorio,
+                                   hora_inicio        = :hora_inicio,
+                                   hora_fin           = :hora_fin,
+                                   fecha_desde        = :fecha_desde,
+                                   fecha_hasta        = :fecha_hasta,
+                                   modificado_por     = :id_admin,
+                                   fecha_modificacion = NOW()
+                               WHERE id = :id";
+                return \DataBase::query($sqlSinDias, [
+                    ':id_especialista' => $datos['id_especialista'],
+                    ':nombre_servicio' => $datos['nombre_servicio'],
+                    ':duracion'        => $datos['duracion'],
+                    ':precio'          => $datos['precio'],
+                    ':consultorio'     => $datos['consultorio'],
+                    ':hora_inicio'     => $datos['hora_inicio'],
+                    ':hora_fin'        => $datos['hora_fin'],
+                    ':fecha_desde'     => $datos['fecha_desde'],
+                    ':fecha_hasta'     => $datos['fecha_hasta'],
+                    ':id_admin'        => $id_admin,
+                    ':id'              => $id
+                ]);
+            } catch (\Throwable $ex) {
+                return false;
+            }
         }
-    }
+    }            
+
+   
 }

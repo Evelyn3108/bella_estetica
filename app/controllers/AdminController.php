@@ -199,40 +199,63 @@ class AdminController extends Controller
      * Guarda la creación o modificación enviada por POST
      * Ruta: /admin/guardarServicio
      */
-    public function actionGuardarServicio()
+  public function actionGuardarServicio()
     {
         SessionController::onlyAdmins();
         static::path();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $id       = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-            $id_admin = $_SESSION['USER']['id_usuario'] ?? 1;
+            $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
 
-            $datos = [
-                'nombre_servicio' => trim($_POST['nombre_servicio'] ?? ''),
-                'id_especialista' => (int)($_POST['id_especialista'] ?? 1),
-                'duracion'        => (int)($_POST['duracion'] ?? 45),
-                'precio'          => (float)($_POST['precio'] ?? 0.00),
-                'consultorio'     => trim($_POST['consultorio'] ?? 'Consultorio 1'),
-                'hora_inicio'     => $_POST['hora_inicio'] ?? '09:00',
-                'hora_fin'        => $_POST['hora_fin'] ?? '18:00',
-                'fecha_desde'     => $_POST['fecha_desde'] ?? date('Y-m-d'),
-                'fecha_hasta'     => $_POST['fecha_hasta'] ?? date('Y-m-d', strtotime('+1 year'))
-            ];
+            // Días de atención seleccionados (ej: "1,3,5")
+            $dias = isset($_POST['dias']) && is_array($_POST['dias']) 
+                    ? implode(',', $_POST['dias']) 
+                    : '1,2,3,4,5,6';
 
-            if ($id) {
-                $resultado = ServiciosModel::actualizarServicio($id, $datos, $id_admin);
-                $mensaje = $resultado ? 'editado_ok' : 'error';
+            // Múltiples franjas horarias cargadas (ej: 10:30, 13:00, 16:30)
+            if (isset($_POST['horarios']) && is_array($_POST['horarios'])) {
+                $horariosArray = array_filter(array_map('trim', $_POST['horarios']));
+                sort($horariosArray);
+                $horariosTexto = implode(',', $horariosArray);
+                $primerHorario = $horariosArray[0] ?? '09:00';
+                $ultimoHorario = end($horariosArray) ?: '18:00';
             } else {
-                $resultado = ServiciosModel::guardarServicio($datos, $id_admin);
-                $mensaje = $resultado ? 'creado_ok' : 'error';
+                // Respaldo por si viniera de un formulario tradicional
+                $primerHorario = trim($_POST['hora_inicio'] ?? '09:00');
+                $ultimoHorario = trim($_POST['hora_fin'] ?? '18:00');
+                $horariosTexto = $primerHorario;
             }
 
-            header("Location: " . self::$path . "admin/servicios?status=" . $mensaje);
-            exit;
+            $datos = [
+                'id_especialista' => filter_input(INPUT_POST, 'id_especialista', FILTER_VALIDATE_INT) ?: 1,
+                'nombre_servicio' => trim($_POST['nombre_servicio'] ?? ''),
+                'duracion'        => filter_input(INPUT_POST, 'duracion', FILTER_VALIDATE_INT) ?: 45,
+                'precio'          => filter_input(INPUT_POST, 'precio', FILTER_VALIDATE_FLOAT) ?: 0.0,
+                'consultorio'     => trim($_POST['consultorio'] ?? 'Consultorio 1'),
+                'dias_atencion'   => $dias,
+                'hora_inicio'     => $horariosTexto, // Almacena las franjas horarias específicas
+                'hora_fin'        => $ultimoHorario,
+                'fecha_desde'     => !empty($_POST['fecha_desde']) ? trim($_POST['fecha_desde']) : date('Y-m-d'),
+                'fecha_hasta'     => !empty($_POST['fecha_hasta']) ? trim($_POST['fecha_hasta']) : date('Y-m-d', strtotime('+1 year'))
+            ];
+
+            $id_admin = $_SESSION['USER']['id_usuario'] ?? 1;
+
+            if (!empty($datos['nombre_servicio'])) {
+                if ($id) {
+                    $resultado = \app\models\ServiciosModel::actualizarServicio($id, $datos, $id_admin);
+                } else {
+                    $resultado = \app\models\ServiciosModel::guardarServicio($datos, $id_admin);
+                }
+
+                if ($resultado) {
+                    header("Location: " . self::$path . "admin/servicios?status=ok");
+                    exit;
+                }
+            }
         }
 
-        header("Location: " . self::$path . "admin/servicios");
+        header("Location: " . self::$path . "admin/servicios?status=error");
         exit;
     }
 

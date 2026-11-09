@@ -53,11 +53,8 @@
                         <i class="bi bi-person-circle fs-5 me-2" style="color: var(--terracota-principal);"></i>
                         <?= htmlspecialchars($_SESSION['USER']['name'] ?? 'Administrador'); ?>
                     </span>
-                    <a href="<?= $ruta; ?>session/logout" class="btn btn-sm px-3 rounded-pill fw-semibold text-decoration-none" 
-                       style="background-color: transparent; border: 1px solid var(--borde-suave); color: var(--texto-muted); transition: all 0.2s;"
-                       onmouseenter="this.style.backgroundColor='var(--caja-suave)'; this.style.borderColor='var(--terracota-principal)'; this.style.color='var(--terracota-principal)';"
-                       onmouseleave="this.style.backgroundColor='transparent'; this.style.borderColor='var(--borde-suave)'; this.style.color='var(--texto-muted)';">
-                        <i class="bi bi-box-arrow-right me-1"></i> Cerrar Sesión
+                    <a href="<?= $ruta; ?>account/salir" class="btn btn-salir btn-sm px-3 rounded-pill fw-semibold d-inline-flex align-items-center gap-1 text-decoration-none">
+                    <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
                     </a>
                 </div>
             </div>

@@ -133,27 +133,35 @@ class TurnosModel extends Model
         }
     }
 
-    /**
-     * Verifica si el cliente ya tiene un turno registrado en esa misma fecha y hora
+   /**
+     * Verifica si el usuario ya tiene un turno registrado en esa misma fecha y hora
      */
     public static function tieneTurnoMismoHorario($id_usuario, $fecha, $hora)
     {
         try {
+            // Normalizamos la hora a los primeros 5 caracteres (HH:MM)
+            $horaLimpia = substr(trim($hora), 0, 5);
+
             $sql = "SELECT id FROM turnos 
                     WHERE id_usuario = :id_usuario 
                       AND fecha = :fecha 
-                      AND hora = :hora 
-                      AND estado IN ('pendiente', 'confirmado') 
+                      AND (TIME_FORMAT(hora, '%H:%i') = :hora OR hora LIKE :hora_like)
+                      AND (LOWER(estado) IN ('pendiente', 'confirmado') OR estado IS NULL)
                     LIMIT 1";
 
             $params = [
                 ':id_usuario' => $id_usuario,
                 ':fecha'      => $fecha,
-                ':hora'       => $hora
+                ':hora'       => $horaLimpia,
+                ':hora_like'  => $horaLimpia . '%'
             ];
 
             $res = \DataBase::getRecord($sql, $params);
-            return !empty($res); // Retorna true si ya tiene turno, false si está libre
+            if (is_array($res) && isset($res['resultado'])) {
+                $res = $res['resultado'];
+            }
+
+            return !empty($res);
         } catch (\Throwable $e) {
             return false;
         }
