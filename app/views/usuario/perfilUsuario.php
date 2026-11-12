@@ -11,11 +11,13 @@
 
     <!-- NAVBAR -->
     <nav class="navbar navbar-expand-lg bg-white shadow-sm py-3 mb-4">
-        <div class="container" style="max-width: 1050px;">
-            <a class="navbar-brand d-flex align-items-center text-dark text-decoration-none gap-2 fw-bold" href="<?= $ruta; ?>home/homeServicios">
-                <i class="bi bi-flower1 fs-3" style="color: var(--terracota-principal, #a05a42);"></i>
-                <span>BELLA ESTÉTICA</span>
-                 <small class="brand-subtitle text-uppercase">Salud & Bienestar</small>
+        <div class="container-fluid px-4 px-lg-5">
+            <a class="navbar-brand d-flex align-items-center text-dark text-decoration-none gap-2" href="<?= $ruta; ?>home/homeServicios">
+                <i class="bi bi-flower1 fs-2" style="color: var(--terracota-principal, #a05a42);"></i>
+                <div class="d-flex flex-column justify-content-center">
+                    <span class="brand-title">BELLA ESTÉTICA</span>
+                    <small class="brand-subtitle text-uppercase">Salud & Bienestar</small>
+                </div>
             </a>
             <div class="ms-auto d-flex gap-3 align-items-center">
                 <a href="<?= $ruta; ?>home/homeServicios" class="text-secondary small text-decoration-none">
@@ -31,8 +33,8 @@
         </div>
     </nav>
 
-    <!-- CONTENEDOR PRINCIPAL -->
-    <main class="container mb-5 flex-grow-1" style="max-width: 1050px;">
+    <!-- CONTENEDOR PRINCIPAL FLUIDO -->
+    <main class="container-fluid px-4 px-lg-5 mb-5 flex-grow-1">
 
         <!-- ALERTAS DE ESTADO -->
         <?php if (!empty($reservaOk)): ?>
@@ -76,47 +78,56 @@
             </div>
         <?php endif; ?>
 
-        <!-- CABECERA DE USUARIO -->
-        <div class="card border-0 rounded-4 shadow-sm p-4 mb-4 bg-white d-flex flex-row align-items-center gap-3">
-            <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold fs-3" 
-                 style="width: 60px; height: 60px; background-color: var(--terracota-principal, #a05a42);">
-                <?= strtoupper(substr($usuario['nombre'] ?: ($usuario['email'] ?? 'U'), 0, 1)); ?>
-            </div>
-            <div>
-                <h4 class="fw-bold mb-0 text-dark"><?= htmlspecialchars(trim(($usuario['nombre'] ?? '') . ' ' . ($usuario['apellido'] ?? '')) ?: 'Mi Perfil'); ?></h4>
-                <small class="text-muted"><i class="bi bi-envelope me-1"></i><?= htmlspecialchars($usuario['email'] ?? ''); ?></small>
-            </div>
-        </div>
+        <!-- ESTRUCTURA PRINCIPAL EN 2 COLUMNAS (DASHBOARD) -->
+        <div class="row g-4">
 
-        <!-- PESTAÑAS (TABS) -->
-        <div class="card border-0 rounded-4 shadow-sm bg-white overflow-hidden">
-            <div class="card-header bg-white border-bottom pt-3 px-4">
-                <ul class="nav nav-tabs card-header-tabs" role="tablist">
-                    <li class="nav-item">
-                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-turnos" type="button">
-                            <i class="bi bi-calendar-check me-2"></i>Turnos Agendados
-                        </button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-historial" type="button">
-                            <i class="bi bi-clock-history me-2"></i>Historial
-                        </button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-cuenta" type="button">
-                            <i class="bi bi-person-gear me-2"></i>Mi Cuenta & Seguridad
-                        </button>
-                    </li>
-                </ul>
+            <!-- COLUMNA IZQUIERDA: RESUMEN DE PERFIL Y ACCIONES -->
+            <div class="col-lg-4 col-xl-3">
+                <div class="card border-0 rounded-4 shadow-sm p-4 bg-white text-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold fs-2 mx-auto mb-3" 
+                         style="width: 75px; height: 75px; background-color: var(--terracota-principal, #a05a42);">
+                        <?= strtoupper(substr($usuario['nombre'] ?: ($usuario['email'] ?? 'U'), 0, 1)); ?>
+                    </div>
+                    <h5 class="fw-bold mb-1 text-dark"><?= htmlspecialchars(trim(($usuario['nombre'] ?? '') . ' ' . ($usuario['apellido'] ?? '')) ?: 'Mi Perfil'); ?></h5>
+                    <p class="text-muted small mb-0"><i class="bi bi-envelope me-1"></i><?= htmlspecialchars($usuario['email'] ?? ''); ?></p>
+
+                    <hr class="my-3" style="color: var(--borde-suave, #ebdcd5);">
+
+                    <a href="<?= $ruta; ?>home/homeServicios" class="btn text-white fw-semibold w-100 py-2 rounded-pill shadow-sm d-inline-flex align-items-center justify-content-center gap-2" style="background-color: var(--terracota-principal, #a05a42);">
+                        <i class="bi bi-calendar-plus"></i> Agendar Nuevo Turno
+                    </a>
+                </div>
             </div>
+
+            <!-- COLUMNA DERECHA: GESTIÓN Y PESTAÑAS -->
+            <div class="col-lg-8 col-xl-9">
+                <div class="card border-0 rounded-4 shadow-sm bg-white overflow-hidden">
+                    <div class="card-header bg-white border-bottom pt-3 px-4">
+                        <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                            <li class="nav-item">
+                                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-turnos" type="button">
+                                    <i class="bi bi-calendar-check me-2"></i>Turnos Agendados
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-historial" type="button">
+                                    <i class="bi bi-clock-history me-2"></i>Historial
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-cuenta" type="button">
+                                    <i class="bi bi-person-gear me-2"></i>Mi Cuenta & Seguridad
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
 
             <div class="card-body p-4 tab-content">
 
                 <!-- 1. PESTAÑA: TURNOS AGENDADOS -->
                 <div class="tab-pane fade show active" id="tab-turnos">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="mb-3">
                         <h6 class="fw-bold text-dark mb-0">Próximas citas</h6>
-                        <a href="<?= $ruta; ?>home/homeServicios" class="btn btn-sm btn-outline-secondary rounded-pill px-3">+ Agendar nuevo</a>
                     </div>
 
                     <?php if (empty($turnosActivos)): ?>
@@ -300,6 +311,8 @@
 
             </div>
         </div>
+    </div> 
+</div> 
 
     </main>
 

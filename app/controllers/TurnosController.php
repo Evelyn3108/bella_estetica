@@ -31,8 +31,9 @@ class TurnosController extends Controller
                    ?? $_SESSION['USER']['id'] 
                    ?? null;
 
-        if (!$id_usuario && isset($_SESSION['USER']['mail'])) {
-            $user = UserModel::findEmail($_SESSION['USER']['mail']);
+        $userEmail = $_SESSION['USER']['mail'] ?? $_SESSION['USER']['email'] ?? null;
+        if (!$id_usuario && $userEmail) {
+            $user = UserModel::findEmail($userEmail);
             if (is_array($user) && isset($user[0])) { $user = $user[0]; }
             $id_usuario = is_object($user) ? ($user->id ?? 1) : ($user['id'] ?? 1);
             $_SESSION['USER']['id_usuario'] = $id_usuario;
@@ -68,20 +69,26 @@ class TurnosController extends Controller
 
                 // Bloquea domingos o días que no atienda el especialista
                 if ($diaSemanaSeleccionado === 0 || !in_array((string)$diaSemanaSeleccionado, $diasHabilitados)) {
-                    header("Location: " . self::$path . "home/detalleServicio?id=" . $id_servicio . "&error=dia_no_disponible");
+                    header("Location: " . self::$path . "home/detalleServicios?id=" . $id_servicio . "&error=dia_no_disponible");
                     exit;
                 }
 
                 // --- VALIDACIONES DE DISPONIBILIDAD ---
-                // Si el método tieneTurnoMismoHorario existe, valida que el cliente no duplique turnos
-                if (method_exists(TurnosModel::class, 'tieneTurnoMismoHorario') && TurnosModel::tieneTurnoMismoHorario($id_usuario, $fecha, $hora)) {
-                    header("Location: " . self::$path . "home/detalleServicio?id=" . $id_servicio . "&error=turno_duplicado");
+                // 1. Valida que el cliente no tenga ya un turno con este especialista en la misma fecha (aunque sea a diferente horario)
+                if (method_exists(TurnosModel::class, 'tieneTurnoConEspecialistaEnFecha') && TurnosModel::tieneTurnoConEspecialistaEnFecha($id_usuario, $id_especialista, $fecha)) {
+                    header("Location: " . self::$path . "home/detalleServicios?id=" . $id_servicio . "&error=mismo_especialista_dia");
                     exit;
                 }
 
-                // Valida que el especialista esté libre
+                // 2. Valida que el cliente no duplique turnos en el mismo día y horario (cualquier servicio)
+                if (method_exists(TurnosModel::class, 'tieneTurnoMismoHorario') && TurnosModel::tieneTurnoMismoHorario($id_usuario, $fecha, $hora)) {
+                    header("Location: " . self::$path . "home/detalleServicios?id=" . $id_servicio . "&error=turno_duplicado");
+                    exit;
+                }
+
+                // 3. Valida que el especialista esté libre
                 if (method_exists(TurnosModel::class, 'comprobarDisponibilidad') && !TurnosModel::comprobarDisponibilidad($id_especialista, $fecha, $hora)) {
-                    header("Location: " . self::$path . "home/detalleServicio?id=" . $id_servicio . "&error=horario_ocupado");
+                    header("Location: " . self::$path . "home/detalleServicios?id=" . $id_servicio . "&error=horario_ocupado");
                     exit;
                 }
 
@@ -95,7 +102,7 @@ class TurnosController extends Controller
             }
         }
 
-        header("Location: " . self::$path . "home/homeServicios");
+        header("Location: " . self::$path . "user/perfilUsuario");
         exit;
     }
 

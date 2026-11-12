@@ -9,14 +9,14 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
-    <link rel="stylesheet" href="../css/estilos.css?v=35">
+    <link rel="stylesheet" href="<?= $ruta; ?>css/estilos.css?v=37">
 </head>
 <body class="bg-light d-flex flex-column min-vh-100">
 
     <!-- BARRA DE NAVEGACIÓN -->
     <nav class="navbar navbar-expand-lg bg-white shadow-sm sticky-top py-3">
-        <div class="container">
-           <a class="navbar-brand d-flex align-items-center text-dark text-decoration-none gap-2" href="home">
+        <div class="container-fluid px-4 px-lg-5">
+           <a class="navbar-brand d-flex align-items-center text-dark text-decoration-none gap-2" href="<?= $ruta; ?>home">
                 <i class="bi bi-flower1 fs-2" style="color: var(--terracota-principal, #a05a42) !important;"></i>
                 <div class="d-flex flex-column justify-content-center">
                     <span class="brand-title">BELLA ESTÉTICA</span>
@@ -29,7 +29,7 @@
             <div class="collapse navbar-collapse" id="navDetalle">
                 <ul class="navbar-nav ms-auto align-items-lg-center gap-3">
                     <li class="nav-item">
-                        <a class="nav-link text-secondary fw-semibold d-flex align-items-center gap-1" href="homeServicios">
+                        <a class="nav-link text-secondary fw-semibold d-flex align-items-center gap-1" href="<?= $ruta; ?>home/homeServicios">
                             <i class="bi bi-grid"></i> Catálogo de Servicios
                         </a>
                     </li>
@@ -39,10 +39,10 @@
                         </a>
                     </li>
                     <li class="nav-item ms-lg-2">
-                        <a href="../account/salir" 
+                        <a href="<?= $ruta; ?>account/salir" 
                            class="btn btn-sm px-3 rounded-pill fw-semibold d-inline-flex align-items-center gap-1 text-decoration-none" 
                            style="background-color: transparent; border: 1px solid #dcd6d6; color: #7d6b6c; transition: all 0.2s ease-in-out;"
-                           onmouseenter="this.style.backgroundColor='#fbf4f2'; this.style.borderColor='#b2614a'; this.style.color='#b2614a';"
+                           onmouseenter="this.style.backgroundColor='#fbf4f2'; this.style.borderColor='var(--terracota-principal, #b2614a)'; this.style.color='var(--terracota-principal, #b2614a)';"
                            onmouseleave="this.style.backgroundColor='transparent'; this.style.borderColor='#dcd6d6'; this.style.color='#7d6b6c';">
                             <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
                         </a>
@@ -87,12 +87,12 @@
         }
     ?>
 
-    <!-- CONTENEDOR PRINCIPAL -->
-    <main class="container my-4 my-lg-5">
-        <div class="row g-0 rounded-4 overflow-hidden shadow-lg border" style="min-height: 580px; background-color: #ffffff;">
+    <!-- CONTENEDOR PRINCIPAL FLUIDO -->
+    <main class="container-fluid px-4 px-lg-5 my-4 flex-grow-1">
+        <div class="row g-0 rounded-4 overflow-hidden shadow-sm border" style="min-height: 600px; background-color: #ffffff; border-color: var(--borde-suave, #ebdcd5) !important;">
             
             <!-- MITAD IZQUIERDA: Portada visual con degradé y datos del servicio -->
-            <div class="col-lg-6 position-relative text-white p-4 p-md-5 d-flex flex-column justify-content-between" 
+            <div class="col-lg-5 col-xl-5 position-relative text-white p-4 p-md-5 d-flex flex-column justify-content-between" 
                  style="background: linear-gradient(180deg, rgba(30, 20, 20, 0.45) 0%, rgba(30, 20, 20, 0.88) 100%), url('<?= $ruta; ?>img/<?= $foto; ?>') center/cover no-repeat;">
                 
                 <div class="d-flex justify-content-between align-items-center">
@@ -129,10 +129,10 @@
             </div>
 
             <!-- MITAD DERECHA: Formulario de reserva -->
-            <div class="col-md-6 p-4 p-lg-5 d-flex flex-column justify-content-between bg-white">
+            <div class="col-lg-7 col-xl-7 p-4 p-lg-5 d-flex flex-column justify-content-between bg-white">
                 <div>
                     <div class="mb-4 text-start">
-                        <span class="badge rounded-pill px-3 py-1 mb-2" style="background-color: #f3e5d8; color: #a05a42; font-size: 0.75rem; font-weight: 600;">
+                        <span class="badge rounded-pill px-3 py-1 mb-2" style="background-color: var(--caja-suave, #faeee9); color: var(--terracota-principal, #a05a42); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px;">
                             Agenda Digital
                         </span>
                         <h3 class="fw-bold mb-1" style="color: #2b2320;">Reservá tu Turno</h3>
@@ -144,7 +144,7 @@
                             <div class="p-3 rounded-3 bg-white border text-start shadow-xs">
                                 <span class="text-muted d-block small mb-1" style="font-size: 0.75rem;">Especialista a cargo:</span>
                                 <strong class="small text-dark d-flex align-items-center">
-                                    <i class="bi bi-person-fill me-1" style="color: #a05a42;"></i>
+                                    <i class="bi bi-person-fill me-1" style="color: var(--terracota-principal, #a05a42);"></i>
                                     <?= htmlspecialchars($nombreEsp); ?>
                                 </strong>
                             </div>
@@ -153,7 +153,7 @@
                             <div class="p-3 rounded-3 bg-white border text-start shadow-xs">
                                 <span class="text-muted d-block small mb-1" style="font-size: 0.75rem;">Consultorio asignado:</span>
                                 <strong class="small text-dark d-flex align-items-center">
-                                    <i class="bi bi-geo-alt me-1" style="color: #a05a42;"></i>
+                                    <i class="bi bi-geo-alt me-1" style="color: var(--terracota-principal, #a05a42);"></i>
                                     <?= htmlspecialchars($consultorio); ?>
                                 </strong>
                             </div>
@@ -161,7 +161,6 @@
                     </div>
 
                     <!-- Formulario de Reserva -->
-                 <!-- Formulario de Reserva (100% Bootstrap 5) -->
                     <form id="formReserva" action="<?= $ruta; ?>turnos/reservar" method="POST">
                         <input type="hidden" name="id_servicio" value="<?= htmlspecialchars($idServicio); ?>">
                         <input type="hidden" name="id_especialista" value="<?= htmlspecialchars($idEspecialista); ?>">
@@ -172,10 +171,10 @@
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5 class="fw-bold mb-0 text-capitalize text-dark" id="labelMesActual"></h5>
                             <div class="d-flex gap-1 align-items-center">
-                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-2 shadow-none" id="btnSemanaAnt" title="Semana anterior">
+                                <button type="button" class="btn btn-sm rounded-circle py-0 px-2 shadow-none border" id="btnSemanaAnt" title="Semana anterior" style="color: var(--terracota-principal, #a05a42); border-color: var(--borde-suave, #ebdcd5);">
                                     <i class="bi bi-chevron-left"></i>
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-2 shadow-none" id="btnSemanaSig" title="Semana siguiente">
+                                <button type="button" class="btn btn-sm rounded-circle py-0 px-2 shadow-none border" id="btnSemanaSig" title="Semana siguiente" style="color: var(--terracota-principal, #a05a42); border-color: var(--borde-suave, #ebdcd5);">
                                     <i class="bi bi-chevron-right"></i>
                                 </button>
                             </div>
@@ -189,7 +188,7 @@
                         <!-- SECCIÓN HORARIOS DISPONIBLES -->
                         <div class="mb-4">
                             <label class="form-label small fw-bold text-dark d-flex align-items-center gap-1 mb-2">
-                                <i class="bi bi-clock text-secondary"></i> Horarios Disponibles
+                                <i class="bi bi-clock" style="color: var(--terracota-principal, #a05a42);"></i> Horarios Disponibles
                             </label>
 
                             <!-- Bloque Mañana -->
@@ -206,12 +205,12 @@
 
                             <!-- Mensaje Inicial -->
                             <div id="mensajeSinDia" class="text-muted small py-3 text-center bg-light rounded-3 border">
-                                <i class="bi bi-hand-index me-1"></i> Seleccioná un día hábil arriba para ver los horarios disponibles.
+                                <i class="bi bi-hand-index me-1" style="color: var(--terracota-principal, #a05a42);"></i> Seleccioná un día hábil arriba para ver los horarios disponibles.
                             </div>
                         </div>
 
-                        <!-- Botón Confirmar Turno -->
-                        <button type="button" id="btnConfirmarTurno" class="btn btn-primary w-100 py-3 fw-bold rounded-3 shadow-sm" disabled>
+                        <!-- Botón Confirmar Turno (Terracota) -->
+                        <button type="button" id="btnConfirmarTurno" class="btn btn-confirmar-reserva w-100 py-3 fw-bold rounded-3 shadow-sm" disabled>
                             <i class="bi bi-calendar-check me-2"></i> Confirmar y Agendar Turno
                         </button>
                     </form>
@@ -228,7 +227,7 @@
 
     <!-- FOOTER INSTITUCIONAL -->
     <footer class="bg-white border-top py-4 mt-auto" style="border-color: #f0ebeb !important;">
-        <div class="container text-center">
+        <div class="container-fluid px-4 px-lg-5 text-center">
             <p class="mb-1 fw-semibold text-dark small">
                 <i class="bi bi-flower1 me-1" style="color: var(--terracota-principal, #b2614a);"></i> Bella Estética
             </p>
@@ -246,6 +245,16 @@
 
         // Franjas horarias configuradas para este servicio
         const listaHoras = <?= json_encode(array_values(array_filter(array_map('trim', $listaHorarios ?? [])))); ?>;
+
+        // Turnos activos que ya tiene agendados el usuario
+        const turnosActivosUsuario = <?= json_encode($turnosUsuario ?? []); ?>;
+
+        // Turnos que tiene ocupados el especialista con cualquier cliente
+        const turnosOcupadosEspecialista = <?= json_encode($turnosOcupadosEsp ?? []); ?>;
+
+        // ID y nombre del especialista de este servicio
+        const idEspecialistaActual = <?= (int)$idEspecialista; ?>;
+        const nombreEspActual = <?= json_encode($nombreEsp); ?>;
 
         let offsetDias = 0;
         let diaElegidoStr = '';
@@ -290,8 +299,12 @@
 
                 // Nombre día (Dom, Lun, Mar...)
                 const spanNom = document.createElement('span');
-                spanNom.className = `small fw-semibold text-capitalize mb-1 ${estaSeleccionado ? 'text-primary fw-bold' : (estaDeshabilitado ? 'text-muted opacity-50' : 'text-secondary')}`;
+                spanNom.className = `small fw-semibold text-capitalize mb-1 ${estaDeshabilitado ? 'text-muted opacity-50' : 'text-secondary'}`;
                 spanNom.style.fontSize = '0.75rem';
+                if (estaSeleccionado) {
+                    spanNom.className = 'small fw-bold text-capitalize mb-1';
+                    spanNom.style.color = 'var(--terracota-principal, #a05a42)';
+                }
                 spanNom.textContent = nombresDiasCortos[numDiaSemana];
 
                 // Botón/Círculo del número
@@ -300,19 +313,19 @@
                 btnNum.textContent = d.getDate();
 
                 if (estaDeshabilitado) {
-                    // Clases nativas de Bootstrap para botones inactivos
                     btnNum.className = 'btn btn-light rounded-circle fw-semibold text-muted opacity-50 pe-none border-0 shadow-none';
                     btnNum.style.width = '38px';
                     btnNum.style.height = '38px';
                     btnNum.style.padding = '0';
                 } else if (estaSeleccionado) {
-                    // Clases de Bootstrap para seleccionado
-                    btnNum.className = 'btn btn-primary rounded-circle fw-bold shadow-sm';
+                    // Seleccionado en terracota
+                    btnNum.className = 'btn rounded-circle fw-bold shadow-sm text-white border-0';
+                    btnNum.style.backgroundColor = 'var(--terracota-principal, #a05a42)';
                     btnNum.style.width = '38px';
                     btnNum.style.height = '38px';
                     btnNum.style.padding = '0';
                 } else {
-                    // Clases de Bootstrap para disponible
+                    // Disponible
                     btnNum.className = 'btn btn-outline-secondary rounded-circle fw-semibold border-0 text-dark';
                     btnNum.style.width = '38px';
                     btnNum.style.height = '38px';
@@ -347,6 +360,36 @@
             document.getElementById('horaSeleccionada').value = '';
             document.getElementById('btnConfirmarTurno').disabled = true;
 
+            // 1. REGLA: No se puede seleccionar el mismo especialista el mismo día aunque sea diferente horario
+            const turnoMismoEspecialista = turnosActivosUsuario.find(t => {
+                const tFecha = t.fecha ? t.fecha.split(' ')[0] : '';
+                const tEspId = parseInt(t.id_especialista || 0);
+                return tFecha === diaElegidoStr && tEspId === idEspecialistaActual;
+            });
+
+            if (turnoMismoEspecialista) {
+                secManana.classList.add('d-none');
+                secTarde.classList.add('d-none');
+                document.getElementById('btnConfirmarTurno').disabled = true;
+
+                const partes = diaElegidoStr.split('-');
+                const fVisual = `${partes[2]}/${partes[1]}/${partes[0]}`;
+
+                Swal.fire({
+                    title: 'Especialista ya asignado',
+                    html: `Ya tenés un turno agendado con <strong>${nombreEspActual}</strong> para el día <strong>${fVisual}</strong>.<br><br>No podés seleccionar el mismo especialista el mismo día aunque sea en diferente horario.`,
+                    icon: 'warning',
+                    confirmButtonText: 'Elegir otra fecha',
+                    confirmButtonColor: '#a05a42'
+                });
+
+                if (mensajeSinDia) {
+                    mensajeSinDia.classList.remove('d-none');
+                    mensajeSinDia.innerHTML = `<i class="bi bi-exclamation-triangle-fill text-warning me-1"></i> Ya tenés un turno agendado con <strong>${nombreEspActual}</strong> este día. Por favor, seleccioná otra fecha.`;
+                }
+                return;
+            }
+
             let cantManana = 0;
             let cantTarde = 0;
 
@@ -356,27 +399,63 @@
 
                 const btnHora = document.createElement('button');
                 btnHora.type = 'button';
-                // Pastilla de Bootstrap: btn-outline-primary
-                btnHora.className = 'btn btn-outline-primary btn-sm px-3 py-2 fw-semibold rounded-3 shadow-none';
+                btnHora.className = 'btn slot-hora-btn btn-sm';
                 btnHora.textContent = `${hLimpia} hs`;
 
-                btnHora.addEventListener('click', () => {
-                    // Deseleccionar otras pastillas
-                    document.querySelectorAll('.btn-outline-primary, .btn-primary').forEach(b => {
-                        if (b.id !== 'btnConfirmarTurno') {
-                            b.classList.remove('btn-primary', 'text-white');
-                            b.classList.add('btn-outline-primary');
-                        }
-                    });
-
-                    // Seleccionar actual
-                    btnHora.classList.remove('btn-outline-primary');
-                    btnHora.classList.add('btn-primary', 'text-white');
-
-                    horaElegidaStr = `${hLimpia}:00`;
-                    document.getElementById('horaSeleccionada').value = horaElegidaStr;
-                    document.getElementById('btnConfirmarTurno').disabled = false;
+                // 2. REGLA: Comprobar si el usuario ya tiene otro servicio agendado a este mismo horario
+                const turnoMismoHorarioUsuario = turnosActivosUsuario.find(t => {
+                    const tFecha = t.fecha ? t.fecha.split(' ')[0] : '';
+                    const tHora = t.hora ? t.hora.substring(0, 5) : '';
+                    return tFecha === diaElegidoStr && tHora === hLimpia;
                 });
+
+                // Comprobar si el especialista ya está ocupado por otro cliente
+                const ocupadoPorOtro = turnosOcupadosEspecialista.some(t => {
+                    const tFecha = t.fecha ? t.fecha.split(' ')[0] : '';
+                    const tHora = t.hora ? t.hora.substring(0, 5) : '';
+                    return tFecha === diaElegidoStr && tHora === hLimpia;
+                });
+
+                if (turnoMismoHorarioUsuario) {
+                    // Si el usuario ya tiene otro turno a esa hora: botón visible pero con advertencia al hacer clic
+                    btnHora.classList.add('border-warning', 'text-muted');
+                    btnHora.style.backgroundColor = '#fff9f4';
+                    btnHora.title = `Turno superpuesto: ${turnoMismoHorarioUsuario.nombre_servicio || 'Servicio'}`;
+
+                    btnHora.addEventListener('click', () => {
+                        const partes = diaElegidoStr.split('-');
+                        const fVisual = `${partes[2]}/${partes[1]}/${partes[0]}`;
+                        const nomOtro = turnoMismoHorarioUsuario.nombre_servicio || 'otro servicio';
+
+                        Swal.fire({
+                            title: 'Horario no disponible',
+                            html: `Ya tenés un turno agendado para el <strong>${fVisual}</strong> a las <strong>${hLimpia} hs</strong> para el servicio <strong>"${nomOtro}"</strong>.<br><br>No podés agendar otro servicio el mismo día al mismo horario.`,
+                            icon: 'warning',
+                            confirmButtonText: 'Elegir otro horario',
+                            confirmButtonColor: '#a05a42'
+                        });
+                    });
+                } else if (ocupadoPorOtro) {
+                    // Turno ocupado por otra persona
+                    btnHora.classList.add('opacity-50', 'bg-light', 'text-muted');
+                    btnHora.disabled = true;
+                    btnHora.title = 'Horario ya reservado';
+                } else {
+                    // Horario disponible
+                    btnHora.addEventListener('click', () => {
+                        // Deseleccionar otras pastillas
+                        document.querySelectorAll('.slot-hora-btn').forEach(b => {
+                            b.classList.remove('activo');
+                        });
+
+                        // Seleccionar actual en terracota
+                        btnHora.classList.add('activo');
+
+                        horaElegidaStr = `${hLimpia}:00`;
+                        document.getElementById('horaSeleccionada').value = horaElegidaStr;
+                        document.getElementById('btnConfirmarTurno').disabled = false;
+                    });
+                }
 
                 if (hora < 13) {
                     contManana.appendChild(btnHora);
@@ -427,7 +506,7 @@
                     showCancelButton: true,
                     confirmButtonText: 'Sí, agendar turno',
                     cancelButtonText: 'Revisar datos',
-                    confirmButtonColor: '#0d6efd',
+                    confirmButtonColor: '#a05a42',
                     cancelButtonColor: '#6c757d',
                     reverseButtons: true
                 }).then((result) => {
@@ -435,6 +514,31 @@
                         document.getElementById('formReserva').submit();
                     }
                 });
+            });
+        }
+
+        // Detección de mensajes de error devueltos por el backend
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('error') === 'mismo_especialista_dia') {
+            Swal.fire({
+                title: 'Especialista ya asignado',
+                text: 'Ya tenés un turno agendado con este especialista para esa fecha. No es posible agendar dos veces con el mismo especialista el mismo día.',
+                icon: 'warning',
+                confirmButtonColor: '#a05a42'
+            });
+        } else if (urlParams.get('error') === 'turno_duplicado') {
+            Swal.fire({
+                title: 'Horario no disponible',
+                text: 'No podés agendar otro servicio el mismo día al mismo horario.',
+                icon: 'warning',
+                confirmButtonColor: '#a05a42'
+            });
+        } else if (urlParams.get('error') === 'horario_ocupado') {
+            Swal.fire({
+                title: 'Horario no disponible',
+                text: 'El especialista ya tiene un turno reservado en ese horario por otro cliente.',
+                icon: 'info',
+                confirmButtonColor: '#a05a42'
             });
         }
 

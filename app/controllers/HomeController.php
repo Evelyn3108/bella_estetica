@@ -7,6 +7,7 @@ use \Response;
 use \DataBase;
 use app\models\UserModel;
 use app\models\ServiciosModel;
+use app\models\TurnosModel;
 
 
 class HomeController extends Controller
@@ -101,12 +102,45 @@ class HomeController extends Controller
             exit;
         }
 
+        // Obtener ID del usuario logueado
+        $id_usuario = $_SESSION['USER']['id_usuario'] 
+                   ?? $_SESSION['id_usuario'] 
+                   ?? $_SESSION['USER']['id'] 
+                   ?? null;
+
+        if (!$id_usuario && !empty($_SESSION['USER']['mail'])) {
+            $u = UserModel::findEmail($_SESSION['USER']['mail']);
+            if (is_array($u) && isset($u[0])) $u = $u[0];
+            $id_usuario = is_object($u) ? ($u->id ?? null) : ($u['id'] ?? null);
+        }
+        if (!$id_usuario && !empty($_SESSION['USER']['email'])) {
+            $u = UserModel::findEmail($_SESSION['USER']['email']);
+            if (is_array($u) && isset($u[0])) $u = $u[0];
+            $id_usuario = is_object($u) ? ($u->id ?? null) : ($u['id'] ?? null);
+        }
+
+        // Turnos activos agendados por este cliente
+        $turnosUsuario = [];
+        if ($id_usuario) {
+            $turnosUsuario = TurnosModel::obtenerTurnosActivos($id_usuario);
+        }
+
+        // Turnos ocupados por el especialista asignado a este servicio
+        $arrServ = is_object($servicio) ? (array)$servicio : ($servicio ?? []);
+        $idEspecialista = $arrServ['id_especialista'] ?? 0;
+        $turnosOcupadosEsp = [];
+        if ($idEspecialista) {
+            $turnosOcupadosEsp = TurnosModel::obtenerTurnosOcupadosEspecialista($idEspecialista);
+        }
+
         $nombre_de_archivoDeVista = 'detalleServicios';
         $parametros_de_vista = [
-            "head"      => SiteController::head(),
-            "footer"    => SiteController::footer(),
-            "ruta"      => self::$path,
-            "servicio"  => $servicio
+            "head"              => SiteController::head(),
+            "footer"            => SiteController::footer(),
+            "ruta"              => self::$path,
+            "servicio"          => $servicio,
+            "turnosUsuario"     => $turnosUsuario,
+            "turnosOcupadosEsp" => $turnosOcupadosEsp
         ];
 
         Response::render($this->viewDir(__NAMESPACE__), $nombre_de_archivoDeVista, $parametros_de_vista);

@@ -1,8 +1,0 @@
-[33mcommit da1770beb847c8394112037df4a62e7a8a2cb009[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
-Author: Evelyn3108 <evelynfranco31.08@gmial.com>
-Date:   Mon Nov 9 00:33:46 2026 -0300
-
-    eliminacion y arreglo de botones nav
-
- delete mode 100644 app/controllers/ClientesController.php
- delete mode 100644 app/controllers/SiteController.php

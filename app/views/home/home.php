@@ -6,13 +6,13 @@
     <title>Bella Estética - Centro de Cuidado & Bienestar</title>
     
     <!-- Enlace a estilos -->
-    <link rel="stylesheet" href="css/estilos.css?v=12">
+    <link rel="stylesheet" href="css/estilos.css?v=13">
 </head>
 <body class="d-flex flex-column min-vh-100">
 
     <!--  NAVBAR -->
     <nav class="navbar navbar-expand-lg bg-white shadow-sm py-3 mb-4">
-        <div class="container" style="max-width: 1200px;">
+        <div class="container-fluid px-4 px-lg-5">
             <a class="navbar-brand d-flex align-items-center text-dark text-decoration-none gap-2" href="home">
                 <i class="bi bi-flower1 fs-2" style="color: var(--terracota-principal) !important;"></i>
                 <div class="d-flex flex-column justify-content-center">
@@ -49,10 +49,10 @@
         </div>
     </nav>
 
-    <!-- 2. CONTENIDO PRINCIPAL -->
-    <main class="container my-2 flex-grow-1" style="max-width: 1200px;">
+    <!-- 2. CONTENIDO PRINCIPAL FLUIDO -->
+    <main class="container-fluid px-4 px-lg-5 my-2 flex-grow-1">
         
-        <!-- TARJETA HERO PRINCIPAL (SIN FILA DE BENEFICIOS) -->
+        <!-- TARJETA HERO PRINCIPAL -->
         <div class="landing-canvas-card mb-5">
             <div class="row align-items-center g-4">
                 
@@ -64,19 +64,19 @@
                         <span style="color: var(--terracota-principal);">en las mejores manos</span>
                     </h1>
                     
-                    <p class="text-muted lead fs-6 mb-4" style="line-height: 1.7;">
+                    <p class="text-muted lead fs-6 mb-4" style="line-height: 1.7; max-width: 580px;">
                         Espacio dedicado a la estética integral. Tratamientos faciales, corporales y masajes terapéuticos brindados por profesionales en consultorios privados.
                     </p>
                     
                    <div>
-                        <a href="account/login" class="btn-solid-terracota py-3 px-4 fs-6 shadow-sm">
+                        <a href="account/registro" class="btn-solid-terracota py-3 px-4 fs-6 shadow-sm">
                             <i class="bi bi-calendar-check me-2"></i> Agendar Turno
                         </a>
                     </div>
                 </div>
 
                 <!-- Columna Derecha: Imagen fotográfica armónica -->
-                <div class="col-lg-6 text-center">
+                <div class="col-lg-6 text-center d-flex justify-content-center justify-content-lg-end">
                     <div class="hero-image-frame">
                         <img src="img/home_facial.jpg" alt="Tratamiento de estética profesional">
                     </div>
@@ -163,7 +163,7 @@
 
     <!-- 3. FOOTER OSCURO -->
     <footer class="footer-canvas py-5 mt-auto" id="contacto">
-        <div class="container py-2" style="max-width: 1200px;">
+        <div class="container-fluid px-4 px-lg-5 py-2">
             <div class="row g-4 justify-content-between">
                 
                 <div class="col-lg-4">

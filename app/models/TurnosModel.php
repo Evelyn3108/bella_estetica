@@ -53,7 +53,7 @@ class TurnosModel extends Model
                 ':hora'            => $hora
             ];
 
-            return \DataBase::query($sql, $params);
+            return \DataBase::execute($sql, $params);
         } catch (\Throwable $e) {
             return false;
         }
@@ -65,7 +65,7 @@ class TurnosModel extends Model
     public static function obtenerTurnosActivos($id_usuario)
     {
         try {
-            $sql = "SELECT t.id, t.fecha, t.hora, t.estado, 
+            $sql = "SELECT t.id, t.fecha, t.hora, t.estado, t.id_especialista,
                            COALESCE(s.nombre_servicio, 'Servicio General') AS nombre_servicio, 
                            COALESCE(s.consultorio, 'Consultorio 1') AS consultorio, 
                            COALESCE(s.duracion, 45) AS duracion, 
@@ -171,6 +171,59 @@ class TurnosModel extends Model
             return !empty($res);
         } catch (\Throwable $e) {
             return false;
+        }
+    }
+
+    /**
+     * Verifica si el usuario ya tiene un turno con este especialista en la fecha especificada
+     */
+    public static function tieneTurnoConEspecialistaEnFecha($id_usuario, $id_especialista, $fecha)
+    {
+        try {
+            $sql = "SELECT id FROM turnos 
+                    WHERE id_usuario = :id_usuario 
+                      AND id_especialista = :id_especialista 
+                      AND fecha = :fecha 
+                      AND (LOWER(estado) IN ('pendiente', 'confirmado') OR estado IS NULL)
+                    LIMIT 1";
+
+            $params = [
+                ':id_usuario'      => $id_usuario,
+                ':id_especialista' => $id_especialista,
+                ':fecha'           => $fecha
+            ];
+
+            $res = \DataBase::getRecord($sql, $params);
+            if (is_array($res) && isset($res['resultado'])) {
+                $res = $res['resultado'];
+            }
+
+            return !empty($res);
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Obtiene los turnos reservados que tiene un especialista para fechas futuras
+     */
+    public static function obtenerTurnosOcupadosEspecialista($id_especialista)
+    {
+        try {
+            $sql = "SELECT fecha, TIME_FORMAT(hora, '%H:%i') AS hora 
+                    FROM turnos 
+                    WHERE id_especialista = :id_especialista 
+                      AND fecha >= CURDATE() 
+                      AND (LOWER(estado) IN ('pendiente', 'confirmado') OR estado IS NULL)";
+
+            $res = \DataBase::getRecords($sql, [':id_especialista' => $id_especialista]);
+            if (is_array($res) && isset($res['resultado'])) {
+                $res = $res['resultado'];
+            }
+
+            return is_array($res) ? $res : [];
+        } catch (\Throwable $e) {
+            return [];
         }
     }
 
