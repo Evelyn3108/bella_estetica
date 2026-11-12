@@ -162,69 +162,36 @@ class ServiciosModel extends Model
     public static function actualizarServicio($id, $datos, $id_admin = 1)
     {
         try {
-            $sql = "UPDATE servicios 
-                    SET id_especialista    = :id_especialista,
+            $sql = "UPDATE servicios SET
                         nombre_servicio    = :nombre_servicio,
+                        id_especialista    = :id_especialista,
                         duracion           = :duracion,
                         precio             = :precio,
                         consultorio        = :consultorio,
                         dias_atencion      = :dias_atencion,
                         hora_inicio        = :hora_inicio,
                         hora_fin           = :hora_fin,
-                        fecha_desde        = :fecha_desde,
-                        fecha_hasta        = :fecha_hasta,
                         modificado_por     = :id_admin,
                         fecha_modificacion = NOW()
                     WHERE id = :id";
 
-            return \DataBase::query($sql, [
-                ':id_especialista' => $datos['id_especialista'],
+            \DataBase::query($sql, [
+                ':id'              => $id,
                 ':nombre_servicio' => $datos['nombre_servicio'],
+                ':id_especialista' => $datos['id_especialista'],
                 ':duracion'        => $datos['duracion'],
                 ':precio'          => $datos['precio'],
                 ':consultorio'     => $datos['consultorio'],
-                ':dias_atencion'   => $datos['dias_atencion'],
+                ':dias_atencion'   => $datos['dias_atencion'] ?? '1,2,3,4,5,6',
                 ':hora_inicio'     => $datos['hora_inicio'],
                 ':hora_fin'        => $datos['hora_fin'],
-                ':fecha_desde'     => $datos['fecha_desde'],
-                ':fecha_hasta'     => $datos['fecha_hasta'],
-                ':id_admin'        => $id_admin,
-                ':id'              => $id
+                ':id_admin'        => $id_admin
             ]);
+            return true;
         } catch (\Throwable $e) {
-            // Respaldo sin la columna dias_atencion
-            try {
-                $sqlSinDias = "UPDATE servicios 
-                               SET id_especialista    = :id_especialista,
-                                   nombre_servicio    = :nombre_servicio,
-                                   duracion           = :duracion,
-                                   precio             = :precio,
-                                   consultorio        = :consultorio,
-                                   hora_inicio        = :hora_inicio,
-                                   hora_fin           = :hora_fin,
-                                   fecha_desde        = :fecha_desde,
-                                   fecha_hasta        = :fecha_hasta,
-                                   modificado_por     = :id_admin,
-                                   fecha_modificacion = NOW()
-                               WHERE id = :id";
-                return \DataBase::query($sqlSinDias, [
-                    ':id_especialista' => $datos['id_especialista'],
-                    ':nombre_servicio' => $datos['nombre_servicio'],
-                    ':duracion'        => $datos['duracion'],
-                    ':precio'          => $datos['precio'],
-                    ':consultorio'     => $datos['consultorio'],
-                    ':hora_inicio'     => $datos['hora_inicio'],
-                    ':hora_fin'        => $datos['hora_fin'],
-                    ':fecha_desde'     => $datos['fecha_desde'],
-                    ':fecha_hasta'     => $datos['fecha_hasta'],
-                    ':id_admin'        => $id_admin,
-                    ':id'              => $id
-                ]);
-            } catch (\Throwable $ex) {
-                return false;
-            }
+            return false;
         }
-    }            
+    }           
 
    
 }

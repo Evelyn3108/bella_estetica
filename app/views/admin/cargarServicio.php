@@ -209,11 +209,21 @@
                             <i class="bi bi-clock-history me-2"></i> 2. Disponibilidad y Horarios de Atención
                         </h6>
 
-                        <!-- Días de Atención Semanal -->
+                       <!-- Días de Atención Semanal -->
                         <div class="mb-4 text-start">
-                            <label class="form-label small fw-bold text-dark d-block mb-2">Días de Atención Semanal *</label>
-                            <div class="d-flex flex-wrap gap-4 p-3 rounded-3" style="background-color: var(--caja-suave); border: 1px solid var(--borde-suave) !important;">
+                            <label class="form-label small fw-bold text-dark">
+                                <i class="bi bi-calendar-week me-1" style="color: var(--terracota-principal, #a05a42);"></i> Días de Atención Semanal *
+                            </label>
+                            <div class="d-flex flex-wrap gap-3 p-3 bg-light rounded-3 border" style="border-color: #e5dede;">
                                 <?php 
+                                    // Convertimos $servicio a array de forma segura si viene como objeto o nulo
+                                    $arrSrv = is_object($servicio) ? (array)$servicio : ($servicio ?? []);
+
+                                    $diasTexto = $arrSrv['dias_atencion'] ?? '1,2,3,4,5,6';
+                                    $diasGuardados = !empty($diasTexto) 
+                                        ? explode(',', (string)$diasTexto) 
+                                        : ['1', '2', '3', '4', '5', '6'];
+                                    
                                     $diasSemana = [
                                         '1' => 'Lunes',
                                         '2' => 'Martes',
@@ -222,16 +232,19 @@
                                         '5' => 'Viernes',
                                         '6' => 'Sábado'
                                     ];
+
                                     foreach ($diasSemana as $num => $nombreDia):
+                                        $marcado = in_array((string)$num, $diasGuardados) ? 'checked' : '';
                                 ?>
-                                    <div class="form-check">
-                                        <input class="form-check-input check-terracota" type="checkbox" name="dias[]" value="<?= $num; ?>" id="dia_<?= $num; ?>" <?= in_array($num, $diasActuales) ? 'checked' : ''; ?>>
+                                    <div class="form-check me-2">
+                                        <input class="form-check-input" type="checkbox" name="dias[]" value="<?= $num; ?>" id="dia_<?= $num; ?>" <?= $marcado; ?>>
                                         <label class="form-check-label small fw-semibold text-dark" for="dia_<?= $num; ?>">
                                             <?= $nombreDia; ?>
                                         </label>
                                     </div>
                                 <?php endforeach; ?>
                             </div>
+                            <small class="text-muted">Desmarcá los días en los que el especialista no atienda este tratamiento.</small>
                         </div>
 
                         <!-- Horarios Puntuales de Atención -->

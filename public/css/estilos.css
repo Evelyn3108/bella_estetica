@@ -334,3 +334,96 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
     background-color: var(--terracota-hover, #884833);
     color: #fff;
 }
+
+/* ==========================================================================
+   SELECTOR DE TURNOS HORIZONTAL (ESTILO AGENDAPRO)
+   ========================================================================== */
+
+/* Carrusel de días */
+.carrusel-dias-wrap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+}
+
+.dia-item {
+    min-width: 48px;
+    text-align: center;
+    cursor: pointer;
+    padding: 6px 4px;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.dia-item .dia-nom {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: capitalize;
+    margin-bottom: 4px;
+    color: var(--texto-muted, #6e6561);
+}
+
+.dia-item .dia-num {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    border-radius: 50%;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--texto-oscuro, #2d2522);
+    transition: all 0.2s ease;
+}
+
+/* Día seleccionado en terracota */
+.dia-item.seleccionado .dia-num {
+    background-color: var(--terracota-principal, #a05a42) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 10px rgba(160, 90, 66, 0.35);
+}
+
+.dia-item.seleccionado .dia-nom {
+    color: var(--terracota-principal, #a05a42) !important;
+    font-weight: 700;
+}
+
+/* Día no laboral o pasado */
+.dia-item.deshabilitado {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.dia-item.deshabilitado .dia-num {
+    color: #a8a29e;
+}
+
+/* Pastillas de horarios (Chips) */
+.btn-hora-slot {
+    border: 1px solid var(--borde-suave, #ebdcd5);
+    background-color: #ffffff;
+    color: var(--texto-oscuro, #2d2522);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.btn-hora-slot:hover {
+    border-color: var(--terracota-principal, #a05a42);
+    color: var(--terracota-principal, #a05a42);
+    background-color: var(--caja-suave, #faeee9);
+}
+
+.btn-hora-slot.seleccionado {
+    background-color: var(--terracota-principal, #a05a42) !important;
+    border-color: var(--terracota-principal, #a05a42) !important;
+    color: #ffffff !important;
+    box-shadow: 0 3px 8px rgba(160, 90, 66, 0.25);
+}

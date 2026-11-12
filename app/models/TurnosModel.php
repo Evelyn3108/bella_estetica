@@ -36,6 +36,9 @@ class TurnosModel extends Model
     /**
      * Inserta un turno en la base de datos
      */
+    /**
+     * Inserta el turno en la tabla turnos
+     */
     public static function insertarTurno($id_usuario, $id_servicio, $id_especialista, $fecha, $hora)
     {
         try {
@@ -50,35 +53,39 @@ class TurnosModel extends Model
                 ':hora'            => $hora
             ];
 
-            DataBase::query($sql, $params);
-            return true;
+            return \DataBase::query($sql, $params);
         } catch (\Throwable $e) {
             return false;
         }
     }
 
     /**
-     * Obtiene los turnos activos (pendientes o confirmados) del cliente
+     * Trae los turnos del cliente para mostrarlos en su perfil
      */
     public static function obtenerTurnosActivos($id_usuario)
     {
         try {
             $sql = "SELECT t.id, t.fecha, t.hora, t.estado, 
-                           COALESCE(s.nombre_servicio, 'Servicio Estético') AS nombre_servicio, 
-                           COALESCE(s.consultorio, 'Consultorio 1') AS consultorio,
+                           COALESCE(s.nombre_servicio, 'Servicio General') AS nombre_servicio, 
+                           COALESCE(s.consultorio, 'Consultorio 1') AS consultorio, 
+                           COALESCE(s.duracion, 45) AS duracion, 
+                           COALESCE(s.precio, 0) AS precio,
                            COALESCE(e.nombre, '') AS esp_nombre, 
                            COALESCE(e.apellido, '') AS esp_apellido
                     FROM turnos t
                     LEFT JOIN servicios s ON t.id_servicio = s.id
                     LEFT JOIN especialista e ON t.id_especialista = e.id
                     WHERE t.id_usuario = :id_usuario 
-                      AND (t.estado = 'pendiente' OR t.estado = 'confirmado' OR t.estado IS NULL)
+                      AND (LOWER(t.estado) = 'pendiente' OR LOWER(t.estado) = 'confirmado' OR t.estado IS NULL)
                     ORDER BY t.fecha ASC, t.hora ASC";
 
-            $res = DataBase::getRecords($sql, [':id_usuario' => $id_usuario]);
+            $res = \DataBase::getRecords($sql, [':id_usuario' => $id_usuario]);
+
+            // Si la cátedra encapsula la respuesta en ['resultado']
             if (is_array($res) && isset($res['resultado'])) {
                 $res = $res['resultado'];
             }
+
             return is_array($res) ? $res : [];
         } catch (\Throwable $e) {
             return [];

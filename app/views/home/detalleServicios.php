@@ -17,7 +17,7 @@
     <nav class="navbar navbar-expand-lg bg-white shadow-sm sticky-top py-3">
         <div class="container">
            <a class="navbar-brand d-flex align-items-center text-dark text-decoration-none gap-2" href="home">
-                <i class="bi bi-flower1 fs-2" style="color: var(--terracota-principal) !important;"></i>
+                <i class="bi bi-flower1 fs-2" style="color: var(--terracota-principal, #a05a42) !important;"></i>
                 <div class="d-flex flex-column justify-content-center">
                     <span class="brand-title">BELLA ESTÉTICA</span>
                     <small class="brand-subtitle text-uppercase">Salud & Bienestar</small>
@@ -36,6 +36,7 @@
                     <li class="nav-item">
                         <a class="nav-link text-secondary fw-semibold d-flex align-items-center gap-1" href="<?= $ruta; ?>user/perfilUsuario">
                             <i class="bi bi-person-circle"></i> Mi Perfil
+                        </a>
                     </li>
                     <li class="nav-item ms-lg-2">
                         <a href="../account/salir" 
@@ -47,13 +48,34 @@
                         </a>
                     </li>
                 </ul>
-                </ul>
             </div>
         </div>
     </nav>
-<?php
+
+    <?php
+        $arrServ = is_object($servicio) ? (array)$servicio : ($servicio ?? []);
+        
+        // Datos del servicio e identificación exacta
+        $idServicio     = $arrServ['id'] ?? ($_GET['id'] ?? 1);
+        $idEspecialista = $arrServ['id_especialista'] ?? 1;
+        $nombreServicio = $arrServ['nombre_servicio'] ?? 'Servicio';
+        $duracionMin    = $arrServ['duracion'] ?? '45';
+        $precioServicio = (float)($arrServ['precio'] ?? 0);
+        $consultorio    = $arrServ['consultorio'] ?? 'Consultorio 1';
+        $diasAtencion   = !empty($arrServ['dias_atencion']) ? $arrServ['dias_atencion'] : '1,2,3,4,5,6';
+
+        // Horarios configurados por el administrador
+        $cadenaHorarios = !empty($arrServ['hora_inicio']) ? $arrServ['hora_inicio'] : '09:30,10:30,11:30,12:30,14:00,15:00';
+        $listaHorarios  = explode(',', $cadenaHorarios);
+
+        // Especialista a cargo
+        $nombreEsp = trim(($arrServ['esp_nombre'] ?? $arrServ['nombre_especialista'] ?? '') . ' ' . ($arrServ['esp_apellido'] ?? $arrServ['apellido_especialista'] ?? ''));
+        if (empty($nombreEsp)) {
+            $nombreEsp = 'Especialista Asignado';
+        }
+
         // Detección automática de la imagen del tratamiento según su nombre
-        $nombreMin = strtolower($servicio->nombre_servicio ?? '');
+        $nombreMin = strtolower($nombreServicio);
         $foto = 'limpiezaFacial.jpg';
 
         if (strpos($nombreMin, 'manicur') !== false || strpos($nombreMin, 'mano') !== false || strpos($nombreMin, 'uña') !== false) {
@@ -65,7 +87,7 @@
         }
     ?>
 
-    <!-- CONTENEDOR PRINCIPAL: Split Screen simétrico -->
+    <!-- CONTENEDOR PRINCIPAL -->
     <main class="container my-4 my-lg-5">
         <div class="row g-0 rounded-4 overflow-hidden shadow-lg border" style="min-height: 580px; background-color: #ffffff;">
             
@@ -73,36 +95,32 @@
             <div class="col-lg-6 position-relative text-white p-4 p-md-5 d-flex flex-column justify-content-between" 
                  style="background: linear-gradient(180deg, rgba(30, 20, 20, 0.45) 0%, rgba(30, 20, 20, 0.88) 100%), url('<?= $ruta; ?>img/<?= $foto; ?>') center/cover no-repeat;">
                 
-                <!-- Encabezado superior izquierdo -->
                 <div class="d-flex justify-content-between align-items-center">
                     <span class="badge rounded-pill px-3 py-2 text-uppercase" style="background-color: rgba(255, 255, 255, 0.2); backdrop-filter: blur(6px); font-size: 0.75rem; letter-spacing: 0.05em;">
                         Tratamiento Exclusivo
                     </span>
                     <span class="small" style="background-color: rgba(0,0,0,0.3); padding: 5px 12px; border-radius: 20px;">
-                        <i class="bi bi-clock me-1"></i> <?= htmlspecialchars($servicio->duracion ?? '45'); ?> min
+                        <i class="bi bi-clock me-1"></i> <?= htmlspecialchars($duracionMin); ?> min
                     </span>
                 </div>
 
-                <!-- Bloque central e inferior de información -->
                 <div class="my-4">
                     <h1 class="display-6 fw-bold mb-3" style="text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
-                        <?= htmlspecialchars($servicio->nombre_servicio ?? 'Servicio'); ?>
+                        <?= htmlspecialchars($nombreServicio); ?>
                     </h1>
                     
                     <p class="small text-light mb-4" style="line-height: 1.7; max-width: 90%; opacity: 0.95;">
-                        <?= htmlspecialchars(!empty($servicio->descripcion) ? $servicio->descripcion : 'Belleza y cuidado de uñas, tratamiento de cutículas y esmaltado semipermanente de larga duración.'); ?>
+                        <?= htmlspecialchars(!empty($arrServ['descripcion']) ? $arrServ['descripcion'] : 'Belleza y cuidado integral con productos de primera calidad y atención personalizada.'); ?>
                     </p>
 
-                    <!-- Valor del tratamiento -->
                     <div class="p-3 rounded-3" style="background-color: rgba(255, 255, 255, 0.12); backdrop-filter: blur(8px); display: inline-block;">
                         <span class="small d-block text-white-50 text-uppercase" style="font-size: 0.7rem; font-weight: 600;">Inversión del servicio</span>
                         <strong class="fs-3 text-white">
-                            $<?= number_format($servicio->precio ?? 0, 2, ',', '.'); ?>
+                            $<?= number_format($precioServicio, 2, ',', '.'); ?>
                         </strong>
                     </div>
                 </div>
 
-                <!-- Enlace inferior para cambiar de tratamiento -->
                 <div>
                     <a href="<?= $ruta; ?>home/homeServicios" class="text-white text-decoration-none small d-inline-flex align-items-center gap-2" style="opacity: 0.85;">
                         <i class="bi bi-arrow-left"></i> Volver al catálogo de servicios
@@ -110,111 +128,100 @@
                 </div>
             </div>
 
-            <!-- MITAD DERECHA: Datos de atención y formulario de reserva -->
-                <div class="col-md-6 p-4 p-lg-5 d-flex flex-column justify-content-between bg-white">
-                    <div>
-                        <!-- Encabezado con Badge -->
-                        <div class="mb-4 text-start">
-                            <span class="badge rounded-pill px-3 py-1 mb-2" style="background-color: #f3e5d8; color: #a05a42; font-size: 0.75rem; font-weight: 600;">
-                                Agenda Digital
-                            </span>
-                            <h3 class="fw-bold mb-1" style="color: #2b2320;">Reservá tu Turno</h3>
-                            <p class="text-muted small mb-0">Completá la fecha y horario disponible para confirmar tu cita.</p>
-                        </div>
-
-                        <!-- Recuadros de Especialista y Consultorio asignados -->
-                        <div class="row g-2 mb-4">
-                            <div class="col-6">
-                                <div class="p-3 rounded-3 bg-white border text-start shadow-xs">
-                                    <span class="text-muted d-block small mb-1" style="font-size: 0.75rem;">Especialista a cargo:</span>
-                                    <strong class="small text-dark d-flex align-items-center">
-                                        <i class="bi bi-person-fill me-1" style="color: #a05a42;"></i>
-                                        <?= htmlspecialchars(trim(($servicio->esp_nombre ?? $servicio->nombre_especialista ?? '') . ' ' . ($servicio->esp_apellido ?? $servicio->apellido_especialista ?? 'Valentina Gómez'))); ?>
-                                    </strong>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="p-3 rounded-3 bg-white border text-start shadow-xs">
-                                    <span class="text-muted d-block small mb-1" style="font-size: 0.75rem;">Consultorio asignado:</span>
-                                    <strong class="small text-dark d-flex align-items-center">
-                                        <i class="bi bi-geo-alt me-1" style="color: #a05a42;"></i>
-                                        <?= htmlspecialchars($servicio->consultorio ?? 'Consultorio 4'); ?>
-                                    </strong>
-                                </div>
-                            </div>
-                        </div>
-
-                       <!-- Formulario de Reserva con validación de domingos -->
-                        <form id="formReserva" action="<?= $ruta; ?>turnos/reservar" method="POST" onsubmit="return validarYConfirmar();">
-                            <input type="hidden" name="id_servicio" value="<?= htmlspecialchars($servicio->id ?? '4'); ?>">
-                            <input type="hidden" name="id_especialista" value="<?= htmlspecialchars($servicio->id_especialista ?? '4'); ?>">
-
-                           <!-- MODAL EMERGENTE EN PANTALLA -->
-                            <div class="modal fade" id="modalErrorTurno" tabindex="-1" aria-labelledby="modalErrorTurnoLabel" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
-                                    <div class="modal-content border-0 rounded-4 shadow-lg text-center p-3">
-                                        <div class="modal-body pt-4 pb-2">
-                                            <!-- Icono circular en tono terracota suave -->
-                                            <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" 
-                                                style="width: 65px; height: 65px; background-color: #fdf2f2; color: var(--terracota-principal, #a05a42);">
-                                                <i class="bi bi-calendar-x fs-1"></i>
-                                            </div>
-                                            
-                                            <h5 class="fw-bold text-dark mb-2" id="modalErrorTurnoLabel">Horario no disponible</h5>
-                                            <p class="text-muted small mb-4" id="textoMensajeError">
-                                                <?= !empty($error) ? htmlspecialchars($error) : ''; ?>
-                                            </p>
-
-                                            <button type="button" class="btn text-white fw-semibold px-4 py-2 w-100 rounded-3 shadow-sm" 
-                                                    style="background-color: var(--terracota-principal, #a05a42);" 
-                                                    data-bs-dismiss="modal">
-                                                Entendido, elegir otro horario
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- 1. Seleccioná el Día -->
-                            <div class="mb-3 text-start">
-                                <label for="fecha" class="form-label small fw-bold text-dark">
-                                    <i class="bi bi-calendar3 me-1" style="color: #a05a42;"></i> 1. Seleccioná el Día *
-                                </label>
-                                <input type="date" id="fecha" name="fecha" class="form-control py-2 shadow-none" min="<?= date('Y-m-d'); ?>" required onchange="comprobarDomingo(this)">
-                                <div id="alertaDomingo" class="text-danger small mt-1 d-none fw-semibold">
-                                    <i class="bi bi-exclamation-circle me-1"></i> Los domingos no atendemos. Por favor elegí de lunes a sábados.
-                                </div>
-                            </div>
-
-                            <!-- 2. Horarios Disponibles -->
-                            <div class="mb-4 text-start">
-                                <label for="hora" class="form-label small fw-bold text-dark">
-                                    <i class="bi bi-clock me-1" style="color: #a05a42;"></i> 2. Horarios Disponibles *
-                                </label>
-                                <select id="hora" name="hora" class="form-select py-2 shadow-none" required>
-                                    <option value="" selected disabled>-- Elegí una franja horaria --</option>
-                                    <option value="09:00:00">09:00 hs</option>
-                                    <option value="10:00:00">10:00 hs</option>
-                                    <option value="11:00:00">11:00 hs</option>
-                                    <option value="14:00:00">14:00 hs</option>
-                                    <option value="15:00:00">15:00 hs</option>
-                                    <option value="16:00:00">16:00 hs</option>
-                                    <option value="17:00:00">17:00 hs</option>
-                                </select>
-                            </div>
-
-                            <button type="button" id="btnConfirmarTurno" class="btn text-white w-100 py-3 fw-bold rounded-3 shadow-sm" style="background-color: var(--terracota-principal, #a05a42);">
-                             <i class="bi bi-calendar-check me-2"></i> Confirmar y Agendar Turno
-                            </button>
-
-                        </form>
+            <!-- MITAD DERECHA: Formulario de reserva -->
+            <div class="col-md-6 p-4 p-lg-5 d-flex flex-column justify-content-between bg-white">
+                <div>
+                    <div class="mb-4 text-start">
+                        <span class="badge rounded-pill px-3 py-1 mb-2" style="background-color: #f3e5d8; color: #a05a42; font-size: 0.75rem; font-weight: 600;">
+                            Agenda Digital
+                        </span>
+                        <h3 class="fw-bold mb-1" style="color: #2b2320;">Reservá tu Turno</h3>
+                        <p class="text-muted small mb-0">Completá la fecha y horario disponible para confirmar tu cita.</p>
                     </div>
 
-                    <!-- Pie de la tarjeta -->
-                    <div class="text-center text-muted small mt-4 pt-3 border-top">
-                        <i class="bi bi-shield-check text-success me-1"></i> El turno quedará registrado a tu nombre de forma inmediata.
+                    <div class="row g-2 mb-4">
+                        <div class="col-6">
+                            <div class="p-3 rounded-3 bg-white border text-start shadow-xs">
+                                <span class="text-muted d-block small mb-1" style="font-size: 0.75rem;">Especialista a cargo:</span>
+                                <strong class="small text-dark d-flex align-items-center">
+                                    <i class="bi bi-person-fill me-1" style="color: #a05a42;"></i>
+                                    <?= htmlspecialchars($nombreEsp); ?>
+                                </strong>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 rounded-3 bg-white border text-start shadow-xs">
+                                <span class="text-muted d-block small mb-1" style="font-size: 0.75rem;">Consultorio asignado:</span>
+                                <strong class="small text-dark d-flex align-items-center">
+                                    <i class="bi bi-geo-alt me-1" style="color: #a05a42;"></i>
+                                    <?= htmlspecialchars($consultorio); ?>
+                                </strong>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- Formulario de Reserva -->
+                 <!-- Formulario de Reserva (100% Bootstrap 5) -->
+                    <form id="formReserva" action="<?= $ruta; ?>turnos/reservar" method="POST">
+                        <input type="hidden" name="id_servicio" value="<?= htmlspecialchars($idServicio); ?>">
+                        <input type="hidden" name="id_especialista" value="<?= htmlspecialchars($idEspecialista); ?>">
+                        <input type="hidden" name="fecha" id="fechaSeleccionada" required>
+                        <input type="hidden" name="hora" id="horaSeleccionada" required>
+
+                        <!-- Encabezado de Mes y Navegación de Semanas -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0 text-capitalize text-dark" id="labelMesActual"></h5>
+                            <div class="d-flex gap-1 align-items-center">
+                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-2 shadow-none" id="btnSemanaAnt" title="Semana anterior">
+                                    <i class="bi bi-chevron-left"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-2 shadow-none" id="btnSemanaSig" title="Semana siguiente">
+                                    <i class="bi bi-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- TIRA HORIZONTAL DE DÍAS (Fuerza fila estricta con flex-nowrap) -->
+                        <div class="d-flex flex-row flex-nowrap justify-content-between align-items-center gap-1 mb-4 pb-3 border-bottom overflow-x-auto" id="carruselDias">
+                            <!-- Renderizado dinámicamente por JS -->
+                        </div>
+
+                        <!-- SECCIÓN HORARIOS DISPONIBLES -->
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold text-dark d-flex align-items-center gap-1 mb-2">
+                                <i class="bi bi-clock text-secondary"></i> Horarios Disponibles
+                            </label>
+
+                            <!-- Bloque Mañana -->
+                            <div id="seccionManana" class="mb-3 d-none">
+                                <span class="text-muted small fw-semibold d-block mb-2 text-uppercase" style="font-size: 0.72rem;">Mañana</span>
+                                <div class="d-flex flex-wrap gap-2" id="contenedorHorasManana"></div>
+                            </div>
+
+                            <!-- Bloque Tarde -->
+                            <div id="seccionTarde" class="mb-3 d-none">
+                                <span class="text-muted small fw-semibold d-block mb-2 text-uppercase" style="font-size: 0.72rem;">Tarde</span>
+                                <div class="d-flex flex-wrap gap-2" id="contenedorHorasTarde"></div>
+                            </div>
+
+                            <!-- Mensaje Inicial -->
+                            <div id="mensajeSinDia" class="text-muted small py-3 text-center bg-light rounded-3 border">
+                                <i class="bi bi-hand-index me-1"></i> Seleccioná un día hábil arriba para ver los horarios disponibles.
+                            </div>
+                        </div>
+
+                        <!-- Botón Confirmar Turno -->
+                        <button type="button" id="btnConfirmarTurno" class="btn btn-primary w-100 py-3 fw-bold rounded-3 shadow-sm" disabled>
+                            <i class="bi bi-calendar-check me-2"></i> Confirmar y Agendar Turno
+                        </button>
+                    </form>
+
                 </div>
+
+                <div class="text-center text-muted small mt-4 pt-3 border-top">
+                    <i class="bi bi-shield-check text-success me-1"></i> El turno quedará registrado a tu nombre de forma inmediata.
+                </div>
+            </div>
 
         </div>
     </main>
@@ -229,127 +236,209 @@
         </div>
     </footer>
 
-    <!-- Bootstrap 5 JS Bundle -->
+    <!-- Bootstrap JS y SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Script para bloquear domingos y pedir confirmación -->
-    <script>
-        const inputFecha = document.getElementById('fecha');
-
-        // Si el usuario cambia la fecha, revisamos si es domingo
-        if (inputFecha) {
-            inputFecha.addEventListener('change', function() {
-                if (!this.value) return;
-                // Creamos la fecha en horario local
-                const partes = this.value.split('-');
-                const fechaElegida = new Date(partes[0], partes[1] - 1, partes[2]);
-                
-                // 0 = Domingo
-                if (fechaElegida.getDay() === 0) {
-                    alert('Los domingos la estética permanece cerrada. Por favor, elegí un día de lunes a sábado.');
-                    this.value = '';
-                }
-            });
-        }
-
-        // Validación final al enviar el formulario
-        function validarYConfirmar() {
-            const fechaVal = document.getElementById('fecha').value;
-            const horaVal = document.getElementById('hora').value;
-
-            if (!fechaVal || !horaVal) {
-                alert('Por favor seleccioná fecha y horario.');
-                return false;
-            }
-
-            const partes = fechaVal.split('-');
-            const fechaElegida = new Date(partes[0], partes[1] - 1, partes[2]);
-            if (fechaElegida.getDay() === 0) {
-                alert('Los domingos no atendemos. Seleccioná una fecha de lunes a sábado.');
-                return false;
-            }
-
-            return confirm('¿Confirmás la reserva de tu turno en la fecha y horario seleccionados?');
-        }
-    </script>
-    
- <!-- SweetAlert2 para mensajes emergentes estéticos -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // 1. ALERTA DEL SERVIDOR (Si el horario está ocupado o ya tiene turno)
-        <?php if (!empty($error)): ?>
-            Swal.fire({
-                icon: 'warning',
-                title: 'Horario no disponible',
-                text: '<?= addslashes($error); ?>',
-                confirmButtonText: 'Elegir otro horario',
-                confirmButtonColor: '#a05a42',
-                background: '#ffffff',
-                customClass: {
-                    popup: 'rounded-4 shadow-lg p-3',
-                    confirmButton: 'rounded-3 px-4 py-2 fw-semibold'
+        // Días de atención configurados en la base de datos (ej: [1, 3, 5, 6])
+        const diasPermitidos = [<?= !empty($diasAtencion) ? $diasAtencion : '1,3,5,6'; ?>];
+
+        // Franjas horarias configuradas para este servicio
+        const listaHoras = <?= json_encode(array_values(array_filter(array_map('trim', $listaHorarios ?? [])))); ?>;
+
+        let offsetDias = 0;
+        let diaElegidoStr = '';
+        let horaElegidaStr = '';
+
+        const nombresDiasCortos = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+        const nombresMeses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+        function renderizarCarrusel() {
+            const carrusel = document.getElementById('carruselDias');
+            if (!carrusel) return;
+            carrusel.innerHTML = '';
+
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+
+            const fechaBase = new Date();
+            fechaBase.setDate(hoy.getDate() + offsetDias);
+
+            const lblMes = document.getElementById('labelMesActual');
+            if (lblMes) {
+                lblMes.textContent = `${nombresMeses[fechaBase.getMonth()]} ${fechaBase.getFullYear()}`;
+            }
+
+            // Renderiza 7 días en fila horizontal
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(fechaBase);
+                d.setDate(fechaBase.getDate() + i);
+
+                const numDiaSemana = d.getDay(); // 0 = Dom, 1 = Lun, etc.
+                const fechaSql = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                
+                const esPasado = d < hoy;
+                const esDomingo = (numDiaSemana === 0);
+                const esAtencionValida = diasPermitidos.includes(numDiaSemana);
+                const estaDeshabilitado = esPasado || esDomingo || !esAtencionValida;
+                const estaSeleccionado = (diaElegidoStr === fechaSql && !estaDeshabilitado);
+
+                // Tarjeta de día (Bootstrap: d-flex flex-column align-items-center)
+                const itemDia = document.createElement('div');
+                itemDia.className = 'd-flex flex-column align-items-center text-center flex-fill p-1';
+
+                // Nombre día (Dom, Lun, Mar...)
+                const spanNom = document.createElement('span');
+                spanNom.className = `small fw-semibold text-capitalize mb-1 ${estaSeleccionado ? 'text-primary fw-bold' : (estaDeshabilitado ? 'text-muted opacity-50' : 'text-secondary')}`;
+                spanNom.style.fontSize = '0.75rem';
+                spanNom.textContent = nombresDiasCortos[numDiaSemana];
+
+                // Botón/Círculo del número
+                const btnNum = document.createElement('button');
+                btnNum.type = 'button';
+                btnNum.textContent = d.getDate();
+
+                if (estaDeshabilitado) {
+                    // Clases nativas de Bootstrap para botones inactivos
+                    btnNum.className = 'btn btn-light rounded-circle fw-semibold text-muted opacity-50 pe-none border-0 shadow-none';
+                    btnNum.style.width = '38px';
+                    btnNum.style.height = '38px';
+                    btnNum.style.padding = '0';
+                } else if (estaSeleccionado) {
+                    // Clases de Bootstrap para seleccionado
+                    btnNum.className = 'btn btn-primary rounded-circle fw-bold shadow-sm';
+                    btnNum.style.width = '38px';
+                    btnNum.style.height = '38px';
+                    btnNum.style.padding = '0';
+                } else {
+                    // Clases de Bootstrap para disponible
+                    btnNum.className = 'btn btn-outline-secondary rounded-circle fw-semibold border-0 text-dark';
+                    btnNum.style.width = '38px';
+                    btnNum.style.height = '38px';
+                    btnNum.style.padding = '0';
+
+                    btnNum.addEventListener('click', () => {
+                        diaElegidoStr = fechaSql;
+                        document.getElementById('fechaSeleccionada').value = fechaSql;
+                        renderizarCarrusel();
+                        renderizarHorarios();
+                    });
                 }
-            });
-        <?php endif; ?>
 
-        // 2. DIÁLOGO DE CONFIRMACIÓN AL CLIQUEAR EL BOTÓN
-        const btnConfirmar = document.getElementById('btnConfirmarTurno');
-        if (btnConfirmar) {
-            btnConfirmar.addEventListener('click', function (e) {
-                e.preventDefault();
+                itemDia.appendChild(spanNom);
+                itemDia.appendChild(btnNum);
+                carrusel.appendChild(itemDia);
+            }
+        }
 
-                const form = document.getElementById('formReservaTurno');
-                const fechaInput = document.getElementById('fecha');
-                const horaInput = document.getElementById('hora');
+        function renderizarHorarios() {
+            const mensajeSinDia = document.getElementById('mensajeSinDia');
+            if (mensajeSinDia) mensajeSinDia.classList.add('d-none');
 
-                // Validar selección antes de abrir confirmación
-                if (!fechaInput || !horaInput || !fechaInput.value || !horaInput.value) {
-                    Swal.fire({
-                        icon: 'info',
-                        title: 'Completá los datos',
-                        text: 'Por favor, seleccioná el día y un horario disponible para agendar tu cita.',
-                        confirmButtonText: 'Entendido',
-                        confirmButtonColor: '#a05a42',
-                        customClass: {
-                            popup: 'rounded-4 shadow p-3',
-                            confirmButton: 'rounded-3 px-4 py-2'
+            const contManana = document.getElementById('contenedorHorasManana');
+            const contTarde = document.getElementById('contenedorHorasTarde');
+            const secManana = document.getElementById('seccionManana');
+            const secTarde = document.getElementById('seccionTarde');
+
+            contManana.innerHTML = '';
+            contTarde.innerHTML = '';
+            horaElegidaStr = '';
+            document.getElementById('horaSeleccionada').value = '';
+            document.getElementById('btnConfirmarTurno').disabled = true;
+
+            let cantManana = 0;
+            let cantTarde = 0;
+
+            listaHoras.forEach(h => {
+                const hLimpia = h.substring(0, 5);
+                const [hora] = hLimpia.split(':').map(Number);
+
+                const btnHora = document.createElement('button');
+                btnHora.type = 'button';
+                // Pastilla de Bootstrap: btn-outline-primary
+                btnHora.className = 'btn btn-outline-primary btn-sm px-3 py-2 fw-semibold rounded-3 shadow-none';
+                btnHora.textContent = `${hLimpia} hs`;
+
+                btnHora.addEventListener('click', () => {
+                    // Deseleccionar otras pastillas
+                    document.querySelectorAll('.btn-outline-primary, .btn-primary').forEach(b => {
+                        if (b.id !== 'btnConfirmarTurno') {
+                            b.classList.remove('btn-primary', 'text-white');
+                            b.classList.add('btn-outline-primary');
                         }
                     });
-                    return;
+
+                    // Seleccionar actual
+                    btnHora.classList.remove('btn-outline-primary');
+                    btnHora.classList.add('btn-primary', 'text-white');
+
+                    horaElegidaStr = `${hLimpia}:00`;
+                    document.getElementById('horaSeleccionada').value = horaElegidaStr;
+                    document.getElementById('btnConfirmarTurno').disabled = false;
+                });
+
+                if (hora < 13) {
+                    contManana.appendChild(btnHora);
+                    cantManana++;
+                } else {
+                    contTarde.appendChild(btnHora);
+                    cantTarde++;
                 }
+            });
 
-                // Formatear fecha y hora
-                const partesFecha = fechaInput.value.split('-');
-                const fechaFormateada = `${partesFecha[2]}/${partesFecha[1]}/${partesFecha[0]}`;
-                const horaFormateada = horaInput.value.substring(0, 5) + ' hs';
+            secManana.classList.toggle('d-none', cantManana === 0);
+            secTarde.classList.toggle('d-none', cantTarde === 0);
+        }
 
-                // Modal de confirmación en tono terracota
+        // Flechas de navegación semanal
+        const btnSig = document.getElementById('btnSemanaSig');
+        if (btnSig) {
+            btnSig.addEventListener('click', () => {
+                offsetDias += 7;
+                renderizarCarrusel();
+            });
+        }
+
+        const btnAnt = document.getElementById('btnSemanaAnt');
+        if (btnAnt) {
+            btnAnt.addEventListener('click', () => {
+                if (offsetDias >= 7) {
+                    offsetDias -= 7;
+                    renderizarCarrusel();
+                }
+            });
+        }
+
+        // Modal de Confirmación y envío del form
+        const btnConfirmar = document.getElementById('btnConfirmarTurno');
+        if (btnConfirmar) {
+            btnConfirmar.addEventListener('click', () => {
+                if (!diaElegidoStr || !horaElegidaStr) return;
+
+                const partes = diaElegidoStr.split('-');
+                const fechaVisual = `${partes[2]}/${partes[1]}/${partes[0]}`;
+                const horaVisual = horaElegidaStr.substring(0, 5) + ' hs';
+
                 Swal.fire({
-                    title: '¿Confirmar tu reserva?',
-                    html: `Estás por agendar tu turno para el día <strong>${fechaFormateada}</strong> a las <strong>${horaFormateada}</strong>.`,
+                    title: '¿Confirmar reserva?',
+                    html: `Estás por agendar tu turno para el día <strong>${fechaVisual}</strong> a las <strong>${horaVisual}</strong>.`,
                     icon: 'question',
                     showCancelButton: true,
-                    confirmButtonText: '<i class="bi bi-check-lg me-1"></i> Sí, agendar turno',
+                    confirmButtonText: 'Sí, agendar turno',
                     cancelButtonText: 'Revisar datos',
-                    confirmButtonColor: '#a05a42',
+                    confirmButtonColor: '#0d6efd',
                     cancelButtonColor: '#6c757d',
-                    reverseButtons: true,
-                    background: '#ffffff',
-                    customClass: {
-                        popup: 'rounded-4 shadow-lg p-3',
-                        title: 'fw-bold text-dark fs-5',
-                        confirmButton: 'rounded-3 px-4 py-2 fw-semibold shadow-sm',
-                        cancelButton: 'rounded-3 px-4 py-2 fw-semibold'
-                    }
+                    reverseButtons: true
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        form.submit();
+                        document.getElementById('formReserva').submit();
                     }
                 });
             });
         }
-    </script>
 
+        document.addEventListener('DOMContentLoaded', renderizarCarrusel);
+    </script>
 </body>
 </html>

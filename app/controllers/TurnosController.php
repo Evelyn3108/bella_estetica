@@ -4,7 +4,9 @@ namespace app\controllers;
 
 use \Controller;
 use \Response;
+use \DataBase;
 use app\models\TurnosModel;
+use app\models\ServiciosModel;
 use app\models\UserModel;
 
 class TurnosController extends Controller
@@ -23,88 +25,78 @@ class TurnosController extends Controller
 
         static::path();
 
-        // 1. Verificación de sesión de usuario
-        if (empty($_SESSION['USER']['id_usuario']) && empty($_SESSION['USER']['mail'])) {
+        // 1. Obtener ID del usuario desde la sesión de forma segura
+        $id_usuario = $_SESSION['USER']['id_usuario'] 
+                   ?? $_SESSION['id_usuario'] 
+                   ?? $_SESSION['USER']['id'] 
+                   ?? null;
+
+        if (!$id_usuario && isset($_SESSION['USER']['mail'])) {
+            $user = UserModel::findEmail($_SESSION['USER']['mail']);
+            if (is_array($user) && isset($user[0])) { $user = $user[0]; }
+            $id_usuario = is_object($user) ? ($user->id ?? 1) : ($user['id'] ?? 1);
+            $_SESSION['USER']['id_usuario'] = $id_usuario;
+        }
+
+        // Si no está logueado, lo mandamos al login
+        if (!$id_usuario) {
             header("Location: " . self::$path . "account/login");
             exit;
         }
 
-        $id_usuario = $_SESSION['USER']['id_usuario'] ?? null;
-        if (!$id_usuario && isset($_SESSION['USER']['mail'])) {
-            $user = null;
-            if (method_exists(\app\models\UserModel::class, 'findEmail')) {
-                $user = \app\models\UserModel::findEmail($_SESSION['USER']['mail']);
-            } elseif (method_exists(\app\models\UserModel::class, 'getUserByEmail')) {
-                $user = \app\models\UserModel::getUserByEmail($_SESSION['USER']['mail']);
-            }
-
-            $usr = (is_array($user) && isset($user[0])) ? $user[0] : $user;
-            $id_usuario = is_object($usr) ? ($usr->id ?? 1) : ($usr['id'] ?? 1);
-            $_SESSION['USER']['id_usuario'] = $id_usuario;
-        }
-
-        if (!$id_usuario) {
-            $id_usuario = 1;
-        }
-
-        $error = null;
-
-        // 2. Procesamiento del formulario por POST
+        // 2. Procesar el formulario enviado por la vista
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id_servicio     = filter_input(INPUT_POST, 'id_servicio', FILTER_VALIDATE_INT) ?: 1;
             $id_especialista = filter_input(INPUT_POST, 'id_especialista', FILTER_VALIDATE_INT) ?: 1;
             $fecha           = trim($_POST['fecha'] ?? '');
             $hora            = trim($_POST['hora'] ?? '');
 
-            if (empty($fecha) || empty($hora) || empty($id_servicio)) {
-                $error = "Por favor, seleccioná una fecha y un horario disponible.";
-            } else {
-                // Validación 1: Bloquear domingos (0 = Domingo)
-                $diaSemana = (int) date('w', strtotime($fecha));
-                if ($diaSemana === 0) {
-                    $error = "Los domingos la estética permanece cerrada. Por favor, seleccioná una fecha de lunes a sábado.";
+            if (!empty($fecha) && !empty($hora)) {
+                // --- VALIDACIÓN DE DÍAS DE ATENCIÓN ---
+                $servicioInfo = ServiciosModel::getServicioById($id_servicio);
+                if (is_array($servicioInfo) && isset($servicioInfo['resultado'])) {
+                    $servicioInfo = $servicioInfo['resultado'][0] ?? null;
                 }
-                // Validación 2: Comprobar si el cliente ya tiene un turno reservado para esa fecha y hora
-                elseif (\app\models\TurnosModel::tieneTurnoMismoHorario($id_usuario, $fecha, $hora)) {
-                    $error = "Ya tenés un turno registrado para este horario.";
+                $arrServ = (array)$servicioInfo;
+
+                // Días configurados (1 = Lunes, 2 = Martes, ..., 6 = Sábado)
+                $diasHabilitados = !empty($arrServ['dias_atencion']) 
+                    ? explode(',', $arrServ['dias_atencion']) 
+                    : ['1', '2', '3', '4', '5', '6'];
+
+                $diaSemanaSeleccionado = (int)date('w', strtotime($fecha)); // 0 = Domingo, 1 = Lunes, ...
+
+                // Bloquea domingos o días que no atienda el especialista
+                if ($diaSemanaSeleccionado === 0 || !in_array((string)$diaSemanaSeleccionado, $diasHabilitados)) {
+                    header("Location: " . self::$path . "home/detalleServicio?id=" . $id_servicio . "&error=dia_no_disponible");
+                    exit;
                 }
-                else {
-                    // Validación 3: Comprobar disponibilidad de la especialista
-                    $disponible = \app\models\TurnosModel::comprobarDisponibilidad($id_especialista, $fecha, $hora);
 
-                    if (!$disponible) {
-                        $error = "El horario seleccionado ya no se encuentra disponible para esta especialista. Por favor, elegí otro.";
-                    } else {
-                        // Inserción segura
-                        $guardado = \app\models\TurnosModel::insertarTurno($id_usuario, $id_servicio, $id_especialista, $fecha, $hora);
+                // --- VALIDACIONES DE DISPONIBILIDAD ---
+                // Si el método tieneTurnoMismoHorario existe, valida que el cliente no duplique turnos
+                if (method_exists(TurnosModel::class, 'tieneTurnoMismoHorario') && TurnosModel::tieneTurnoMismoHorario($id_usuario, $fecha, $hora)) {
+                    header("Location: " . self::$path . "home/detalleServicio?id=" . $id_servicio . "&error=turno_duplicado");
+                    exit;
+                }
 
-                        if ($guardado) {
-                            header("Location: " . self::$path . "usuario/perfilUsuario?reserva=ok");
-                            exit;
-                        } else {
-                            $error = "Ocurrió un error al registrar el turno. Intentalo nuevamente.";
-                        }
-                    }
+                // Valida que el especialista esté libre
+                if (method_exists(TurnosModel::class, 'comprobarDisponibilidad') && !TurnosModel::comprobarDisponibilidad($id_especialista, $fecha, $hora)) {
+                    header("Location: " . self::$path . "home/detalleServicio?id=" . $id_servicio . "&error=horario_ocupado");
+                    exit;
+                }
+
+                // Insertar el turno en la base de datos
+                $guardado = TurnosModel::insertarTurno($id_usuario, $id_servicio, $id_especialista, $fecha, $hora);
+
+                if ($guardado) {
+                    header("Location: " . self::$path . "user/perfilUsuario?reserva=ok");
+                    exit;
                 }
             }
         }
 
-        // Si falló o hubo colisión, se vuelve a cargar la vista pasando el mensaje de error
-        $idServicio = $_POST['id_servicio'] ?? ($_GET['id'] ?? 1);
-        $servicio   = \app\models\ServiciosModel::getServicioById($idServicio);
-        if (is_array($servicio) && isset($servicio[0])) {
-            $servicio = $servicio[0];
-        }
-
-        $parametros = [
-            "ruta"        => self::$path,
-            "servicio"    => $servicio,
-            "error"       => $error,
-            "id_servicio" => $idServicio
-        ];
-
-        // Se renderiza detalleServicios.php (o detalleServicio.php según tu archivo)
-        \Response::render('home/', 'detalleServicios', $parametros);
+        header("Location: " . self::$path . "home/homeServicios");
+        exit;
     }
 
     /**
@@ -156,7 +148,7 @@ class TurnosController extends Controller
 
         $id_usuario = $_SESSION['USER']['id_usuario'] ?? null;
         if (!$id_usuario && isset($_SESSION['USER']['mail'])) {
-            $usr = \app\models\UserModel::findEmail($_SESSION['USER']['mail']);
+            $usr = UserModel::findEmail($_SESSION['USER']['mail']);
             if (is_array($usr) && isset($usr[0])) { $usr = $usr[0]; }
             $id_usuario = is_object($usr) ? ($usr->id ?? 1) : ($usr['id'] ?? 1);
         }
@@ -164,10 +156,9 @@ class TurnosController extends Controller
         $id_turno = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 
         if ($id_turno && $id_usuario) {
-            \app\models\TurnosModel::cancelarTurno($id_turno, $id_usuario);
+            TurnosModel::cancelarTurno($id_turno, $id_usuario);
         }
 
-        // Redirige al perfil en la pestaña de turnos con aviso
         header("Location: " . self::$path . "user/perfilUsuario?cancelado=ok");
         exit;
     }

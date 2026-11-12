@@ -195,11 +195,8 @@ class AdminController extends Controller
         Response::render('admin/', 'cargarServicio', $parametros);
     }
 
-    /**
-     * Guarda la creación o modificación enviada por POST
-     * Ruta: /admin/guardarServicio
-     */
-  public function actionGuardarServicio()
+    
+ public function actionGuardarServicio()
     {
         SessionController::onlyAdmins();
         static::path();
@@ -207,23 +204,20 @@ class AdminController extends Controller
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
 
-            // Días de atención seleccionados (ej: "1,3,5")
-            $dias = isset($_POST['dias']) && is_array($_POST['dias']) 
+            // 1. Días de atención seleccionados (1=Lunes, ..., 6=Sábado)
+            $dias = (isset($_POST['dias']) && is_array($_POST['dias'])) 
                     ? implode(',', $_POST['dias']) 
                     : '1,2,3,4,5,6';
 
-            // Múltiples franjas horarias cargadas (ej: 10:30, 13:00, 16:30)
+            // 2. Horarios puntuales
             if (isset($_POST['horarios']) && is_array($_POST['horarios'])) {
-                $horariosArray = array_filter(array_map('trim', $_POST['horarios']));
+                $horariosArray = array_values(array_filter(array_map('trim', $_POST['horarios'])));
                 sort($horariosArray);
                 $horariosTexto = implode(',', $horariosArray);
-                $primerHorario = $horariosArray[0] ?? '09:00';
                 $ultimoHorario = end($horariosArray) ?: '18:00';
             } else {
-                // Respaldo por si viniera de un formulario tradicional
-                $primerHorario = trim($_POST['hora_inicio'] ?? '09:00');
-                $ultimoHorario = trim($_POST['hora_fin'] ?? '18:00');
-                $horariosTexto = $primerHorario;
+                $horariosTexto = trim($_POST['hora_inicio'] ?? '09:30');
+                $ultimoHorario = trim($_POST['hora_fin'] ?? '15:00');
             }
 
             $datos = [
@@ -232,8 +226,8 @@ class AdminController extends Controller
                 'duracion'        => filter_input(INPUT_POST, 'duracion', FILTER_VALIDATE_INT) ?: 45,
                 'precio'          => filter_input(INPUT_POST, 'precio', FILTER_VALIDATE_FLOAT) ?: 0.0,
                 'consultorio'     => trim($_POST['consultorio'] ?? 'Consultorio 1'),
-                'dias_atencion'   => $dias,
-                'hora_inicio'     => $horariosTexto, // Almacena las franjas horarias específicas
+                'dias_atencion'   => $dias, // Guarda el string '1,3,5'
+                'hora_inicio'     => $horariosTexto,
                 'hora_fin'        => $ultimoHorario,
                 'fecha_desde'     => !empty($_POST['fecha_desde']) ? trim($_POST['fecha_desde']) : date('Y-m-d'),
                 'fecha_hasta'     => !empty($_POST['fecha_hasta']) ? trim($_POST['fecha_hasta']) : date('Y-m-d', strtotime('+1 year'))
