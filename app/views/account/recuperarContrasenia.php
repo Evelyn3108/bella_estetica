@@ -6,7 +6,7 @@
     <title>Recuperar Contraseña - Bella Estética</title>
     
     <!-- Enlace exclusivo a la hoja de estilos unificada -->
-    <link rel="stylesheet" href="../css/estilos.css?v=17">
+    <link rel="stylesheet" href="<?= htmlspecialchars($ruta ?? '../'); ?>css/estilos.css?v=18">
 </head>
 <body class="d-flex align-items-center justify-content-center min-vh-100 py-5">
 
@@ -14,7 +14,7 @@
         <div class="row justify-content-center">
             <div class="col-12 col-sm-10 col-md-7 col-lg-5 col-xl-4">
                 
-                <!-- Tarjeta Principal Canvas (Sin logo, diseño directo y ordenado) -->
+                <!-- Tarjeta Principal Canvas -->
                 <div class="landing-canvas-card p-4 p-md-5">
                     
                     <!-- Encabezado -->
@@ -40,7 +40,7 @@
                     <?php endif; ?>
 
                     <!-- Formulario de Recuperación -->
-                    <form action="recuperarContrasenia" method="POST">
+                    <form action="<?= htmlspecialchars($ruta ?? ''); ?>account/recuperarContrasenia" method="POST">
                         
                         <!-- Campo: Correo Electrónico -->
                         <div class="mb-4 text-start">
@@ -59,7 +59,7 @@
                             </div>
                         </div>
 
-                        <!-- Botón Enviar Instrucciones -->
+                        <!-- Botón Enviar Código -->
                         <div class="mb-3">
                             <button type="submit" class="btn-solid-terracota w-100 py-2 fs-6 shadow-sm">
                                 <i class="bi bi-send me-1"></i> Enviar Código
@@ -70,7 +70,7 @@
                     <!-- Pie de Tarjeta: Volver a Iniciar Sesión -->
                     <div class="text-center mt-4 pt-3 border-top" style="border-color: var(--borde-suave) !important;">
                         <span class="text-muted small">¿Te acordaste de tu contraseña?</span> 
-                        <a href="login" class="link-terracota ms-1 small">
+                        <a href="<?= htmlspecialchars($ruta ?? ''); ?>account/login" class="link-terracota ms-1 small">
                             Iniciá sesión acá
                         </a>
                     </div>
@@ -79,7 +79,7 @@
 
                 <!-- Enlace exterior: Volver al inicio -->
                 <div class="text-center mt-3">
-                    <a href="../home" class="text-muted small text-decoration-none d-inline-flex align-items-center">
+                    <a href="<?= htmlspecialchars($ruta ?? '../'); ?>home" class="text-muted small text-decoration-none d-inline-flex align-items-center">
                         <i class="bi bi-arrow-left me-1"></i> Volver a la página principal
                     </a>
                 </div>

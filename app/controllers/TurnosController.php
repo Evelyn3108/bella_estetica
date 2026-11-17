@@ -1,6 +1,7 @@
 <?php
 
 namespace app\controllers;
+require_once __DIR__ . '/../librerias/Mailer.php';
 
 use \Controller;
 use \Response;
@@ -94,8 +95,33 @@ class TurnosController extends Controller
 
                 // Insertar el turno en la base de datos
                 $guardado = TurnosModel::insertarTurno($id_usuario, $id_servicio, $id_especialista, $fecha, $hora);
+// Insertar el turno en la base de datos
+                $guardado = TurnosModel::insertarTurno($id_usuario, $id_servicio, $id_especialista, $fecha, $hora);
 
                 if ($guardado) {
+                    // --- INICIO ENVÍO DE MAIL DE CONFIRMACIÓN ---
+                    $emailUsuario  = $_SESSION['USER']['mail'] ?? $_SESSION['USER']['email'] ?? null;
+                    $nombreUsuario = $_SESSION['USER']['name'] ?? $_SESSION['USER']['nombre'] ?? 'Cliente';
+
+                    // Construimos la URL completa hacia Mi Perfil para el botón de cancelar
+                    $protocolo = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
+                    $host      = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                    $urlPerfil = $protocolo . $host . self::$path . "user/perfilUsuario";
+
+                    if (!empty($emailUsuario)) {
+                        $datosTurno = [
+                            'servicio'     => $arrServ['nombre_servicio'] ?? 'Tratamiento Estético',
+                            'fecha'        => $fecha,
+                            'hora'         => $hora,
+                            'especialista' => trim(($arrServ['esp_nombre'] ?? '') . ' ' . ($arrServ['esp_apellido'] ?? '')) ?: 'Profesional asignado',
+                            'consultorio'  => $arrServ['consultorio'] ?? 'Consultorio 1',
+                            'url_perfil'   => $urlPerfil
+                        ];
+
+                        \app\librerias\Mailer::enviarConfirmacionTurno($emailUsuario, $nombreUsuario, $datosTurno);
+                    }
+                    // --- FIN ENVÍO DE MAIL ---
+
                     header("Location: " . self::$path . "user/perfilUsuario?reserva=ok");
                     exit;
                 }

@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión - Bella Estética</title>
     
-    <!-- Enlace exclusivo a la hoja de estilos general externa -->
-    <link rel="stylesheet" href="../css/estilos.css?v=15">
+    <!-- Enlace exclusivo a la hoja de estilos general externa con ruta dinámica -->
+    <link rel="stylesheet" href="<?= htmlspecialchars($ruta ?? '../'); ?>css/estilos.css?v=16">
 </head>
 <body class="d-flex align-items-center justify-content-center min-vh-100 py-5">
 
@@ -24,7 +24,15 @@
                         <p class="text-muted small mb-0">Ingresá tu correo y contraseña para continuar</p>
                     </div>
 
-                 <!-- Mensaje de error si falla la autenticación -->
+                    <!-- Mensaje de éxito tras recuperar contraseña -->
+                    <?php if (isset($_GET['recupero']) && $_GET['recupero'] === 'ok'): ?>
+                        <div class="alert alert-success py-2 px-3 small d-flex align-items-center mb-4 rounded-3" role="alert">
+                            <i class="bi bi-check-circle-fill me-2 fs-6"></i>
+                            <div>¡Contraseña restablecida con éxito! Ya podés iniciar sesión.</div>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Mensaje de error si falla la autenticación -->
                     <?php 
                         // Determinamos el mensaje de error que viene desde el controlador
                         $mensajeMostrar = '';
@@ -47,7 +55,7 @@
                     <?php endif; ?>
 
                     <!-- 2. Formulario de Ingreso -->
-                    <form action="login" method="POST">
+                    <form action="<?= htmlspecialchars($ruta ?? ''); ?>account/login" method="POST">
                         
                         <!-- Campo: Correo Electrónico -->
                         <div class="mb-3 text-start">
@@ -66,7 +74,7 @@
                             </div>
                         </div>
 
-                       <!-- Campo: Contraseña con botón ver/ocultar -->
+                        <!-- Campo: Contraseña con botón ver/ocultar -->
                         <div class="mb-4 text-start">
                             <label for="password" class="form-label small fw-bold text-dark mb-1">Contraseña</label>
                             <div class="input-group login-input-group">
@@ -99,22 +107,22 @@
                     <!-- 3. Pie de Tarjeta: Enlaces juntos abajo con el mismo color terracota -->
                     <div class="text-center mt-4 pt-3 border-top" style="border-color: var(--borde-suave) !important;">
                         <div class="mb-2">
-                            <a href="recuperarContrasenia" class="small link-terracota">
+                            <a href="<?= htmlspecialchars($ruta ?? ''); ?>account/recuperarContrasenia" class="small link-terracota">
                                 ¿Olvidaste tu contraseña?
                             </a>
                         </div>
                         <div class="small">
                             <span class="text-muted">¿No tenés cuenta?</span> 
-                            <a href="registro" class="link-terracota ms-1">
+                            <a href="<?= htmlspecialchars($ruta ?? ''); ?>account/registro" class="link-terracota ms-1">
                                 Registrate acá
                             </a>
                         </div>
                     </div>
                     
                     <div class="text-center mt-3">
-                    <a href="../home" class="text-muted small text-decoration-none d-inline-flex align-items-center">
-                        <i class="bi bi-arrow-left me-1"></i> Volver a la página principal
-                    </a>
+                        <a href="<?= htmlspecialchars($ruta ?? '../'); ?>home" class="text-muted small text-decoration-none d-inline-flex align-items-center">
+                            <i class="bi bi-arrow-left me-1"></i> Volver a la página principal
+                        </a>
                     </div>
 
                 </div>

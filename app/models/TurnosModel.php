@@ -32,33 +32,49 @@ class TurnosModel extends Model
             return true;
         }
     }
-
-    /**
-     * Inserta un turno en la base de datos
-     */
     /**
      * Inserta el turno en la tabla turnos
      */
     public static function insertarTurno($id_usuario, $id_servicio, $id_especialista, $fecha, $hora)
     {
         try {
-            $sql = "INSERT INTO turnos (id_usuario, id_servicio, id_especialista, fecha, hora, estado, fecha_alta) 
-                    VALUES (:id_usuario, :id_servicio, :id_especialista, :fecha, :hora, 'pendiente', NOW())";
+            $pdo = \DataBase::connection();
 
-            $params = [
+            // 1. Candado extra: evitar insertar exactamente lo mismo si ya existe en la BD
+            $check = $pdo->prepare("SELECT id FROM turnos 
+                                    WHERE id_usuario = :id_usuario 
+                                      AND id_servicio = :id_servicio 
+                                      AND fecha = :fecha 
+                                      AND hora = :hora 
+                                      AND estado = 'confirmado' 
+                                    LIMIT 1");
+            $check->execute([
+                ':id_usuario'  => $id_usuario,
+                ':id_servicio' => $id_servicio,
+                ':fecha'       => $fecha,
+                ':hora'        => $hora
+            ]);
+
+            if ($check->fetch()) {
+                return true; // Ya se guardó, evitamos duplicarlo
+            }
+
+            // 2. Inserción única y directa
+            $sql = "INSERT INTO turnos (id_usuario, id_servicio, id_especialista, fecha, hora, estado, fecha_alta) 
+                    VALUES (:id_usuario, :id_servicio, :id_especialista, :fecha, :hora, 'confirmado', NOW())";
+
+            $stmt = $pdo->prepare($sql);
+            return $stmt->execute([
                 ':id_usuario'      => $id_usuario,
                 ':id_servicio'     => $id_servicio,
                 ':id_especialista' => $id_especialista,
                 ':fecha'           => $fecha,
                 ':hora'            => $hora
-            ];
-
-            return \DataBase::execute($sql, $params);
+            ]);
         } catch (\Throwable $e) {
             return false;
         }
     }
-
     /**
      * Trae los turnos del cliente para mostrarlos en su perfil
      */

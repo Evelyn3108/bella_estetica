@@ -122,9 +122,9 @@
                         </ul>
                     </div>
 
-            <div class="card-body p-4 tab-content">
-
+                <div class="card-body p-4 tab-content">
                 <!-- 1. PESTAÑA: TURNOS AGENDADOS -->
+                 
                 <div class="tab-pane fade show active" id="tab-turnos">
                     <div class="mb-3">
                         <h6 class="fw-bold text-dark mb-0">Próximas citas</h6>
@@ -146,7 +146,7 @@
                                     $fechaVal   = $arr['fecha'] ?? '';
                                     $horaFmt    = !empty($horaVal) ? substr($horaVal, 0, 5) . ' hs' : '--:-- hs';
                                     $fechaFmt   = !empty($fechaVal) ? date('d/m/Y', strtotime($fechaVal)) : '--/--/----';
-                                    $estadoVal  = strtolower($arr['estado'] ?? 'pendiente');
+                                    $estadoVal  = strtolower($arr['estado'] ?? 'confirmado');
                                     $idTurno    = $arr['id'] ?? 0;
                                 ?>
                                 <div class="p-3 rounded-3 border bg-light d-flex justify-content-between align-items-center">
@@ -162,7 +162,7 @@
                                         </div>
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
-                                        <span class="badge rounded-pill bg-warning text-dark px-3 py-2 text-uppercase" style="font-size: 0.72rem;">
+                                        <span class="badge rounded-pill <?= ($estadoVal === 'confirmado') ? 'bg-success text-white' : 'bg-warning text-dark'; ?> px-3 py-2 text-uppercase" style="font-size: 0.72rem;">
                                             <?= htmlspecialchars($estadoVal); ?>
                                         </span>
                                         <a href="<?= $ruta; ?>turnos/cancelar?id=<?= $idTurno; ?>" 

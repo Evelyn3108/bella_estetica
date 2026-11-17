@@ -509,8 +509,12 @@
                     confirmButtonColor: '#a05a42',
                     cancelButtonColor: '#6c757d',
                     reverseButtons: true
-                }).then((result) => {
+               }).then((result) => {
                     if (result.isConfirmed) {
+                        // Deshabilitamos el botón para evitar que se envíe 2 veces mientras Brevo manda el mail
+                        btnConfirmar.disabled = true;
+                        btnConfirmar.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Agendando...';
+                        
                         document.getElementById('formReserva').submit();
                     }
                 });
