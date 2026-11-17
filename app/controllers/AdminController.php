@@ -187,9 +187,12 @@ class AdminController extends Controller
             }
         }
 
+        $especialistas = \app\models\EspecialistaModel::obtenerActivos();
+
         $parametros = [
             "ruta"     => self::$path,
-            "servicio" => $servicio
+            "servicio" => $servicio,
+            "especialistas" => $especialistas
         ];
 
         Response::render('admin/', 'cargarServicio', $parametros);
@@ -304,11 +307,15 @@ class AdminController extends Controller
             $id_admin     = $_SESSION['USER']['id_usuario'] ?? 1;
 
             if (!empty($nombre) && !empty($apellido)) {
-                EspecialistaModel::crearEspecialista($nombre, $apellido, $especialidad, $id_admin);
+                $creado = EspecialistaModel::crearEspecialista($nombre, $apellido, $especialidad, $id_admin);
+                if ($creado) {
+                    header("Location: " . self::$path . "admin/especialistas?status=creado_ok");
+                    exit;
+                }
             }
         }
 
-        header("Location: " . self::$path . "admin/especialistas");
+        header("Location: " . self::$path . "admin/especialistas?status=error");
         exit;
     }
 
@@ -361,11 +368,15 @@ class AdminController extends Controller
             $rol      = trim($_POST['rol'] ?? 'cliente');
 
             if (!empty($nombre) && !empty($apellido) && !empty($email) && !empty($password)) {
-                UserModel::crearUsuarioAdmin($nombre, $apellido, $email, $password, $telefono, $rol);
+                $creado = UserModel::crearUsuarioAdmin($nombre, $apellido, $email, $password, $telefono, $rol);
+                if ($creado) {
+                    header("Location: " . self::$path . "admin/usuarios?status=creado_ok");
+                    exit;
+                }
             }
         }
 
-        header("Location: " . self::$path . "admin/usuarios");
+        header("Location: " . self::$path . "admin/usuarios?status=error");
         exit;
     }
 
@@ -388,11 +399,15 @@ class AdminController extends Controller
             $password = trim($_POST['password'] ?? ''); // Nueva contraseña (opcional)
 
             if ($id && !empty($nombre) && !empty($apellido) && !empty($email)) {
-                UserModel::actualizarUsuarioAdmin($id, $nombre, $apellido, $email, $telefono, $rol, $password);
+                $actualizado = UserModel::actualizarUsuarioAdmin($id, $nombre, $apellido, $email, $telefono, $rol, $password);
+                if ($actualizado) {
+                    header("Location: " . self::$path . "admin/usuarios?status=editado_ok");
+                    exit;
+                }
             }
         }
 
-        header("Location: " . self::$path . "admin/usuarios");
+        header("Location: " . self::$path . "admin/usuarios?status=error");
         exit;
     }
     /**
@@ -410,6 +425,8 @@ class AdminController extends Controller
         // Evita que el administrador se elimine a sí mismo
         if ($id && $id !== (int)$idAdminActual) {
             UserModel::eliminarUsuario($id);
+            header("Location: " . self::$path . "admin/usuarios?status=eliminado_ok");
+            exit;
         }
 
         header("Location: " . self::$path . "admin/usuarios");
@@ -429,6 +446,8 @@ class AdminController extends Controller
 
         if ($id) {
             EspecialistaModel::eliminarEspecialista($id);
+            header("Location: " . self::$path . "admin/especialistas?status=eliminado_ok");
+            exit;
         }
 
         header("Location: " . self::$path . "admin/especialistas");

@@ -64,6 +64,26 @@
 
     <!-- CONTENIDO PRINCIPAL -->
     <main class="container-fluid px-4 mb-5 flex-grow-1">
+
+        <!-- Mensajes de estado -->
+        <?php $status = $_GET['status'] ?? null; ?>
+        <?php if ($status === 'creado_ok'): ?>
+            <div class="alert alert-success alert-dismissible fade show rounded-3 small py-2 px-3 border-0 shadow-sm mb-4" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i> Especialista registrado y guardado con éxito.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php elseif ($status === 'eliminado_ok'): ?>
+            <div class="alert alert-success alert-dismissible fade show rounded-3 small py-2 px-3 border-0 shadow-sm mb-4" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i> Especialista eliminado correctamente.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php elseif ($status === 'error'): ?>
+            <div class="alert alert-danger alert-dismissible fade show rounded-3 small py-2 px-3 border-0 shadow-sm mb-4" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> No se pudo guardar el especialista. Asegúrese de completar todos los campos requeridos.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
+
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gy-2">
             <div>
                 <h3 class="fw-bold text-dark mb-1" style="letter-spacing: -0.02em;">Equipo Profesional</h3>
@@ -140,7 +160,7 @@
                                             <a href="<?= $ruta; ?>admin/eliminarEspecialista?id=<?= $idEsp; ?>" 
                                                class="btn btn-sm btn-outline-danger rounded-3" 
                                                title="Eliminar especialista"
-                                               onclick="return confirm('¿Confirmás la eliminación definitiva de <?= htmlspecialchars(addslashes($nomEsp)); ?>?');">
+                                               onclick="return confirm('¿Confirmás la eliminación definitiva de <?= htmlspecialchars(addslashes($nombre)); ?>?');">
                                                 <i class="bi bi-trash"></i>
                                             </a>
                                         </div>

@@ -40,7 +40,7 @@ class UserModel extends Model
         try {
             $passwordHash = password_hash($password, PASSWORD_BCRYPT);
 
-            $sql = "INSERT INTO usuario (nombre, apellido, email, password, telefono, rol, fecha_creacion) 
+            $sql = "INSERT INTO usuario (nombre, apellido, email, password, telefono, rol, fecha_alta) 
                     VALUES (:nombre, :apellido, :email, :password, :telefono, 'cliente', NOW())";
 
             $params = [
@@ -51,8 +51,7 @@ class UserModel extends Model
                 ":telefono" => $telefono
             ];
 
-            DataBase::query($sql, $params);
-            return true;
+            return DataBase::execute($sql, $params);
         } catch (\Throwable $e) {
             return false;
         }
@@ -69,11 +68,10 @@ class UserModel extends Model
                     SET password = :password 
                     WHERE id = :id";
 
-            DataBase::query($sql, [
+            return DataBase::execute($sql, [
                 ':password' => $hash,
                 ':id'       => $id
             ]);
-            return true;
         } catch (\Throwable $e) {
             return false;
         }
@@ -89,12 +87,11 @@ class UserModel extends Model
                     SET email = :email, telefono = :telefono 
                     WHERE id = :id";
             
-            DataBase::query($sql, [
+            return DataBase::execute($sql, [
                 ':email'    => $email,
                 ':telefono' => $telefono,
                 ':id'       => $id
             ]);
-            return true;
         } catch (\Throwable $e) {
             return false;
         }
@@ -108,10 +105,10 @@ class UserModel extends Model
         try {
             $passwordHash = password_hash($password, PASSWORD_BCRYPT);
 
-            $sql = "INSERT INTO usuario (nombre, apellido, email, password, telefono, rol, fecha_creacion)
+            $sql = "INSERT INTO usuario (nombre, apellido, email, password, telefono, rol, fecha_alta)
                     VALUES (:nombre, :apellido, :email, :password, :telefono, :rol, NOW())";
 
-            DataBase::query($sql, [
+            return DataBase::execute($sql, [
                 ':nombre'   => $nombre,
                 ':apellido' => $apellido,
                 ':email'    => $email,
@@ -119,7 +116,6 @@ class UserModel extends Model
                 ':telefono' => $telefono,
                 ':rol'      => $rol
             ]);
-            return true;
         } catch (\Throwable $e) {
             return false;
         }
@@ -178,7 +174,7 @@ class UserModel extends Model
                             password = :password 
                         WHERE id = :id";
 
-                return \DataBase::query($sql, [
+                return \DataBase::execute($sql, [
                     ':nombre'   => $nombre,
                     ':apellido' => $apellido,
                     ':email'    => $email,
@@ -197,7 +193,7 @@ class UserModel extends Model
                             rol = :rol 
                         WHERE id = :id";
 
-                return \DataBase::query($sql, [
+                return \DataBase::execute($sql, [
                     ':nombre'   => $nombre,
                     ':apellido' => $apellido,
                     ':email'    => $email,
@@ -218,7 +214,7 @@ class UserModel extends Model
     {
         try {
             $sql = "DELETE FROM usuario WHERE id = :id";
-            return \DataBase::query($sql, [':id' => $id]);
+            return \DataBase::execute($sql, [':id' => $id]);
         } catch (\Throwable $e) {
             return false;
         }

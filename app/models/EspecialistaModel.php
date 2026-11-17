@@ -48,12 +48,7 @@ class EspecialistaModel extends Model
     public static function listarTodos()
     {
         try {
-            $sql = "SELECT e.*, 
-                           COALESCE(u.nombre, 'Admin') AS creador_nombre
-                    FROM especialista e
-                    LEFT JOIN usuario u ON e.creado_por = u.id
-                    ORDER BY e.id ASC";
-
+            $sql = "SELECT * FROM especialista ORDER BY id ASC";
             $res = DataBase::getRecords($sql);
             if (is_array($res) && isset($res['resultado'])) {
                 $res = $res['resultado'];
@@ -65,22 +60,34 @@ class EspecialistaModel extends Model
     }
 
     /**
-     * Da de alta un nuevo especialista con auditoría
+     * Da de alta un nuevo especialista
      */
     public static function crearEspecialista($nombre, $apellido, $especialidad, $id_admin = 1)
     {
         try {
-            $sql = "INSERT INTO especialista (nombre, apellido, especialidad, creado_por, estado, fecha_creacion)
-                    VALUES (:nombre, :apellido, :especialidad, :creado_por, 1, NOW())";
+            // Intento 1: Incluyendo auditoría completa (creado_por y fecha_alta)
+            $sql = "INSERT INTO especialista (nombre, apellido, especialidad, estado, creado_por, fecha_alta)
+                    VALUES (:nombre, :apellido, :especialidad, 1, :id_admin, NOW())";
 
-            return DataBase::query($sql, [
+            return DataBase::execute($sql, [
                 ':nombre'       => $nombre,
                 ':apellido'     => $apellido,
                 ':especialidad' => $especialidad,
-                ':creado_por'   => $id_admin
+                ':id_admin'     => $id_admin
             ]);
         } catch (\Throwable $e) {
-            return false;
+            // Intento 2: Inserción básica como respaldo si no existen columnas de auditoría
+            try {
+                $sqlBasico = "INSERT INTO especialista (nombre, apellido, especialidad, estado)
+                              VALUES (:nombre, :apellido, :especialidad, 1)";
+                return DataBase::execute($sqlBasico, [
+                    ':nombre'       => $nombre,
+                    ':apellido'     => $apellido,
+                    ':especialidad' => $especialidad
+                ]);
+            } catch (\Throwable $ex) {
+                return false;
+            }
         }
     }
 
@@ -97,7 +104,7 @@ class EspecialistaModel extends Model
                            fecha_modificacion = NOW()
                        WHERE id = :id";
 
-            \DataBase::query($sqlEsp, [
+            DataBase::execute($sqlEsp, [
                 ':estado'   => $nuevo_estado,
                 ':id_admin' => $id_admin,
                 ':id'       => $id
@@ -110,7 +117,7 @@ class EspecialistaModel extends Model
                             fecha_modificacion = NOW()
                         WHERE id_especialista = :id_especialista";
 
-            \DataBase::query($sqlServ, [
+            DataBase::execute($sqlServ, [
                 ':estado'          => $nuevo_estado,
                 ':id_admin'        => $id_admin,
                 ':id_especialista' => $id
@@ -129,7 +136,7 @@ class EspecialistaModel extends Model
     {
         try {
             $sql = "DELETE FROM especialista WHERE id = :id";
-            return \DataBase::query($sql, [':id' => $id]);
+            return DataBase::execute($sql, [':id' => $id]);
         } catch (\Throwable $e) {
             return false;
         }

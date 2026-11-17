@@ -148,30 +148,25 @@
                             </div>
 
                             <!-- Especialista Asignado (mantiene el select dinámico) -->
-                            <div class="col-md-5">
-                                <label for="id_especialista" class="form-label small fw-bold text-dark">Especialista Asignado *</label>
-                                <select id="id_especialista" name="id_especialista" class="form-select rounded-3 shadow-none" style="border-color: var(--borde-suave);" required>
-                                    <option value="" disabled>-- Seleccionar Especialista --</option>
-                                    <?php if (!empty($especialistas)): ?>
-                                        <?php foreach ($especialistas as $esp): ?>
-                                            <?php 
-                                                $arrE = is_object($esp) ? (array)$esp : $esp;
-                                                $idE = $arrE['id'];
-                                                $nomE = trim($arrE['nombre'] . ' ' . $arrE['apellido']);
-                                                $espE = $arrE['especialidad'] ?? '';
-                                            ?>
-                                            <option value="<?= $idE; ?>" <?= ((int)$espActual === (int)$idE) ? 'selected' : ''; ?>>
-                                                <?= htmlspecialchars($nomE); ?> (<?= htmlspecialchars($espE); ?>)
-                                            </option>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <option value="1" <?= ((int)$espActual === 1) ? 'selected' : ''; ?>>Romina Paz (Manicura)</option>
-                                        <option value="2" <?= ((int)$espActual === 2) ? 'selected' : ''; ?>>Laura Ríos (Cosmetología y Mirada)</option>
-                                        <option value="3" <?= ((int)$espActual === 3) ? 'selected' : ''; ?>>Sofía Martínez (Masoterapia y Corporal)</option>
-                                        <option value="4" <?= ((int)$espActual === 4) ? 'selected' : ''; ?>>Valentina Gómez (Lifting y Diseño de Mirada)</option>
-                                    <?php endif; ?>
-                                </select>
-                            </div>
+                         <div class="col-md-5">
+                            <label for="id_especialista" class="form-label small fw-bold text-dark">Especialista Asignado *</label>
+                            <select id="id_especialista" name="id_especialista" class="form-select rounded-3 shadow-none" style="border-color: var(--borde-suave);" required>
+                                <option value="" disabled <?= empty($espActual) ? 'selected' : ''; ?>>-- Seleccionar Especialista --</option>
+                                <?php if (!empty($especialistas)): ?>
+                                    <?php foreach ($especialistas as $esp): ?>
+                                        <?php 
+                                            $eArr = is_object($esp) ? (array)$esp : (is_array($esp) ? $esp : []);
+                                            $idE  = $eArr['id'] ?? 0;
+                                            $nomE = trim(($eArr['nombre'] ?? '') . ' ' . ($eArr['apellido'] ?? ''));
+                                            $area = $eArr['especialidad'] ?? '';
+                                        ?>
+                                        <option value="<?= $idE; ?>" <?= ((int)$espActual === (int)$idE) ? 'selected' : ''; ?>>
+                                            <?= htmlspecialchars($nomE); ?><?= !empty($area) ? ' (' . htmlspecialchars($area) . ')' : ''; ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                         </div>
 
                             <!-- Precio -->
                             <div class="col-md-4">

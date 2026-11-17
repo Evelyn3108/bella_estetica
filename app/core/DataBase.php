@@ -44,6 +44,10 @@ class DataBase
 	public static function query($sql, $params = []){
 		$statement = static::connection()->prepare($sql);
 		$statement->execute($params);
+		$trimmed = strtoupper(ltrim($sql));
+		if (strpos($trimmed, 'INSERT') === 0 || strpos($trimmed, 'UPDATE') === 0 || strpos($trimmed, 'DELETE') === 0 || strpos($trimmed, 'REPLACE') === 0) {
+			return true;
+		}
 		$result = $statement->fetchAll(PDO::FETCH_OBJ);
 		return $result;
 	}
