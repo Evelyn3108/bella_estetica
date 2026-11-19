@@ -23,6 +23,9 @@ class Mailer
         $mail->Port       = (int)($_ENV['SMTP_PORT'] ?? 587);
         $mail->CharSet    = 'UTF-8';
 
+        // Evita que Brevo reescriba los enlaces con sendibt2.com (rompe URLs en localhost)
+        $mail->addCustomHeader('X-Mailin-Track-Clicks', '0');
+
         $remitente = $_ENV['SMTP_FROM'] ?? '';
         $mail->setFrom($remitente, 'Bella Estética');
 
@@ -36,7 +39,7 @@ class Mailer
             $mail->addAddress($destinatarioEmail, $nombreCliente);
 
             $mail->isHTML(true);
-            $mail->Subject = 'Confirmación de Turno - Bella Estética';
+          $mail->Subject = 'Confirmación de Turno NUEVA - Bella Estética';
 
             $fechaFormateada = date('d/m/Y', strtotime($datosTurno['fecha']));
             $horaFormateada  = substr($datosTurno['hora'], 0, 5) . ' hs';
@@ -50,7 +53,7 @@ class Mailer
                     </div>
                     <div style='padding: 25px; color: #4a3b3c; background-color: #ffffff;'>
                         <p>Hola <strong>" . htmlspecialchars($nombreCliente) . "</strong>,</p>
-                        <p>Te confirmamos que reservaste un turno en nuestro centro. Aquí tenés el resumen de tu cita:</p>
+                        <p>Te confirmamos que reservaste un turno en nuestro centro:</p>
                         
                         <div style='background-color: #fdf5f5; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #a05a42;'>
                             <p style='margin: 5px 0;'><strong>Tratamiento:</strong> " . htmlspecialchars($datosTurno['servicio']) . "</p>
@@ -61,12 +64,12 @@ class Mailer
                         </div>
 
                         <p style='font-size: 14px; color: #4a3b3c;'>
-                            Si por algún motivo no podés asistir y deseás cancelar tu turno, podés hacerlo ingresando a tu perfil desde el siguiente enlace:
+                            Si por algún motivo no podés asistir y deseás cancelar tu turno, podés ingresar a nuestra página para gestionarlo:
                         </p>
 
                         <div style='text-align: center; margin: 25px 0;'>
                             <a href='{$urlCancelar}' style='background-color: #a05a42; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; display: inline-block;'>
-                                Ir a Mi Perfil para Cancelar Turno
+                                Ingresar para Gestionar o Cancelar Turno
                             </a>
                         </div>
                     </div>
@@ -112,6 +115,62 @@ class Mailer
                     </div>
                     <div style='background-color: #fbf7f7; padding: 12px; text-align: center; font-size: 12px; color: #7d6b6c;'>
                         © " . date('Y') . " Bella Estética.
+                    </div>
+                </div>
+            ";
+
+            $mail->send();
+            return true;
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
+    public static function enviarAvisoBajaEspecialista($destinatarioEmail, $nombreCliente, $datosTurno)
+    {
+        try {
+            $mail = self::configurarSMTP();
+            $mail->addAddress($destinatarioEmail, $nombreCliente);
+
+            $mail->isHTML(true);
+            $mail->Subject = 'Aviso importante sobre tu turno - Bella Estética';
+
+            $fechaFormateada = date('d/m/Y', strtotime($datosTurno['fecha']));
+            $horaFormateada  = substr($datosTurno['hora'], 0, 5) . ' hs';
+            $urlCatalogo     = $datosTurno['url_catalogo'];
+
+            $mail->Body = "
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #f0ebeb; border-radius: 10px; overflow: hidden;'>
+                    <div style='background-color: #a05a42; padding: 20px; text-align: center; color: #ffffff;'>
+                        <h2 style='margin: 0;'>Bella Estética</h2>
+                        <p style='margin: 5px 0 0; font-size: 14px;'>Actualización sobre tu cita programada</p>
+                    </div>
+                    <div style='padding: 25px; color: #4a3b3c; background-color: #ffffff;'>
+                        <p>Hola <strong>" . htmlspecialchars($nombreCliente) . "</strong>,</p>
+                        <p>Te informamos que el/la especialista <strong>" . htmlspecialchars($datosTurno['especialista']) . "</strong> no se encontrará disponible próximamente, por lo que tu turno ha sido <strong>cancelado automáticamente</strong>:</p>
+                        
+                        <div style='background-color: #fdf5f5; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc3545;'>
+                            <p style='margin: 5px 0;'><strong>Tratamiento:</strong> " . htmlspecialchars($datosTurno['servicio']) . "</p>
+                            <p style='margin: 5px 0;'><strong>Fecha original:</strong> {$fechaFormateada}</p>
+                            <p style='margin: 5px 0;'><strong>Horario original:</strong> {$horaFormateada}</p>
+                        </div>
+
+                        <p style='font-size: 14px; color: #4a3b3c;'>
+                            No es necesario que asistas en esa fecha. Si deseás <strong>reagendar tu turno con otro profesional</strong> de nuestro equipo, podés hacerlo ingresando directamente a nuestro catálogo:
+                        </p>
+
+                        <div style='text-align: center; margin: 25px 0;'>
+                            <a href='{$urlCatalogo}' style='background-color: #a05a42; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; display: inline-block;'>
+                                Reagendar con Otro Especialista
+                            </a>
+                        </div>
+
+                        <p style='font-size: 13px; color: #7d6b6c;'>
+                            Si preferís no reagendar por el momento, no tenés que realizar ninguna acción adicional. Pedimos disculpas por las molestias ocasionadas.
+                        </p>
+                    </div>
+                    <div style='background-color: #fbf7f7; padding: 15px; text-align: center; font-size: 12px; color: #7d6b6c;'>
+                        © " . date('Y') . " Bella Estética. Belleza, cuidado y bienestar integral.
                     </div>
                 </div>
             ";

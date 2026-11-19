@@ -5,7 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Perfil - Bella Estética</title>
     <!-- Único archivo de estilos enlazado (contiene Bootstrap, iconos y variables terracota) -->
-    <link rel="stylesheet" href="<?= $ruta; ?>css/estilos.css">
+    <link rel="stylesheet" href="<?= $ruta; ?>css/estilos.css?v=<?= time(); ?>">
+    <style>
+        /* Oculta el icono de visualización nativo de Edge/Windows dentro del recuadro del input */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+    </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
 
@@ -35,6 +44,18 @@
 
     <!-- CONTENEDOR PRINCIPAL FLUIDO -->
     <main class="container-fluid px-4 px-lg-5 mb-5 flex-grow-1">
+
+        <?php
+            // Determinamos qué pestaña debe mostrarse activa según la acción realizada
+            $tabActiva = 'turnos';
+            if (!empty($_GET['tab'])) {
+                $tabActiva = trim($_GET['tab']);
+            } elseif (isset($_GET['error_pass']) || isset($_GET['pass']) || isset($_GET['datos'])) {
+                $tabActiva = 'cuenta';
+            } elseif (isset($_GET['cancelado'])) {
+                $tabActiva = 'historial';
+            }
+        ?>
 
         <!-- ALERTAS DE ESTADO -->
         <?php if (!empty($reservaOk)): ?>
@@ -105,17 +126,17 @@
                     <div class="card-header bg-white border-bottom pt-3 px-4">
                         <ul class="nav nav-tabs card-header-tabs" role="tablist">
                             <li class="nav-item">
-                                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-turnos" type="button">
+                                <button class="nav-link <?= ($tabActiva === 'turnos') ? 'active' : ''; ?>" data-bs-toggle="tab" data-bs-target="#tab-turnos" type="button">
                                     <i class="bi bi-calendar-check me-2"></i>Turnos Agendados
                                 </button>
                             </li>
                             <li class="nav-item">
-                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-historial" type="button">
+                                <button class="nav-link <?= ($tabActiva === 'historial') ? 'active' : ''; ?>" data-bs-toggle="tab" data-bs-target="#tab-historial" type="button">
                                     <i class="bi bi-clock-history me-2"></i>Historial
                                 </button>
                             </li>
                             <li class="nav-item">
-                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-cuenta" type="button">
+                                <button class="nav-link <?= ($tabActiva === 'cuenta') ? 'active' : ''; ?>" data-bs-toggle="tab" data-bs-target="#tab-cuenta" type="button">
                                     <i class="bi bi-person-gear me-2"></i>Mi Cuenta & Seguridad
                                 </button>
                             </li>
@@ -125,7 +146,7 @@
                 <div class="card-body p-4 tab-content">
                 <!-- 1. PESTAÑA: TURNOS AGENDADOS -->
                  
-                <div class="tab-pane fade show active" id="tab-turnos">
+                <div class="tab-pane fade <?= ($tabActiva === 'turnos') ? 'show active' : ''; ?>" id="tab-turnos">
                     <div class="mb-3">
                         <h6 class="fw-bold text-dark mb-0">Próximas citas</h6>
                     </div>
@@ -178,7 +199,7 @@
                 </div>
 
                 <!-- 2. PESTAÑA: HISTORIAL -->
-                <div class="tab-pane fade" id="tab-historial">
+                <div class="tab-pane fade <?= ($tabActiva === 'historial') ? 'show active' : ''; ?>" id="tab-historial">
                     <?php if (empty($historial)): ?>
                         <p class="text-center text-muted py-4 small">No hay turnos registrados en el historial todavía.</p>
                     <?php else: ?>
@@ -213,7 +234,7 @@
                                             <td class="small text-muted"><?= htmlspecialchars($hFecha); ?></td>
                                             <td class="small text-muted"><?= htmlspecialchars($hHora); ?></td>
                                             <td>
-                                                <span class="badge rounded-pill px-2 py-1 <?= ($hEst === 'cancelado') ? 'bg-danger text-white' : 'bg-secondary text-white'; ?>">
+                                                <span class="badge rounded-pill px-2 py-1 <?= ($hEst === 'cancelado') ? 'bg-danger text-white' : (($hEst === 'ausente') ? 'bg-warning text-dark' : 'bg-secondary text-white'); ?>">
                                                     <?= htmlspecialchars($hEst); ?>
                                                 </span>
                                             </td>
@@ -226,7 +247,7 @@
                 </div>
 
                 <!-- 3. PESTAÑA: MI CUENTA & SEGURIDAD -->
-                <div class="tab-pane fade" id="tab-cuenta">
+                <div class="tab-pane fade <?= ($tabActiva === 'cuenta') ? 'show active' : ''; ?>" id="tab-cuenta">
                     <div class="row g-4">
                         <!-- Datos de Contacto -->
                         <div class="col-lg-6 pe-lg-4 border-end">
@@ -264,7 +285,7 @@
                             <form action="<?= $ruta; ?>user/cambiarContrasenia" method="POST">
                                 <!-- Contraseña Actual -->
                                 <div class="mb-2">
-                                    <label class="form-label small text-muted fw-bold">Contraseña Actual *</label>
+                                    <label class="form-label small text-muted fw-bold">Contraseña Actual </label>
                                     <div class="input-group">
                                         <input type="password" name="pass_actual" id="pass_actual" class="form-control" required placeholder="••••••••">
                                         <button class="btn btn-outline-secondary" type="button" onclick="togglePass('pass_actual', 'eye_act')">
@@ -275,7 +296,7 @@
 
                                 <!-- Nueva Contraseña -->
                                 <div class="mb-2">
-                                    <label class="form-label small text-muted fw-bold">Nueva Contraseña *</label>
+                                    <label class="form-label small text-muted fw-bold">Nueva Contraseña </label>
                                     <div class="input-group">
                                         <input type="password" name="pass_nueva" id="pass_nueva" class="form-control" required placeholder="••••••••">
                                         <button class="btn btn-outline-secondary" type="button" onclick="togglePass('pass_nueva', 'eye_new')">
@@ -336,6 +357,25 @@
                 icono.classList.add('bi-eye');
             }
         }
+
+        // Mantener la pestaña activa sincronizada con el hash de la URL si se usa
+        document.addEventListener('DOMContentLoaded', function () {
+            const hash = window.location.hash;
+            if (hash) {
+                const triggerEl = document.querySelector(`button[data-bs-target="${hash}"]`);
+                if (triggerEl) {
+                    const tab = new bootstrap.Tab(triggerEl);
+                    tab.show();
+                }
+            }
+        });
+
+        // Evitar que al dar 'Atrás' en el navegador tras cerrar sesión se visualice la sesión abierta
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted || (window.performance && window.performance.getEntriesByType("navigation")[0]?.type === "back_forward")) {
+                window.location.reload();
+            }
+        });
     </script>
 </body>
 </html>

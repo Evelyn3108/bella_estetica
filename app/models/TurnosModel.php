@@ -76,11 +76,15 @@ class TurnosModel extends Model
         }
     }
     /**
-     * Trae los turnos del cliente para mostrarlos en su perfil
+     * Trae los turnos activos (pendientes o confirmados, cuya fecha y hora aún no hayan vencido)
      */
     public static function obtenerTurnosActivos($id_usuario)
     {
         try {
+            // Actualizamos previamente turnos que hayan expirado
+            self::actualizarTurnosVencidos();
+
+            // Traemos únicamente los turnos activos vigentes
             $sql = "SELECT t.id, t.fecha, t.hora, t.estado, t.id_especialista,
                            COALESCE(s.nombre_servicio, 'Servicio General') AS nombre_servicio, 
                            COALESCE(s.consultorio, 'Consultorio 1') AS consultorio, 
@@ -92,12 +96,11 @@ class TurnosModel extends Model
                     LEFT JOIN servicios s ON t.id_servicio = s.id
                     LEFT JOIN especialista e ON t.id_especialista = e.id
                     WHERE t.id_usuario = :id_usuario 
-                      AND (LOWER(t.estado) = 'pendiente' OR LOWER(t.estado) = 'confirmado' OR t.estado IS NULL)
+                      AND (LOWER(TRIM(COALESCE(t.estado, ''))) IN ('pendiente', 'confirmado') OR t.estado IS NULL)
+                      AND TIMESTAMP(t.fecha, t.hora) >= NOW()
                     ORDER BY t.fecha ASC, t.hora ASC";
 
             $res = \DataBase::getRecords($sql, [':id_usuario' => $id_usuario]);
-
-            // Si la cátedra encapsula la respuesta en ['resultado']
             if (is_array($res) && isset($res['resultado'])) {
                 $res = $res['resultado'];
             }
@@ -109,13 +112,19 @@ class TurnosModel extends Model
     }
 
     /**
-     * Obtiene el historial de turnos (asistidos o cancelados)
+     * Obtiene el historial de turnos (asistidos, cancelados o ya vencidos)
      */
     public static function obtenerHistorialTurnos($id_usuario)
     {
         try {
-            $sql = "SELECT t.id, t.fecha, t.hora, t.estado, 
-                           COALESCE(s.nombre_servicio, 'Servicio Estético') AS nombre_servicio, 
+            $sql = "SELECT t.id, t.fecha, t.hora, 
+                           CASE 
+                               WHEN (LOWER(TRIM(COALESCE(t.estado, ''))) IN ('pendiente', 'confirmado') OR t.estado IS NULL) 
+                                    AND TIMESTAMP(t.fecha, t.hora) < NOW()
+                               THEN 'asistido' 
+                               ELSE t.estado 
+                           END AS estado,
+                           COALESCE(s.nombre_servicio, 'Servicio General') AS nombre_servicio, 
                            COALESCE(s.consultorio, 'Consultorio 1') AS consultorio,
                            COALESCE(e.nombre, '') AS esp_nombre, 
                            COALESCE(e.apellido, '') AS esp_apellido
@@ -123,13 +132,17 @@ class TurnosModel extends Model
                     LEFT JOIN servicios s ON t.id_servicio = s.id
                     LEFT JOIN especialista e ON t.id_especialista = e.id
                     WHERE t.id_usuario = :id_usuario 
-                      AND t.estado IN ('asistido', 'cancelado')
+                      AND (
+                          LOWER(TRIM(COALESCE(t.estado, ''))) IN ('asistido', 'cancelado', 'ausente')
+                          OR TIMESTAMP(t.fecha, t.hora) < NOW()
+                      )
                     ORDER BY t.fecha DESC, t.hora DESC";
 
-            $res = DataBase::getRecords($sql, [':id_usuario' => $id_usuario]);
+            $res = \DataBase::getRecords($sql, [':id_usuario' => $id_usuario]);
             if (is_array($res) && isset($res['resultado'])) {
                 $res = $res['resultado'];
             }
+
             return is_array($res) ? $res : [];
         } catch (\Throwable $e) {
             return [];
@@ -145,20 +158,17 @@ class TurnosModel extends Model
             $sql = "UPDATE turnos 
                     SET estado = 'cancelado' 
                     WHERE id = :id_turno AND id_usuario = :id_usuario";
-            
-            DataBase::query($sql, [
+
+            return \DataBase::execute($sql, [
                 ':id_turno'   => $id_turno,
                 ':id_usuario' => $id_usuario
             ]);
-            return true;
         } catch (\Throwable $e) {
             return false;
         }
     }
 
-   /**
-     * Verifica si el usuario ya tiene un turno registrado en esa misma fecha y hora
-     */
+   /*** Verifica si el usuario ya tiene un turno registrado en esa misma fecha y hora*/
     public static function tieneTurnoMismoHorario($id_usuario, $fecha, $hora)
     {
         try {
@@ -217,6 +227,60 @@ class TurnosModel extends Model
             return !empty($res);
         } catch (\Throwable $e) {
             return false;
+        }
+    }
+
+    /**
+     * Asegura que la columna estado en la tabla turnos permita valores como 'ausente'
+     */
+    public static function asegurarColumnaEstadoTurno()
+    {
+        try {
+            $pdo = \DataBase::connection();
+            $col = $pdo->query("SHOW COLUMNS FROM turnos LIKE 'estado'")->fetch();
+            if ($col && isset($col['Type']) && stripos($col['Type'], 'enum') !== false) {
+                if (stripos($col['Type'], 'ausente') === false) {
+                    $pdo->exec("ALTER TABLE turnos MODIFY COLUMN estado VARCHAR(50) NOT NULL DEFAULT 'confirmado'");
+                }
+            }
+        } catch (\Throwable $e) {
+            // Silencioso
+        }
+    }
+
+    public static function actualizarEstadoTurno($id_turno, $nuevo_estado, $id_admin)
+    {
+        self::asegurarColumnaEstadoTurno();
+        try {
+            $sql = "UPDATE turnos 
+                    SET estado = :estado, 
+                        modificado_por = :id_admin,
+                        fecha_modificacion = NOW()
+                    WHERE id = :id";
+
+            \DataBase::query($sql, [
+                ':estado'   => $nuevo_estado,
+                ':id_admin' => $id_admin,
+                ':id'       => $id_turno
+            ]);
+            return true;
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+    /**
+     * Marca automáticamente como 'asistido' (o 'finalizado') los turnos confirmados cuya fecha y hora ya pasaron
+     */
+    public static function actualizarTurnosVencidos()
+    {
+        try {
+            $sql = "UPDATE turnos 
+                    SET estado = 'asistido' 
+                    WHERE LOWER(TRIM(COALESCE(estado, ''))) IN ('confirmado', 'pendiente') 
+                      AND TIMESTAMP(fecha, hora) < NOW()";
+            \DataBase::query($sql);
+        } catch (\Throwable $e) {
+            // Ignorar silenciosamente si falla
         }
     }
 
@@ -288,26 +352,64 @@ class TurnosModel extends Model
         }
     }
 
+
     /**
-     * Actualiza el estado de un turno con auditoría
+     * Obtiene los turnos futuros confirmados de un especialista junto con el email del cliente
      */
-    public static function actualizarEstadoTurno($id_turno, $nuevo_estado, $id_admin)
+    public static function obtenerTurnosAfectadosPorEspecialista($id_especialista)
     {
         try {
-            $sql = "UPDATE TURNOS 
-                    SET estado = :estado, 
+            $sql = "SELECT t.id, t.fecha, t.hora,
+                           u.nombre AS cliente_nombre, u.apellido AS cliente_apellido, u.email AS cliente_email,
+                           COALESCE(s.nombre_servicio, 'Tratamiento Estético') AS nombre_servicio,
+                           CONCAT(COALESCE(e.nombre, ''), ' ', COALESCE(e.apellido, '')) AS especialista_nombre
+                    FROM turnos t
+                    INNER JOIN usuario u ON t.id_usuario = u.id
+                    LEFT JOIN servicios s ON t.id_servicio = s.id
+                    LEFT JOIN especialista e ON t.id_especialista = e.id
+                    WHERE t.id_especialista = :id_especialista
+                      AND t.estado IN ('confirmado', 'pendiente')
+                      AND t.fecha >= CURDATE()";
+
+            $res = \DataBase::getRecords($sql, [':id_especialista' => $id_especialista]);
+            if (is_array($res) && isset($res['resultado'])) {
+                $res = $res['resultado'];
+            }
+            return is_array($res) ? $res : [];
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Cancela los turnos futuros de un especialista dado de baja
+     */
+    public static function cancelarTurnosPorBajaEspecialista($id_especialista, $id_admin = 1)
+    {
+        try {
+            $pdo = \DataBase::connection();
+            $sql = "UPDATE turnos 
+                    SET estado = 'cancelado',
                         modificado_por = :id_admin,
                         fecha_modificacion = NOW()
-                    WHERE id = :id";
+                    WHERE id_especialista = :id_especialista
+                      AND estado IN ('confirmado', 'pendiente')
+                      AND fecha >= CURDATE()";
 
-            \DataBase::query($sql, [
-                ':estado'   => $nuevo_estado,
-                ':id_admin' => $id_admin,
-                ':id'       => $id_turno
+            $stmt = $pdo->prepare($sql);
+            return $stmt->execute([
+                ':id_admin'        => $id_admin,
+                ':id_especialista' => $id_especialista
             ]);
-            return true;
         } catch (\Throwable $e) {
-            return false;
+            // Respaldo por si la tabla turnos no tiene columnas de auditoría
+            try {
+                $pdo = \DataBase::connection();
+                $stmt = $pdo->prepare("UPDATE turnos SET estado = 'cancelado' WHERE id_especialista = :id_especialista AND estado IN ('confirmado', 'pendiente') AND fecha >= CURDATE()");
+                return $stmt->execute([':id_especialista' => $id_especialista]);
+            } catch (\Throwable $ex) {
+                return false;
+            }
         }
     }
 

@@ -358,13 +358,43 @@ class AccountController extends Controller
 
     public function actionSalir()
     {
-        session_destroy();
-        static::path();
-        $ruta = self::$path . 'account/login';
-        $_SESSION['SESSION']['STATUS'] = false;
-        header("Location: $ruta");
-        $offline = UserModel::offline($_SESSION["USER"]["mail"]);
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
 
-        
+        $email = $_SESSION["USER"]["mail"] ?? $_SESSION["USER"]["email"] ?? null;
+        if ($email && method_exists(UserModel::class, 'offline')) {
+            try {
+                UserModel::offline($email);
+            } catch (\Throwable $e) {}
+        }
+
+        $esAdmin = (isset($_SESSION['USER']['rol']) && strtolower(trim($_SESSION['USER']['rol'])) === 'administrador') || 
+                   (isset($_SESSION['USER']['type']) && strtolower(trim($_SESSION['USER']['type'])) === 'administrador');
+
+        // 1. Vaciar superglobal $_SESSION
+        $_SESSION = [];
+
+        // 2. Destruir cookie de sesión
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(
+                session_name(), 
+                '', 
+                time() - 42000,
+                $params["path"], 
+                $params["domain"],
+                $params["secure"], 
+                $params["httponly"]
+            );
+        }
+
+        // 3. Destruir sesión en el servidor
+        session_destroy();
+
+        static::path();
+        $redir = $esAdmin ? "admin/login" : "account/login";
+        header("Location: " . self::$path . $redir);
+        exit;
     }
 }

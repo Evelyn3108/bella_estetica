@@ -107,6 +107,8 @@
                     $horariosGuardados = !empty($srv['hora_inicio']) ? explode(',', $srv['hora_inicio']) : ['09:00', '10:30', '14:00', '16:30'];
                     $fDesdeActual  = !empty($srv['fecha_desde']) ? $srv['fecha_desde'] : date('Y-m-d');
                     $fHastaActual  = !empty($srv['fecha_hasta']) ? $srv['fecha_hasta'] : date('Y-m-d', strtotime('+1 year'));
+                    $imagenActual  = $srv['imagen'] ?? '';
+                    $descripcionActual = $srv['descripcion'] ?? '';
                 ?>
 
                 <!-- Tarjeta del Formulario (Lienzo Terracota) -->
@@ -120,16 +122,17 @@
                             <?= !empty($idActual) ? 'Modificar Servicio' : 'Nuevo Servicio y Agenda'; ?>
                         </h2>
                         <p class="text-muted small mb-0">
-                            Completá la información del tratamiento y definí los días y horarios específicos de atención.
+                            Completá la información del tratamiento, subí una foto representativa y definí los días y horarios específicos de atención.
                         </p>
                     </div>
 
-                    <!-- Formulario hacia el Controller -->
-                    <form action="<?= $ruta; ?>admin/guardarServicio" method="POST">
+                    <!-- Formulario hacia el Controller con soporte para subida de archivos (enctype) -->
+                    <form action="<?= $ruta; ?>admin/guardarServicio" method="POST" enctype="multipart/form-data">
                         
                         <?php if (!empty($idActual)): ?>
                             <input type="hidden" name="id" value="<?= htmlspecialchars($idActual); ?>">
                         <?php endif; ?>
+                        <input type="hidden" name="imagen_actual" value="<?= htmlspecialchars($imagenActual); ?>">
 
                         <!-- SECCIÓN 1: INFORMACIÓN DEL TRATAMIENTO -->
                         <h6 class="fw-bold text-uppercase mb-3 d-flex align-items-center" style="color: var(--terracota-principal) !important; font-size: 0.85rem; letter-spacing: 0.03em;">
@@ -168,6 +171,15 @@
                             </select>
                          </div>
 
+                         <!-- Descripción del Servicio: Texto explicativo para el usuario -->
+                         <div class="col-12">
+                             <label for="descripcion" class="form-label small fw-bold text-dark">Descripción del Servicio / Tratamiento</label>
+                             <textarea id="descripcion" name="descripcion" rows="3" 
+                                       class="form-control rounded-3 shadow-none" 
+                                       style="border-color: var(--borde-suave);" 
+                                       placeholder="Detallá los beneficios, características o metodología del tratamiento que verán los clientes en la web..."><?= htmlspecialchars($descripcionActual); ?></textarea>
+                         </div>
+
                             <!-- Precio -->
                             <div class="col-md-4">
                                 <label for="precio" class="form-label small fw-bold text-dark">Precio ($ ARS) *</label>
@@ -196,6 +208,48 @@
                                 <input type="text" id="consultorio" name="consultorio" class="form-control shadow-none rounded-3" 
                                        style="border-color: var(--borde-suave);" 
                                        placeholder="Consultorio 1" value="<?= htmlspecialchars($boxActual); ?>" required>
+                            </div>
+
+                            <!-- Imagen del Servicio / Portada -->
+                            <div class="col-12 mt-3">
+                                <label for="imagen" class="form-label small fw-bold text-dark d-flex align-items-center gap-1">
+                                    <i class="bi bi-image" style="color: var(--terracota-principal);"></i> Imagen Ilustrativa del Servicio
+                                    <span class="text-muted fw-normal">(se mostrará en el catálogo y detalle para el cliente)</span>
+                                </label>
+                                
+                                <div class="d-flex flex-wrap align-items-center gap-3 p-3 bg-light rounded-3 border" style="border-color: var(--borde-suave) !important;">
+                                    <!-- Previsualización de Imagen -->
+                                    <div id="contenedor-preview" class="rounded-3 overflow-hidden border d-flex align-items-center justify-content-center bg-white shadow-xs" style="width: 120px; height: 85px; min-width: 120px;">
+                                        <?php if (!empty($imagenActual)): ?>
+                                            <?php 
+                                                if (file_exists('public/img/servicios/' . $imagenActual) || file_exists('img/servicios/' . $imagenActual)) {
+                                                    $srcPrev = $ruta . 'img/servicios/' . $imagenActual;
+                                                } elseif (file_exists('public/img/' . $imagenActual) || file_exists('img/' . $imagenActual)) {
+                                                    $srcPrev = $ruta . 'img/' . $imagenActual;
+                                                } else {
+                                                    $srcPrev = $ruta . 'img/servicios/' . $imagenActual;
+                                                }
+                                            ?>
+                                            <img id="img-preview" src="<?= $srcPrev; ?>" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">
+                                        <?php else: ?>
+                                            <div id="preview-placeholder" class="text-center text-muted p-2">
+                                                <i class="bi bi-card-image fs-3 d-block opacity-50" style="color: var(--terracota-principal);"></i>
+                                                <span style="font-size: 0.65rem;">Sin imagen</span>
+                                            </div>
+                                            <img id="img-preview" src="" alt="Preview" class="d-none" style="width: 100%; height: 100%; object-fit: cover;">
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <!-- Selector de archivo -->
+                                    <div class="flex-grow-1">
+                                        <input type="file" id="imagen" name="imagen" class="form-control rounded-3 shadow-none form-control-sm mb-1" 
+                                               accept="image/jpeg,image/png,image/webp,image/jpg" onchange="previsualizarImagen(event)" 
+                                               style="border-color: var(--borde-suave);">
+                                        <div class="small text-muted" style="font-size: 0.75rem;">
+                                            Subí una imagen (JPG, PNG o WEBP). Si no seleccionás ninguna, el sistema asignará una imagen temática automática.
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -330,6 +384,23 @@
                 alert('Debe haber al menos un horario habilitado.');
             }
         }
+
+        // Previsualización instantánea de la imagen seleccionada
+        function previsualizarImagen(event) {
+            const input = event.target;
+            const preview = document.getElementById('img-preview');
+            const placeholder = document.getElementById('preview-placeholder');
+
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('d-none');
+                    if (placeholder) placeholder.classList.add('d-none');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
     </script>
 
     <!-- FOOTER INSTITUCIONAL -->
@@ -358,6 +429,13 @@
                 inputConsultorio.value = box;
             }
         }
+
+        // Evita que al dar 'Atrás' en el navegador tras cerrar sesión se visualice la sesión abierta
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted || (window.performance && window.performance.getEntriesByType("navigation")[0]?.type === "back_forward")) {
+                window.location.reload();
+            }
+        });
     </script>
 </body>
 </html>

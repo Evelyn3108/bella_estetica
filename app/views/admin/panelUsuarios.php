@@ -344,6 +344,13 @@
             const modalEdicion = new bootstrap.Modal(document.getElementById('modalEditarUsuario'));
             modalEdicion.show();
         }
+
+        // Evita que al dar 'Atrás' en el navegador tras cerrar sesión se visualice la sesión abierta
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted || (window.performance && window.performance.getEntriesByType("navigation")[0]?.type === "back_forward")) {
+                window.location.reload();
+            }
+        });
     </script>
 </body>
 </html>

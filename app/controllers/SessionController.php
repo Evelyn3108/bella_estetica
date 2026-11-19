@@ -109,16 +109,18 @@ class SessionController extends Controller
             session_start();
         }
 
-        // 1. Si no inició sesión, lo mandamos al formulario de login de administrador
-        if (!isset($_SESSION['SESSION']['STATUS']) || $_SESSION['SESSION']['STATUS'] !== true) {
-            header("Location: /bella_estetica/admin/login");
+        static::path();
+
+        // 1. Si no inició sesión o no tiene ID activo, lo mandamos al formulario de login de administrador
+        if (!isset($_SESSION['SESSION']['STATUS']) || $_SESSION['SESSION']['STATUS'] !== true || empty($_SESSION['USER']['id_usuario'])) {
+            header("Location: " . self::$path . "admin/login");
             exit;
         }
 
-        // 2. Si es un cliente común intentando entrar, lo mandamos al home para no rebotar
+        // 2. Si es un cliente común intentando entrar, lo mandamos al catálogo/home
         $rol = $_SESSION['USER']['type'] ?? $_SESSION['USER']['rol'] ?? null;
         if (strtolower(trim((string)$rol)) !== 'administrador') {
-            header("Location: /bella_estetica/home");
+            header("Location: " . self::$path . "home");
             exit;
         }
 

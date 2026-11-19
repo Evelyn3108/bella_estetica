@@ -74,16 +74,30 @@
             $nombreEsp = 'Especialista Asignado';
         }
 
-        // Detección automática de la imagen del tratamiento según su nombre
-        $nombreMin = strtolower($nombreServicio);
-        $foto = 'limpiezaFacial.jpg';
+        // Selección de foto: personalizada subida o temática por defecto
+        $imgCustom = trim($arrServ['imagen'] ?? '');
+        $fotoPortada = null;
+        if (!empty($imgCustom)) {
+            if (file_exists('public/img/servicios/' . $imgCustom) || file_exists('img/servicios/' . $imgCustom)) {
+                $fotoPortada = $ruta . 'img/servicios/' . $imgCustom;
+            } elseif (file_exists('public/img/' . $imgCustom) || file_exists('img/' . $imgCustom)) {
+                $fotoPortada = $ruta . 'img/' . $imgCustom;
+            } else {
+                $fotoPortada = $ruta . 'img/servicios/' . $imgCustom;
+            }
+        }
 
-        if (strpos($nombreMin, 'manicur') !== false || strpos($nombreMin, 'mano') !== false || strpos($nombreMin, 'uña') !== false) {
-            $foto = 'manicura.jpg';
-        } elseif (strpos($nombreMin, 'masaje') !== false || strpos($nombreMin, 'corporal') !== false) {
-            $foto = 'masaje.jpg';
-        } elseif (strpos($nombreMin, 'lifting') !== false || strpos($nombreMin, 'pestaña') !== false || strpos($nombreMin, 'ceja') !== false) {
-            $foto = 'Lifting.jpg';
+        if (!$fotoPortada) {
+            $nombreMin = strtolower($nombreServicio);
+            $fotoDef = 'limpiezaFacial.jpg';
+            if (strpos($nombreMin, 'manicur') !== false || strpos($nombreMin, 'mano') !== false || strpos($nombreMin, 'uña') !== false) {
+                $fotoDef = 'manicura.jpg';
+            } elseif (strpos($nombreMin, 'masaje') !== false || strpos($nombreMin, 'corporal') !== false) {
+                $fotoDef = 'masaje.jpg';
+            } elseif (strpos($nombreMin, 'lifting') !== false || strpos($nombreMin, 'pestaña') !== false || strpos($nombreMin, 'ceja') !== false) {
+                $fotoDef = 'Lifting.jpg';
+            }
+            $fotoPortada = $ruta . 'img/' . $fotoDef;
         }
     ?>
 
@@ -93,7 +107,7 @@
             
             <!-- MITAD IZQUIERDA: Portada visual con degradé y datos del servicio -->
             <div class="col-lg-5 col-xl-5 position-relative text-white p-4 p-md-5 d-flex flex-column justify-content-between" 
-                 style="background: linear-gradient(180deg, rgba(30, 20, 20, 0.45) 0%, rgba(30, 20, 20, 0.88) 100%), url('<?= $ruta; ?>img/<?= $foto; ?>') center/cover no-repeat;">
+                 style="background: linear-gradient(180deg, rgba(30, 20, 20, 0.45) 0%, rgba(30, 20, 20, 0.88) 100%), url('<?= $fotoPortada; ?>') center/cover no-repeat;">
                 
                 <div class="d-flex justify-content-between align-items-center">
                     <span class="badge rounded-pill px-3 py-2 text-uppercase" style="background-color: rgba(255, 255, 255, 0.2); backdrop-filter: blur(6px); font-size: 0.75rem; letter-spacing: 0.05em;">
@@ -542,6 +556,13 @@
                 title: 'Horario no disponible',
                 text: 'El especialista ya tiene un turno reservado en ese horario por otro cliente.',
                 icon: 'info',
+                confirmButtonColor: '#a05a42'
+            });
+        } else if (urlParams.get('error') === 'dia_no_disponible') {
+            Swal.fire({
+                title: 'Día no disponible',
+                text: 'El especialista no atiende en el día seleccionado. Por favor, seleccioná otro día hábil.',
+                icon: 'warning',
                 confirmButtonColor: '#a05a42'
             });
         }

@@ -145,14 +145,16 @@
                                     if (empty($espNombre)) { $espNombre = 'Especialista'; }
 
                                     $box       = $arr['consultorio'] ?? $arr['CONSULTORIO'] ?? '-';
-                                    $estado    = strtolower(trim($arr['estado'] ?? $arr['ESTADO'] ?? 'pendiente'));
+                                    $estado    = strtolower(trim($arr['estado'] ?? $arr['ESTADO'] ?? 'confirmado'));
 
                                     $badgeStyle = match($estado) {
-                                        'confirmado' => 'background-color: #d1e7dd; color: #0f5132;',
-                                        'asistido'   => 'background-color: #cfe2ff; color: #084298;',
-                                        'cancelado'  => 'background-color: #f8d7da; color: #842029;',
-                                        default      => 'background-color: #fff3cd; color: #856404;'
+                                        'confirmado'           => 'background-color: #d1e7dd; color: #0f5132;',
+                                        'asistido'             => 'background-color: #cfe2ff; color: #084298;',
+                                        'cancelado'            => 'background-color: #f8d7da; color: #842029;',
+                                        'ausente'              => 'background-color: #fff3cd; color: #856404;',
+                                        default                => 'background-color: #e2e3e5; color: #383d41;'
                                     };
+                                    
                                 ?>
                                 <tr class="border-bottom" style="border-color: #f7f1ee;">
                                     <td class="ps-3 fw-semibold text-secondary small"><?= htmlspecialchars($fechaFmt); ?></td>
@@ -170,7 +172,7 @@
                                     <td><span class="badge bg-light text-secondary border"><?= htmlspecialchars($box); ?></span></td>
                                     <td>
                                         <span class="badge rounded-pill px-3 py-2 text-uppercase fw-semibold" style="font-size: 0.72rem; <?= $badgeStyle; ?>">
-                                            <?= htmlspecialchars($estado); ?>
+                                            <?= htmlspecialchars($estadoDisplay); ?>
                                         </span>
                                     </td>
                                     <td class="text-center pe-3">
@@ -180,9 +182,9 @@
                                             <select name="estado" class="form-select form-select-sm shadow-none rounded-3" 
                                                     style="border-color: var(--borde-suave); font-size: 0.85rem;" 
                                                     onchange="this.form.submit()">
-                                                <option value="pendiente" <?= ($estado === 'pendiente') ? 'selected' : ''; ?>>Pendiente</option>
                                                 <option value="confirmado" <?= ($estado === 'confirmado') ? 'selected' : ''; ?>>Confirmado</option>
                                                 <option value="asistido" <?= ($estado === 'asistido') ? 'selected' : ''; ?>>Asistido</option>
+                                                <option value="ausente" <?= ($estado === 'ausente' || $estado === 'pendiente') ? 'selected' : ''; ?>>Ausente</option>
                                                 <option value="cancelado" <?= ($estado === 'cancelado') ? 'selected' : ''; ?>>Cancelado</option>
                                             </select>
                                         </form>
@@ -203,5 +205,13 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Evita que al dar 'Atrás' en el navegador tras cerrar sesión se visualice la sesión abierta
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted || (window.performance && window.performance.getEntriesByType("navigation")[0]?.type === "back_forward")) {
+                window.location.reload();
+            }
+        });
+    </script>
 </body>
 </html>

@@ -32,7 +32,7 @@
                     <li class="nav-item">
                         <a class="nav-link fw-semibold d-flex align-items-center gap-1 active" 
                            style="color: var(--terracota-principal) !important;" 
-                           href="homeServicios">
+                           href="<?= $ruta; ?>home/homeServicios">
                             <i class="bi bi-grid"></i> Catálogo de Servicios
                         </a>
                     </li>
@@ -43,7 +43,7 @@
                     </li>
                    <!-- Botón Cerrar Sesión con hover suave en terracota -->
                     <li class="nav-item ms-lg-2">
-                        <a href="../account/salir" 
+                        <a href="<?= $ruta; ?>account/salir" 
                            class="btn btn-sm px-3 rounded-pill fw-semibold d-inline-flex align-items-center gap-1 text-decoration-none" 
                            style="background-color: transparent; border: 1px solid #dcd6d6; color: #7d6b6c; transition: all 0.2s ease-in-out;"
                            onmouseenter="this.style.backgroundColor='#fbf4f2'; this.style.borderColor='#b2614a'; this.style.color='#b2614a';"
@@ -83,22 +83,37 @@
                         $duracion     = $srv['duracion'] ?? '45';
                         $precio       = number_format((float)($srv['precio'] ?? 0), 2, ',', '.');
                         
-                        // Selección de foto temática según el nombre del servicio cargado
-                        $nombreMin = strtolower($nombreServ);
-                        $foto = 'limpiezaFacial.jpg'; // Imagen por defecto
-                        if (str_contains($nombreMin, 'manicur') || str_contains($nombreMin, 'mano') || str_contains($nombreMin, 'uña')) {
-                            $foto = 'manicura.jpg';
-                        } elseif (str_contains($nombreMin, 'masaje') || str_contains($nombreMin, 'corporal')) {
-                            $foto = 'masaje.jpg';
-                        } elseif (str_contains($nombreMin, 'lifting') || str_contains($nombreMin, 'pestaña') || str_contains($nombreMin, 'ceja')) {
-                            $foto = 'Lifting.jpg';
+                        // Selección de foto: personalizada subida o temática por defecto
+                        $imgCustom = trim($srv['imagen'] ?? '');
+                        $fotoSrc = null;
+                        if (!empty($imgCustom)) {
+                            if (file_exists('public/img/servicios/' . $imgCustom) || file_exists('img/servicios/' . $imgCustom)) {
+                                $fotoSrc = $ruta . 'img/servicios/' . $imgCustom;
+                            } elseif (file_exists('public/img/' . $imgCustom) || file_exists('img/' . $imgCustom)) {
+                                $fotoSrc = $ruta . 'img/' . $imgCustom;
+                            } else {
+                                $fotoSrc = $ruta . 'img/servicios/' . $imgCustom;
+                            }
+                        }
+
+                        if (!$fotoSrc) {
+                            $nombreMin = strtolower($nombreServ);
+                            $fotoDef = 'limpiezaFacial.jpg';
+                            if (strpos($nombreMin, 'manicur') !== false || strpos($nombreMin, 'mano') !== false || strpos($nombreMin, 'uña') !== false) {
+                                $fotoDef = 'manicura.jpg';
+                            } elseif (strpos($nombreMin, 'masaje') !== false || strpos($nombreMin, 'corporal') !== false) {
+                                $fotoDef = 'masaje.jpg';
+                            } elseif (strpos($nombreMin, 'lifting') !== false || strpos($nombreMin, 'pestaña') !== false || strpos($nombreMin, 'ceja') !== false) {
+                                $fotoDef = 'Lifting.jpg';
+                            }
+                            $fotoSrc = $ruta . 'img/' . $fotoDef;
                         }
                     ?>
                     <div class="col-md-6 col-lg-3">
                         <div class="card card-service h-100 d-flex flex-column border-0 shadow-sm rounded-4 overflow-hidden">
                             <!-- Imagen del Tratamiento -->
                             <div class="service-icon-box" style="height: 190px; overflow: hidden;">
-                                <img src="<?= $ruta; ?>img/<?= $foto; ?>" 
+                                <img src="<?= $fotoSrc; ?>" 
                                      alt="<?= htmlspecialchars($nombreServ); ?>" 
                                      style="width: 100%; height: 100%; object-fit: cover;">
                             </div>
@@ -107,8 +122,13 @@
                             <div class="card-body p-4 d-flex flex-column justify-content-between flex-grow-1 bg-white">
                                 <div>
                                     <h5 class="fw-bold mb-2 text-dark"><?= htmlspecialchars($nombreServ); ?></h5>
+                                    <?php 
+                                        $descServ = !empty($srv['descripcion']) 
+                                            ? $srv['descripcion'] 
+                                            : 'Tratamiento estético profesional personalizado en consultorios exclusivos.';
+                                    ?>
                                     <p class="text-muted small mb-3" style="line-height: 1.5;">
-                                        Tratamiento estético profesional personalizado en consultorios exclusivos.
+                                        <?= htmlspecialchars($descServ); ?>
                                     </p>
                                 </div>
 

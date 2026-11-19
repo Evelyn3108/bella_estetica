@@ -1,6 +1,7 @@
 <?php
 
 namespace app\controllers;
+require_once __DIR__ . '/../librerias/Mailer.php';
 
 use Controller;
 use Response;
@@ -131,7 +132,7 @@ class AdminController extends Controller
             $estado   = trim($_POST['estado'] ?? '');
             $id_admin = $_SESSION['USER']['id_usuario'] ?? 1;
 
-            if ($id_turno && in_array($estado, ['pendiente', 'confirmado', 'cancelado', 'asistido'])) {
+            if ($id_turno && in_array($estado, ['pendiente', 'confirmado', 'cancelado', 'asistido', 'ausente'])) {
                 if (method_exists(TurnosModel::class, 'actualizarEstadoTurno')) {
                     TurnosModel::actualizarEstadoTurno($id_turno, $estado, $id_admin);
                 } elseif (method_exists(TurnosModel::class, 'actualizarEstado')) {
@@ -223,9 +224,32 @@ class AdminController extends Controller
                 $ultimoHorario = trim($_POST['hora_fin'] ?? '15:00');
             }
 
+            // 3. Procesamiento de imagen ilustrativa del servicio
+            $imagenActual = trim($_POST['imagen_actual'] ?? '');
+            $nombreImagenFinal = !empty($imagenActual) ? $imagenActual : null;
+
+            if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
+                $tmpName = $_FILES['imagen']['tmp_name'];
+                $ext     = strtolower(pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION));
+                $permitidas = ['jpg', 'jpeg', 'png', 'webp'];
+
+                if (in_array($ext, $permitidas)) {
+                    $carpetaDestino = __DIR__ . '/../../public/img/servicios/';
+                    if (!is_dir($carpetaDestino)) {
+                        mkdir($carpetaDestino, 0777, true);
+                    }
+
+                    $nombreUnico = 'serv_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+                    if (move_uploaded_file($tmpName, $carpetaDestino . $nombreUnico)) {
+                        $nombreImagenFinal = $nombreUnico;
+                    }
+                }
+            }
+
             $datos = [
                 'id_especialista' => filter_input(INPUT_POST, 'id_especialista', FILTER_VALIDATE_INT) ?: 1,
                 'nombre_servicio' => trim($_POST['nombre_servicio'] ?? ''),
+                'descripcion'     => trim($_POST['descripcion'] ?? ''),
                 'duracion'        => filter_input(INPUT_POST, 'duracion', FILTER_VALIDATE_INT) ?: 45,
                 'precio'          => filter_input(INPUT_POST, 'precio', FILTER_VALIDATE_FLOAT) ?: 0.0,
                 'consultorio'     => trim($_POST['consultorio'] ?? 'Consultorio 1'),
@@ -233,7 +257,8 @@ class AdminController extends Controller
                 'hora_inicio'     => $horariosTexto,
                 'hora_fin'        => $ultimoHorario,
                 'fecha_desde'     => !empty($_POST['fecha_desde']) ? trim($_POST['fecha_desde']) : date('Y-m-d'),
-                'fecha_hasta'     => !empty($_POST['fecha_hasta']) ? trim($_POST['fecha_hasta']) : date('Y-m-d', strtotime('+1 year'))
+                'fecha_hasta'     => !empty($_POST['fecha_hasta']) ? trim($_POST['fecha_hasta']) : date('Y-m-d', strtotime('+1 year')),
+                'imagen'          => $nombreImagenFinal
             ];
 
             $id_admin = $_SESSION['USER']['id_usuario'] ?? 1;
@@ -241,12 +266,14 @@ class AdminController extends Controller
             if (!empty($datos['nombre_servicio'])) {
                 if ($id) {
                     $resultado = \app\models\ServiciosModel::actualizarServicio($id, $datos, $id_admin);
+                    $status = 'editado_ok';
                 } else {
                     $resultado = \app\models\ServiciosModel::guardarServicio($datos, $id_admin);
+                    $status = 'creado_ok';
                 }
 
                 if ($resultado) {
-                    header("Location: " . self::$path . "admin/servicios?status=ok");
+                    header("Location: " . self::$path . "admin/servicios?status=" . $status);
                     exit;
                 }
             }
@@ -319,6 +346,41 @@ class AdminController extends Controller
         exit;
     }
 
+  /**
+     * Notifica por correo a los clientes afectados y cancela sus turnos futuros
+     */
+    private function notificarYCancelarTurnosEspecialista($id_especialista, $id_admin)
+    {
+        $turnosAfectados = \app\models\TurnosModel::obtenerTurnosAfectadosPorEspecialista($id_especialista);
+
+        if (!empty($turnosAfectados)) {
+            $protocolo   = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
+            $host        = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            $urlCatalogo = $protocolo . $host . self::$path . "home/homeServicios";
+
+            foreach ($turnosAfectados as $t) {
+                $arr = is_object($t) ? (array)$t : $t;
+                $emailCliente  = $arr['cliente_email'] ?? '';
+                $nombreCliente = trim(($arr['cliente_nombre'] ?? '') . ' ' . ($arr['cliente_apellido'] ?? '')) ?: 'Cliente';
+
+                if (!empty($emailCliente)) {
+                    $datosTurno = [
+                        'servicio'     => $arr['nombre_servicio'] ?? 'Tratamiento Estético',
+                        'especialista' => trim($arr['especialista_nombre'] ?? 'Especialista'),
+                        'fecha'        => $arr['fecha'],
+                        'hora'         => $arr['hora'],
+                        'url_catalogo' => $urlCatalogo
+                    ];
+
+                    \app\librerias\Mailer::enviarAvisoBajaEspecialista($emailCliente, $nombreCliente, $datosTurno);
+                }
+            }
+
+            // Cancela en bloque los turnos afectados
+            \app\models\TurnosModel::cancelarTurnosPorBajaEspecialista($id_especialista, $id_admin);
+        }
+    }
+
     public function actionBajaEspecialista()
     {
         SessionController::onlyAdmins();
@@ -329,7 +391,31 @@ class AdminController extends Controller
         $id_admin = $_SESSION['USER']['id_usuario'] ?? 1;
 
         if ($id !== null && $estado !== null) {
-            EspecialistaModel::alternarBajaLogica($id, $estado, $id_admin);
+            // Si pasa a INACTIVO (0), avisa a los clientes y cancela sus turnos futuros
+            if ((int)$estado === 0) {
+                $this->notificarYCancelarTurnosEspecialista($id, $id_admin);
+            }
+
+            \app\models\EspecialistaModel::alternarBajaLogica($id, $estado, $id_admin);
+        }
+
+        header("Location: " . self::$path . "admin/especialistas");
+        exit;
+    }
+
+    public function actionEliminarEspecialista()
+    {
+        SessionController::onlyAdmins();
+        static::path();
+
+        $id       = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $id_admin = $_SESSION['USER']['id_usuario'] ?? 1;
+
+        if ($id) {
+            // Antes de eliminar, avisa a los clientes y cancela sus turnos futuros
+            $this->notificarYCancelarTurnosEspecialista($id, $id_admin);
+
+            \app\models\EspecialistaModel::eliminarEspecialista($id);
         }
 
         header("Location: " . self::$path . "admin/especialistas");
@@ -337,7 +423,7 @@ class AdminController extends Controller
     }
 
     /* ========================================================
-       MÓDULO: GESTIÓN DE USUARIOS
+                       GESTIÓN DE USUARIOS
        ======================================================== */
     public function actionUsuarios()
     {
@@ -432,25 +518,44 @@ class AdminController extends Controller
         header("Location: " . self::$path . "admin/usuarios");
         exit;
     }
-    
+
     /**
-     * Procesa la eliminación de un especialista
-     * Ruta: /admin/eliminarEspecialista?id=X
+     * Cierra la sesión del administrador de forma segura
+     * Ruta: /admin/salir
      */
-    public function actionEliminarEspecialista()
+    public function actionSalir()
     {
-        SessionController::onlyAdmins();
-        static::path();
-
-        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-
-        if ($id) {
-            EspecialistaModel::eliminarEspecialista($id);
-            header("Location: " . self::$path . "admin/especialistas?status=eliminado_ok");
-            exit;
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
         }
 
-        header("Location: " . self::$path . "admin/especialistas");
+        $email = $_SESSION["USER"]["mail"] ?? $_SESSION["USER"]["email"] ?? null;
+        if ($email && method_exists(UserModel::class, 'offline')) {
+            try {
+                UserModel::offline($email);
+            } catch (\Throwable $e) {}
+        }
+
+        $_SESSION = [];
+
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(
+                session_name(), 
+                '', 
+                time() - 42000,
+                $params["path"], 
+                $params["domain"],
+                $params["secure"], 
+                $params["httponly"]
+            );
+        }
+
+        session_destroy();
+
+        static::path();
+        header("Location: " . self::$path . "admin/login");
         exit;
     }
+    
 }

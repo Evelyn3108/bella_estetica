@@ -1,4 +1,5 @@
 <?php session_start();
+date_default_timezone_set('America/Argentina/Buenos_Aires');
 error_reporting(-1);
 // Definimos que todas las rutas van a ser relativas a la raiz del sitio
 chdir(dirname(__DIR__));

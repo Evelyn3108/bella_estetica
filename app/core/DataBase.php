@@ -59,33 +59,30 @@ class DataBase
 	}
 
 	public static function getRecords($sql, $params = []){
-		$result['status'] = true;
-		$statement = static::connection()->prepare($sql);
+		$result = ['status' => true, 'resultado' => []];
 		try {
+			$statement = static::connection()->prepare($sql);
 			$statement->execute($params);
 			$resultado = $statement->fetchAll(PDO::FETCH_OBJ);
-		}
-		catch (exception $e) {
-		    $resultado = false;
-		}
-
-
-		if ($resultado === false) {
-			$result['status'] = false;
-			$result['resultado'] = $e->errorInfo;
-		}else{
 			$result['resultado'] = $resultado;
+		}
+		catch (\Throwable $e) {
+			$result['status'] = false;
+			$result['resultado'] = [];
 		}
  
 		return $result;
 	}
 
 	public static function getRecord($sql, $params = []){
-		$statement = static::connection()->prepare($sql);
-		// echo "$sql";
-		$statement->execute($params);
-		$result = $statement->fetch(PDO::FETCH_OBJ);
-		return $result;
+		try {
+			$statement = static::connection()->prepare($sql);
+			$statement->execute($params);
+			$result = $statement->fetch(PDO::FETCH_OBJ);
+			return $result;
+		} catch (\Throwable $e) {
+			return null;
+		}
 	}
 
 	public static function transaction($sql){

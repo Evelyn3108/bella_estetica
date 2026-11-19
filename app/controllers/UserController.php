@@ -417,12 +417,12 @@ class UserController extends Controller
                 $_SESSION['USER']['email']    = $email;
                 $_SESSION['USER']['telefono'] = $telefono;
 
-                header("Location: " . self::$path . "user/perfilUsuario?datos=ok");
+                header("Location: " . self::$path . "user/perfilUsuario?datos=ok&tab=cuenta");
                 exit;
             }
         }
 
-        header("Location: " . self::$path . "user/perfilUsuario");
+        header("Location: " . self::$path . "user/perfilUsuario?tab=cuenta");
         exit;
     }
 
@@ -459,29 +459,29 @@ class UserController extends Controller
 
             // 2. Validar que la contraseña actual sea correcta
             if (!password_verify($pass_actual, $hashActual)) {
-                header("Location: " . self::$path . "user/perfilUsuario?error_pass=actual");
+                header("Location: " . self::$path . "user/perfilUsuario?error_pass=actual&tab=cuenta");
                 exit;
             }
 
             // 3. Validar que las dos nuevas coincidan
             if ($pass_nueva !== $pass_rep) {
-                header("Location: " . self::$path . "user/perfilUsuario?error_pass=coincidencia");
+                header("Location: " . self::$path . "user/perfilUsuario?error_pass=coincidencia&tab=cuenta");
                 exit;
             }
 
             // 4. Validar requisitos de complejidad (8 a 15 caracteres, 1 mayúscula, 1 número, 1 símbolo)
             if (!preg_match('/^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,15}$/', $pass_nueva)) {
-                header("Location: " . self::$path . "user/perfilUsuario?error_pass=formato");
+                header("Location: " . self::$path . "user/perfilUsuario?error_pass=formato&tab=cuenta");
                 exit;
             }
 
             // 5. Guardar nueva contraseña
             \app\models\UserModel::actualizarPassword($id_usuario, $pass_nueva);
-            header("Location: " . self::$path . "user/perfilUsuario?pass=ok");
+            header("Location: " . self::$path . "user/perfilUsuario?pass=ok&tab=cuenta");
             exit;
         }
 
-        header("Location: " . self::$path . "user/perfilUsuario");
+        header("Location: " . self::$path . "user/perfilUsuario?tab=cuenta");
         exit;
     }
 }

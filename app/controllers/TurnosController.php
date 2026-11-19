@@ -95,18 +95,17 @@ class TurnosController extends Controller
 
                 // Insertar el turno en la base de datos
                 $guardado = TurnosModel::insertarTurno($id_usuario, $id_servicio, $id_especialista, $fecha, $hora);
-// Insertar el turno en la base de datos
-                $guardado = TurnosModel::insertarTurno($id_usuario, $id_servicio, $id_especialista, $fecha, $hora);
+
 
                 if ($guardado) {
                     // --- INICIO ENVÍO DE MAIL DE CONFIRMACIÓN ---
                     $emailUsuario  = $_SESSION['USER']['mail'] ?? $_SESSION['USER']['email'] ?? null;
                     $nombreUsuario = $_SESSION['USER']['name'] ?? $_SESSION['USER']['nombre'] ?? 'Cliente';
 
-                    // Construimos la URL completa hacia Mi Perfil para el botón de cancelar
+                   // Construimos la URL absoluta limpia hacia el Login (o cambiá "account/login" por "home")
                     $protocolo = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
                     $host      = $_SERVER['HTTP_HOST'] ?? 'localhost';
-                    $urlPerfil = $protocolo . $host . self::$path . "user/perfilUsuario";
+                    $urlPerfil = $protocolo . $host . "/bella_estetica/account/login";
 
                     if (!empty($emailUsuario)) {
                         $datosTurno = [

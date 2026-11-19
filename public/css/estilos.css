@@ -480,3 +480,11 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
     color: #ffffff !important;
     box-shadow: 0 3px 10px rgba(160, 90, 66, 0.3) !important;
 }
+
+/* Ocultar el icono nativo de visualización de contraseña del navegador (Edge / Windows) dentro del recuadro */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
