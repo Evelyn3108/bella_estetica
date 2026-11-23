@@ -67,29 +67,86 @@
         
         <!-- ENCABEZADO Y FILTRO -->
         <div class="row align-items-center mb-4 gy-3">
-            <div class="col-md-5">
+            <div class="col-lg-4 col-md-12">
                 <h3 class="fw-bold text-dark mb-1" style="letter-spacing: -0.02em;">Agenda de Turnos</h3>
                 <p class="text-muted small mb-0">
-                    <?= !empty($fechaFiltro) ? 'Mostrando citas del día: <strong>' . date('d/m/Y', strtotime($fechaFiltro)) . '</strong>' : 'Listado general de todas las reservas registradas.'; ?>
+                    <?php 
+                        $filtrosTexto = [];
+                        if (!empty($fechaFiltro)) {
+                            $filtrosTexto[] = 'fecha: <strong>' . date('d/m/Y', strtotime($fechaFiltro)) . '</strong>';
+                        }
+                        if (!empty($especialistaNombreFiltro)) {
+                            $filtrosTexto[] = 'especialista: <strong>' . htmlspecialchars($especialistaNombreFiltro) . '</strong>';
+                        }
+                        if (!empty($filtrosTexto)) {
+                            echo 'Mostrando citas por ' . implode(' y ', $filtrosTexto) . '.';
+                        } else {
+                            echo 'Listado general de todas las reservas registradas.';
+                        }
+                    ?>
                 </p>
             </div>
             
-            <div class="col-md-7">
+            <div class="col-lg-8 col-md-12">
                 <form action="<?= $ruta; ?>admin/panel" method="GET" class="d-flex flex-wrap justify-content-md-end align-items-center gap-2">
-                    <label for="fecha" class="small fw-bold text-muted text-nowrap">Filtrar fecha:</label>
+                    <label for="fecha" class="small fw-bold text-muted text-nowrap">Fecha:</label>
                     <input type="date" id="fecha" name="fecha" class="form-control form-control-sm w-auto shadow-none rounded-3" 
                            style="border-color: var(--borde-suave);" 
                            value="<?= htmlspecialchars($fechaFiltro); ?>" 
                            onchange="this.form.submit()">
+
+                    <label for="especialista" class="small fw-bold text-muted text-nowrap ms-md-1">Especialista:</label>
+                    <select id="especialista" name="especialista" class="form-select form-select-sm w-auto shadow-none rounded-3" 
+                            style="border-color: var(--borde-suave);" 
+                            onchange="this.form.submit()">
+                        <option value="">Todos los especialistas</option>
+                        <?php if (!empty($especialistas)): ?>
+                            <?php foreach ($especialistas as $esp): ?>
+                                <?php 
+                                    $eArr = is_object($esp) ? (array)$esp : $esp;
+                                    $idE  = $eArr['id'] ?? 0;
+                                    $nomE = trim(($eArr['nombre'] ?? '') . ' ' . ($eArr['apellido'] ?? ''));
+                                    $isSelected = ($especialistaFiltro == $idE || $especialistaFiltro === $nomE);
+                                ?>
+                                <option value="<?= $idE; ?>" <?= $isSelected ? 'selected' : ''; ?>>
+                                    <?= htmlspecialchars($nomE); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
                     
-                    <a href="<?= $ruta; ?>admin/panel?fecha=<?= date('Y-m-d'); ?>" class="btn btn-sm fw-semibold rounded-3 text-decoration-none" 
+                    <a href="<?= $ruta; ?>admin/panel?fecha=<?= date('Y-m-d'); ?><?= !empty($especialistaFiltro) ? '&especialista=' . urlencode($especialistaFiltro) : ''; ?>" class="btn btn-sm fw-semibold rounded-3 text-decoration-none" 
                        style="background-color: var(--caja-suave); color: var(--terracota-principal); border: 1px solid var(--borde-suave);">
                         Hoy
                     </a>
                     
-                    <a href="<?= $ruta; ?>admin/panel" class="btn btn-sm btn-outline-secondary rounded-3 text-decoration-none">
+                    <a href="<?= $ruta; ?>admin/panel" class="btn btn-sm btn-outline-secondary rounded-3 text-decoration-none" title="Limpiar todos los filtros">
                         Ver todos
                     </a>
+
+                    <div class="dropdown d-inline-block">
+                        <button class="btn btn-sm btn-outline-success dropdown-toggle rounded-3 fw-semibold d-inline-flex align-items-center gap-1 shadow-none" 
+                                type="button" id="dropdownExportar" data-bs-toggle="dropdown" aria-expanded="false" 
+                                title="<?= !empty($especialistaNombreFiltro) ? 'Exportar turnos de ' . htmlspecialchars($especialistaNombreFiltro) : 'Exportar turnos'; ?>">
+                            <i class="bi bi-download"></i> Exportar
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 py-1" aria-labelledby="dropdownExportar" style="font-size: 0.85rem; border: 1px solid var(--borde-suave) !important;">
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2 py-2" 
+                                   href="<?= $ruta; ?>admin/exportarTurnos?formato=excel<?= !empty($fechaFiltro) ? '&fecha=' . urlencode($fechaFiltro) : ''; ?><?= !empty($especialistaFiltro) ? '&especialista=' . urlencode($especialistaFiltro) : ''; ?>">
+                                    <i class="bi bi-file-earmark-excel-fill text-success fs-6"></i> 
+                                    <span>Exportar a Excel (.csv)</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2 py-2" 
+                                   href="<?= $ruta; ?>admin/exportarTurnos?formato=txt<?= !empty($fechaFiltro) ? '&fecha=' . urlencode($fechaFiltro) : ''; ?><?= !empty($especialistaFiltro) ? '&especialista=' . urlencode($especialistaFiltro) : ''; ?>">
+                                    <i class="bi bi-file-earmark-text-fill text-secondary fs-6"></i> 
+                                    <span>Exportar a Texto (.txt)</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </form>
             </div>
         </div>
@@ -116,7 +173,20 @@
                             <tr>
                                 <td colspan="9" class="text-center py-5 text-muted">
                                     <i class="bi bi-calendar-x fs-1 d-block mb-2 opacity-50" style="color: var(--terracota-principal);"></i>
-                                    No se encontraron turnos <?= !empty($fechaFiltro) ? 'para el día ' . date('d/m/Y', strtotime($fechaFiltro)) : 'registrados en el sistema'; ?>.
+                                    <?php 
+                                        $msgVacio = [];
+                                        if (!empty($fechaFiltro)) {
+                                            $msgVacio[] = 'para el día ' . date('d/m/Y', strtotime($fechaFiltro));
+                                        }
+                                        if (!empty($especialistaNombreFiltro)) {
+                                            $msgVacio[] = 'con el especialista ' . htmlspecialchars($especialistaNombreFiltro);
+                                        }
+                                        if (!empty($msgVacio)) {
+                                            echo 'No se encontraron turnos ' . implode(' y ', $msgVacio) . '.';
+                                        } else {
+                                            echo 'No se encontraron turnos registrados en el sistema.';
+                                        }
+                                    ?>
                                 </td>
                             </tr>
                         <?php else: ?>
@@ -154,7 +224,7 @@
                                         'ausente'              => 'background-color: #fff3cd; color: #856404;',
                                         default                => 'background-color: #e2e3e5; color: #383d41;'
                                     };
-                                    
+                                    $estadoDisplay = ($estado === 'pendiente') ? 'ausente' : $estado;
                                 ?>
                                 <tr class="border-bottom" style="border-color: #f7f1ee;">
                                     <td class="ps-3 fw-semibold text-secondary small"><?= htmlspecialchars($fechaFmt); ?></td>
@@ -179,6 +249,7 @@
                                         <form action="<?= $ruta; ?>admin/cambiarEstadoTurno" method="POST" class="d-inline-flex">
                                             <input type="hidden" name="id_turno" value="<?= $idTurno; ?>">
                                             <input type="hidden" name="fecha_origen" value="<?= htmlspecialchars($fechaFiltro); ?>">
+                                            <input type="hidden" name="especialista_origen" value="<?= htmlspecialchars($especialistaFiltro ?? ''); ?>">
                                             <select name="estado" class="form-select form-select-sm shadow-none rounded-3" 
                                                     style="border-color: var(--borde-suave); font-size: 0.85rem;" 
                                                     onchange="this.form.submit()">

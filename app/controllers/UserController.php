@@ -29,10 +29,13 @@ class UserController extends Controller
 	/*obtiene todos los datos de un usuarios por id o por email según dato ingresado*/
 	public static function getUser($emailOrId)
 	{
+		$userData = null;
 		if (filter_var($emailOrId, FILTER_VALIDATE_EMAIL)) {
 			# obtener datos de usuario por Email
 			$userData = UserModel::findEmail($emailOrId);
-			// var_dump($userData);
+		} elseif (is_numeric($emailOrId)) {
+			# obtener datos de usuario por ID
+			$userData = UserModel::getUsuarioById((int)$emailOrId);
 		}
 		return $userData;
 	}
@@ -322,19 +325,10 @@ class UserController extends Controller
         // Consultamos la base de datos para traer el teléfono y datos actualizados
         if ($email) {
             try {
-                $host = 'localhost';
-                $db   = 'estetica_bd';
-                $user = 'root';
-                $pass = '';
-                $dsn  = "mysql:host=$host;dbname=$db;charset=utf8mb4";
-                $pdo  = new \PDO($dsn, $user, $pass, [
-                    \PDO::ATTR_ERRMODE            => \PDO::ERRMODE_EXCEPTION,
-                    \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_OBJ
-                ]);
-
+                $pdo = \DataBase::connection();
                 $stmt = $pdo->prepare("SELECT * FROM usuario WHERE email = :email LIMIT 1");
                 $stmt->execute([':email' => $email]);
-                $userRow = $stmt->fetch();
+                $userRow = $stmt->fetch(\PDO::FETCH_OBJ);
 
                 if ($userRow) {
                     $id_usuario = $userRow->id ?? $id_usuario;

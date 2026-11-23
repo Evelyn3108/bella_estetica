@@ -39,7 +39,7 @@ class Mailer
             $mail->addAddress($destinatarioEmail, $nombreCliente);
 
             $mail->isHTML(true);
-          $mail->Subject = 'Confirmación de Turno NUEVA - Bella Estética';
+          $mail->Subject = 'Confirmación de Turno - Bella Estética';
 
             $fechaFormateada = date('d/m/Y', strtotime($datosTurno['fecha']));
             $horaFormateada  = substr($datosTurno['hora'], 0, 5) . ' hs';
@@ -64,12 +64,12 @@ class Mailer
                         </div>
 
                         <p style='font-size: 14px; color: #4a3b3c;'>
-                            Si por algún motivo no podés asistir y deseás cancelar tu turno, podés ingresar a nuestra página para gestionarlo:
+                           Si por algún motivo no podés asistir y deseás cancelar tu turno, podés hacerlo ingresando a tu perfil desde el siguiente boton:
                         </p>
 
                         <div style='text-align: center; margin: 25px 0;'>
                             <a href='{$urlCancelar}' style='background-color: #a05a42; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; display: inline-block;'>
-                                Ingresar para Gestionar o Cancelar Turno
+                                Cancelar Turno
                             </a>
                         </div>
                     </div>
@@ -147,12 +147,12 @@ class Mailer
                     </div>
                     <div style='padding: 25px; color: #4a3b3c; background-color: #ffffff;'>
                         <p>Hola <strong>" . htmlspecialchars($nombreCliente) . "</strong>,</p>
-                        <p>Te informamos que el/la especialista <strong>" . htmlspecialchars($datosTurno['especialista']) . "</strong> no se encontrará disponible próximamente, por lo que tu turno ha sido <strong>cancelado automáticamente</strong>:</p>
+                        <p>Te informamos que la especialista <strong>" . htmlspecialchars($datosTurno['especialista']) . "</strong> no se encontrará disponible próximamente, por lo que tu turno ha sido <strong>cancelado automáticamente</strong>:</p>
                         
                         <div style='background-color: #fdf5f5; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc3545;'>
                             <p style='margin: 5px 0;'><strong>Tratamiento:</strong> " . htmlspecialchars($datosTurno['servicio']) . "</p>
-                            <p style='margin: 5px 0;'><strong>Fecha original:</strong> {$fechaFormateada}</p>
-                            <p style='margin: 5px 0;'><strong>Horario original:</strong> {$horaFormateada}</p>
+                            <p style='margin: 5px 0;'><strong>Fecha:</strong> {$fechaFormateada}</p>
+                            <p style='margin: 5px 0;'><strong>Horario:</strong> {$horaFormateada}</p>
                         </div>
 
                         <p style='font-size: 14px; color: #4a3b3c;'>
@@ -161,12 +161,12 @@ class Mailer
 
                         <div style='text-align: center; margin: 25px 0;'>
                             <a href='{$urlCatalogo}' style='background-color: #a05a42; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; display: inline-block;'>
-                                Reagendar con Otro Especialista
+                                Reagendar
                             </a>
                         </div>
 
                         <p style='font-size: 13px; color: #7d6b6c;'>
-                            Si preferís no reagendar por el momento, no tenés que realizar ninguna acción adicional. Pedimos disculpas por las molestias ocasionadas.
+                         Pedimos disculpas por las molestias ocasionadas.
                         </p>
                     </div>
                     <div style='background-color: #fbf7f7; padding: 15px; text-align: center; font-size: 12px; color: #7d6b6c;'>

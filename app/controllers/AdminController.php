@@ -104,13 +104,36 @@ class AdminController extends Controller
         SessionController::onlyAdmins();
         static::path();
 
-        $fechaFiltro = trim($_GET['fecha'] ?? '');
-        $turnos = TurnosModel::obtenerAgendaAdmin(!empty($fechaFiltro) ? $fechaFiltro : null);
+        $fechaFiltro        = trim($_GET['fecha'] ?? '');
+        $especialistaFiltro = trim($_GET['especialista'] ?? '');
+        $especialistas      = \app\models\EspecialistaModel::listarTodos();
+
+        $turnos = TurnosModel::obtenerAgendaAdmin(
+            !empty($fechaFiltro) ? $fechaFiltro : null,
+            !empty($especialistaFiltro) ? $especialistaFiltro : null
+        );
+
+        $especialistaNombreFiltro = '';
+        if (!empty($especialistaFiltro)) {
+            foreach ($especialistas as $esp) {
+                $eArr = is_object($esp) ? (array)$esp : $esp;
+                if (($eArr['id'] ?? 0) == $especialistaFiltro || trim(($eArr['nombre'] ?? '') . ' ' . ($eArr['apellido'] ?? '')) === $especialistaFiltro) {
+                    $especialistaNombreFiltro = trim(($eArr['nombre'] ?? '') . ' ' . ($eArr['apellido'] ?? ''));
+                    break;
+                }
+            }
+            if (empty($especialistaNombreFiltro)) {
+                $especialistaNombreFiltro = $especialistaFiltro;
+            }
+        }
 
         $parametros = [
-            "ruta"        => self::$path,
-            "turnos"      => $turnos,
-            "fechaFiltro" => $fechaFiltro
+            "ruta"                     => self::$path,
+            "turnos"                   => $turnos,
+            "fechaFiltro"              => $fechaFiltro,
+            "especialistaFiltro"       => $especialistaFiltro,
+            "especialistaNombreFiltro" => $especialistaNombreFiltro,
+            "especialistas"            => $especialistas
         ];
 
         Response::render('admin/', 'panelTurnos', $parametros);
@@ -125,7 +148,8 @@ class AdminController extends Controller
         SessionController::onlyAdmins();
         static::path();
 
-        $fechaOrigen = trim($_POST['fecha_origen'] ?? '');
+        $fechaOrigen        = trim($_POST['fecha_origen'] ?? '');
+        $especialistaOrigen = trim($_POST['especialista_origen'] ?? '');
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id_turno = filter_input(INPUT_POST, 'id_turno', FILTER_VALIDATE_INT);
@@ -141,12 +165,166 @@ class AdminController extends Controller
             }
         }
 
-        $redir = "admin/panel";
+        $params = [];
         if (!empty($fechaOrigen)) {
-            $redir .= "?fecha=" . urlencode($fechaOrigen);
+            $params['fecha'] = $fechaOrigen;
         }
+        if (!empty($especialistaOrigen)) {
+            $params['especialista'] = $especialistaOrigen;
+        }
+        $redir = "admin/panel" . (!empty($params) ? '?' . http_build_query($params) : '');
 
         header("Location: " . self::$path . $redir);
+        exit;
+    }
+
+    /**
+     * Exporta los turnos (filtrados por especialista y/o fecha) a Excel (.csv) o Texto (.txt)
+     * Ruta: /admin/exportarTurnos
+     */
+    public function actionExportarTurnos()
+    {
+        SessionController::onlyAdmins();
+
+        $fechaFiltro        = trim($_GET['fecha'] ?? '');
+        $especialistaFiltro = trim($_GET['especialista'] ?? '');
+        $formato            = strtolower(trim($_GET['formato'] ?? 'excel'));
+
+        $especialistas      = \app\models\EspecialistaModel::listarTodos();
+        $nombreEspecialista = '';
+        if (!empty($especialistaFiltro)) {
+            foreach ($especialistas as $esp) {
+                $eArr = is_object($esp) ? (array)$esp : $esp;
+                if (($eArr['id'] ?? 0) == $especialistaFiltro || trim(($eArr['nombre'] ?? '') . ' ' . ($eArr['apellido'] ?? '')) === $especialistaFiltro) {
+                    $nombreEspecialista = trim(($eArr['nombre'] ?? '') . ' ' . ($eArr['apellido'] ?? ''));
+                    break;
+                }
+            }
+            if (empty($nombreEspecialista)) {
+                $nombreEspecialista = $especialistaFiltro;
+            }
+        }
+
+        $turnos = TurnosModel::obtenerAgendaAdmin(
+            !empty($fechaFiltro) ? $fechaFiltro : null,
+            !empty($especialistaFiltro) ? $especialistaFiltro : null
+        );
+
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
+
+        // Armar nombre del archivo amigable
+        $partes = ['turnos'];
+        if (!empty($nombreEspecialista)) {
+            $partes[] = preg_replace('/[^a-zA-Z0-9_-]/', '_', $nombreEspecialista);
+        }
+        if (!empty($fechaFiltro)) {
+            $partes[] = $fechaFiltro;
+        } else {
+            $partes[] = date('Y-m-d');
+        }
+        $nombreBase = implode('_', $partes);
+
+        if ($formato === 'txt') {
+            header('Content-Type: text/plain; charset=UTF-8');
+            header('Content-Disposition: attachment; filename="' . $nombreBase . '.txt"');
+            header('Pragma: no-cache');
+            header('Expires: 0');
+
+            $espDisplay   = !empty($nombreEspecialista) ? $nombreEspecialista : 'Todos los especialistas';
+            $fechaDisplay = !empty($fechaFiltro) ? date('d/m/Y', strtotime($fechaFiltro)) : 'Todas las fechas';
+            $totalTurnos  = count($turnos);
+
+            echo "========================================================================================================\n";
+            echo "                                BELLA ESTÉTICA - REPORTE DE AGENDA\n";
+            echo "========================================================================================================\n";
+            echo "Especialista : " . $espDisplay . "\n";
+            echo "Fecha Filtro : " . $fechaDisplay . "\n";
+            echo "Generado el  : " . date('d/m/Y H:i') . " hs\n";
+            echo "Total Turnos : " . $totalTurnos . "\n";
+            echo "========================================================================================================\n\n";
+
+            if (empty($turnos)) {
+                echo "No se encontraron turnos registrados para el criterio de búsqueda seleccionado.\n";
+            } else {
+                echo sprintf(
+                    "%-11s | %-6s | %-20s | %-22s | %-20s | %-14s | %-12s\n",
+                    "FECHA", "HORA", "ESPECIALISTA", "SERVICIO", "CLIENTE", "TELÉFONO", "ESTADO"
+                );
+                echo str_repeat("-", 116) . "\n";
+
+                foreach ($turnos as $t) {
+                    $arr = is_object($t) ? (array)$t : (is_array($t) ? $t : []);
+
+                    $fRaw = $arr['fecha'] ?? $arr['FECHA'] ?? '';
+                    $fFmt = !empty($fRaw) ? date('d/m/Y', strtotime($fRaw)) : '-';
+                    $hFmt = !empty($arr['hora']) ? substr($arr['hora'], 0, 5) : '-';
+
+                    $esp = trim(($arr['esp_nombre'] ?? '') . ' ' . ($arr['esp_apellido'] ?? '')) ?: 'Sin asignar';
+                    $srv = $arr['nombre_servicio'] ?? '-';
+                    $cli = trim(($arr['cliente_nombre'] ?? '') . ' ' . ($arr['cliente_apellido'] ?? '')) ?: 'Cliente';
+                    $tel = $arr['cliente_telefono'] ?? '-';
+                    $est = $arr['estado'] ?? 'pendiente';
+                    $estFmt = ucfirst($est === 'pendiente' ? 'ausente' : $est);
+
+                    $esp = mb_strimwidth($esp, 0, 20, ".");
+                    $srv = mb_strimwidth($srv, 0, 22, ".");
+                    $cli = mb_strimwidth($cli, 0, 20, ".");
+                    $tel = mb_strimwidth($tel, 0, 14, ".");
+
+                    echo sprintf(
+                        "%-11s | %-6s | %-20s | %-22s | %-20s | %-14s | %-12s\n",
+                        $fFmt, $hFmt, $esp, $srv, $cli, $tel, $estFmt
+                    );
+                }
+                echo str_repeat("=", 116) . "\n";
+                echo "Bella Estética © " . date('Y') . " - Belleza, cuidado y bienestar integral\n";
+            }
+            exit;
+        }
+
+        // Formato Excel (.csv con UTF-8 BOM y delimitador ';' para Microsoft Excel)
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $nombreBase . '.csv"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        $output = fopen('php://output', 'w');
+        fwrite($output, "\xEF\xBB\xBF");
+
+        fputcsv($output, ['Fecha', 'Hora', 'Especialista', 'Servicio', 'Consultorio', 'Cliente', 'Teléfono', 'Email', 'Estado'], ';');
+
+        foreach ($turnos as $t) {
+            $arr = is_object($t) ? (array)$t : (is_array($t) ? $t : []);
+
+            $fRaw = $arr['fecha'] ?? $arr['FECHA'] ?? '';
+            $fFmt = !empty($fRaw) ? date('d/m/Y', strtotime($fRaw)) : '-';
+            $hFmt = !empty($arr['hora']) ? substr($arr['hora'], 0, 5) : '-';
+
+            $esp = trim(($arr['esp_nombre'] ?? '') . ' ' . ($arr['esp_apellido'] ?? '')) ?: 'Sin asignar';
+            $srv = $arr['nombre_servicio'] ?? '-';
+            $box = $arr['consultorio'] ?? '-';
+            $cli = trim(($arr['cliente_nombre'] ?? '') . ' ' . ($arr['cliente_apellido'] ?? '')) ?: 'Cliente';
+            $tel = $arr['cliente_telefono'] ?? '-';
+            $eml = $arr['cliente_email'] ?? '-';
+            $est = $arr['estado'] ?? 'pendiente';
+            $estFmt = ucfirst($est === 'pendiente' ? 'ausente' : $est);
+
+            fputcsv($output, [
+                $fFmt,
+                $hFmt,
+                $esp,
+                $srv,
+                $box,
+                $cli,
+                $tel,
+                $eml,
+                $estFmt
+            ], ';');
+        }
+
+        fclose($output);
         exit;
     }
 
@@ -213,12 +391,19 @@ class AdminController extends Controller
                     ? implode(',', $_POST['dias']) 
                     : '1,2,3,4,5,6';
 
-            // 2. Horarios puntuales
+            // 2. Horarios puntuales (normalizados, sin duplicados y ordenados cronológicamente)
             if (isset($_POST['horarios']) && is_array($_POST['horarios'])) {
-                $horariosArray = array_values(array_filter(array_map('trim', $_POST['horarios'])));
+                $horariosFiltrados = [];
+                foreach ($_POST['horarios'] as $h) {
+                    $hTrim = trim($h);
+                    if (!empty($hTrim)) {
+                        $horariosFiltrados[] = substr($hTrim, 0, 5);
+                    }
+                }
+                $horariosArray = array_values(array_unique($horariosFiltrados));
                 sort($horariosArray);
                 $horariosTexto = implode(',', $horariosArray);
-                $ultimoHorario = end($horariosArray) ?: '18:00';
+                $ultimoHorario = !empty($horariosArray) ? end($horariosArray) : '18:00';
             } else {
                 $horariosTexto = trim($_POST['hora_inicio'] ?? '09:30');
                 $ultimoHorario = trim($_POST['hora_fin'] ?? '15:00');
@@ -356,7 +541,7 @@ class AdminController extends Controller
         if (!empty($turnosAfectados)) {
             $protocolo   = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
             $host        = $_SERVER['HTTP_HOST'] ?? 'localhost';
-            $urlCatalogo = $protocolo . $host . self::$path . "home/homeServicios";
+            $urlCatalogo = $protocolo . $host . "/bella_estetica/home";
 
             foreach ($turnosAfectados as $t) {
                 $arr = is_object($t) ? (array)$t : $t;
@@ -416,6 +601,30 @@ class AdminController extends Controller
             $this->notificarYCancelarTurnosEspecialista($id, $id_admin);
 
             \app\models\EspecialistaModel::eliminarEspecialista($id);
+        }
+
+        header("Location: " . self::$path . "admin/especialistas");
+        exit;
+    }
+    /**
+     * Procesa la edición de un especialista existente
+     * Ruta: /admin/actualizarEspecialista
+     */
+    public function actionActualizarEspecialista()
+    {
+        SessionController::onlyAdmins();
+        static::path();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id           = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+            $nombre       = trim($_POST['nombre'] ?? '');
+            $apellido     = trim($_POST['apellido'] ?? '');
+            $especialidad = trim($_POST['especialidad'] ?? '');
+            $id_admin     = $_SESSION['USER']['id_usuario'] ?? 1;
+
+            if ($id && !empty($nombre) && !empty($apellido) && !empty($especialidad)) {
+                \app\models\EspecialistaModel::actualizarEspecialista($id, $nombre, $apellido, $especialidad, $id_admin);
+            }
         }
 
         header("Location: " . self::$path . "admin/especialistas");

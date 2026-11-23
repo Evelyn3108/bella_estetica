@@ -72,6 +72,11 @@
                 <i class="bi bi-check-circle-fill me-2"></i> Especialista registrado y guardado con éxito.
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
+        <?php elseif ($status === 'editado_ok'): ?>
+            <div class="alert alert-success alert-dismissible fade show rounded-3 small py-2 px-3 border-0 shadow-sm mb-4" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i> Los datos del especialista fueron actualizados correctamente.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
         <?php elseif ($status === 'eliminado_ok'): ?>
             <div class="alert alert-success alert-dismissible fade show rounded-3 small py-2 px-3 border-0 shadow-sm mb-4" role="alert">
                 <i class="bi bi-check-circle-fill me-2"></i> Especialista eliminado correctamente.
@@ -117,11 +122,13 @@
                         <?php else: ?>
                             <?php foreach ($especialistas as $e): ?>
                                 <?php 
-                                    $arr = (array)$e; 
-                                    $idEsp    = $arr['id'] ?? 0;
-                                    $nombre   = htmlspecialchars(trim(($arr['nombre'] ?? '') . ' ' . ($arr['apellido'] ?? '')));
-                                    $espe     = htmlspecialchars($arr['especialidad'] ?? 'General');
-                                    // Comprobación de estado compatible con 'estado' y 'estado_logico'
+                                    $arr       = (array)$e; 
+                                    $idEsp     = $arr['id'] ?? 0;
+                                    $nomRaw    = $arr['nombre'] ?? '';
+                                    $apeRaw    = $arr['apellido'] ?? '';
+                                    $espRaw    = $arr['especialidad'] ?? 'General';
+                                    $nombre    = htmlspecialchars(trim($nomRaw . ' ' . $apeRaw));
+                                    $espe      = htmlspecialchars($espRaw);
                                     $estadoVal = (int)($arr['estado'] ?? $arr['estado_logico'] ?? 1);
                                     $esActivo  = ($estadoVal === 1);
                                 ?>
@@ -141,26 +148,41 @@
                                     </td>
                                     <td class="text-center pe-3">
                                         <div class="d-inline-flex gap-1">
-                                            <!-- Botón 1: Alternar Estado (Activar / Desactivar) -->
+                                            <!-- Botón 1: Editar Especialista -->
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-outline-primary rounded-3" 
+                                                    title="Editar especialista"
+                                                    onclick="cargarDatosEditarEsp(
+                                                        <?= (int)$idEsp; ?>,
+                                                        '<?= htmlspecialchars(addslashes($nomRaw), ENT_QUOTES); ?>',
+                                                        '<?= htmlspecialchars(addslashes($apeRaw), ENT_QUOTES); ?>',
+                                                        '<?= htmlspecialchars(addslashes($espRaw), ENT_QUOTES); ?>'
+                                                    )">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+
+                                            <!-- Botón 2: Alternar Estado (Activar / Desactivar) -->
                                             <?php if ($esActivo): ?>
                                                 <a href="<?= $ruta; ?>admin/bajaEspecialista?id=<?= $idEsp; ?>&estado=0" 
                                                    class="btn btn-sm btn-outline-secondary rounded-3" 
-                                                   title="Desactivar especialista">
+                                                   title="Desactivar especialista"
+                                                   onclick="return confirm('¿Inhabilitar a <?= htmlspecialchars(addslashes($nombre), ENT_QUOTES); ?>? Sus servicios dejarán de mostrarse y sus turnos futuros se cancelarán.');">
                                                     <i class="bi bi-slash-circle"></i>
                                                 </a>
                                             <?php else: ?>
                                                 <a href="<?= $ruta; ?>admin/bajaEspecialista?id=<?= $idEsp; ?>&estado=1" 
                                                    class="btn btn-sm btn-outline-success rounded-3" 
-                                                   title="Reactivar especialista">
+                                                   title="Reactivar especialista"
+                                                   onclick="return confirm('¿Reactivar a <?= htmlspecialchars(addslashes($nombre), ENT_QUOTES); ?>?');">
                                                     <i class="bi bi-check-circle"></i>
                                                 </a>
                                             <?php endif; ?>
 
-                                            <!-- Botón 2: Eliminar definitivamente -->
+                                            <!-- Botón 3: Eliminar definitivamente -->
                                             <a href="<?= $ruta; ?>admin/eliminarEspecialista?id=<?= $idEsp; ?>" 
                                                class="btn btn-sm btn-outline-danger rounded-3" 
                                                title="Eliminar especialista"
-                                               onclick="return confirm('¿Confirmás la eliminación definitiva de <?= htmlspecialchars(addslashes($nombre)); ?>?');">
+                                               onclick="return confirm('¿Confirmás la eliminación definitiva de <?= htmlspecialchars(addslashes($nombre), ENT_QUOTES); ?>?');">
                                                 <i class="bi bi-trash"></i>
                                             </a>
                                         </div>
@@ -174,7 +196,7 @@
         </div>
     </main>
 
-    <!-- MODAL NUEVO ESPECIALISTA -->
+    <!-- MODAL 1: NUEVO ESPECIALISTA -->
     <div class="modal fade" id="modalEspecialista" tabindex="-1" aria-labelledby="modalEspecialistaLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-4 border-0 shadow">
@@ -206,6 +228,39 @@
         </div>
     </div>
 
+    <!-- MODAL 2: EDITAR ESPECIALISTA -->
+    <div class="modal fade" id="modalEditarEspecialista" tabindex="-1" aria-labelledby="modalEditarEspecialistaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <form action="<?= $ruta; ?>admin/actualizarEspecialista" method="POST">
+                    <input type="hidden" id="edit_esp_id" name="id">
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <h5 class="fw-bold text-dark mb-0" id="modalEditarEspecialistaLabel">Editar Especialista</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3 text-start">
+                            <label for="edit_esp_nombre" class="form-label small fw-bold">Nombre *</label>
+                            <input type="text" id="edit_esp_nombre" name="nombre" class="form-control rounded-3 shadow-none" style="border-color: var(--borde-suave);" required>
+                        </div>
+                        <div class="mb-3 text-start">
+                            <label for="edit_esp_apellido" class="form-label small fw-bold">Apellido *</label>
+                            <input type="text" id="edit_esp_apellido" name="apellido" class="form-control rounded-3 shadow-none" style="border-color: var(--borde-suave);" required>
+                        </div>
+                        <div class="mb-3 text-start">
+                            <label for="edit_esp_especialidad" class="form-label small fw-bold">Especialidad *</label>
+                            <input type="text" id="edit_esp_especialidad" name="especialidad" class="form-control rounded-3 shadow-none" style="border-color: var(--borde-suave);" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0">
+                        <button type="button" class="btn btn-outline-secondary rounded-3 small" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn-solid-terracota py-2 px-3 rounded-3 small shadow-sm">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- FOOTER INSTITUCIONAL -->
     <footer class="footer-canvas py-3 text-center small mt-auto border-top" style="border-color: var(--borde-suave) !important;">
         Bella Estética &copy; <?= date('Y'); ?> &bull; Panel de Gestión Administrativa
@@ -213,6 +268,16 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        function cargarDatosEditarEsp(id, nombre, apellido, especialidad) {
+            document.getElementById('edit_esp_id').value = id;
+            document.getElementById('edit_esp_nombre').value = nombre;
+            document.getElementById('edit_esp_apellido').value = apellido;
+            document.getElementById('edit_esp_especialidad').value = especialidad;
+
+            const modalEdicion = new bootstrap.Modal(document.getElementById('modalEditarEspecialista'));
+            modalEdicion.show();
+        }
+
         // Evita que al dar 'Atrás' en el navegador tras cerrar sesión se visualice la sesión abierta
         window.addEventListener('pageshow', function (event) {
             if (event.persisted || (window.performance && window.performance.getEntriesByType("navigation")[0]?.type === "back_forward")) {

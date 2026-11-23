@@ -13,6 +13,5 @@
     <link rel="stylesheet" href="#PATH#css/estilos.css">
 
     <script src="#PATH#js/jquery-3.6.0.min.js"></script>
-    <script src="#PATH#js/main.js"></script>
 </head>
 <body class="d-flex flex-column min-vh-100">

@@ -96,12 +96,10 @@ class TurnosController extends Controller
                 // Insertar el turno en la base de datos
                 $guardado = TurnosModel::insertarTurno($id_usuario, $id_servicio, $id_especialista, $fecha, $hora);
 
-
-                if ($guardado) {
+                    if ($guardado) {
                     // --- INICIO ENVÍO DE MAIL DE CONFIRMACIÓN ---
                     $emailUsuario  = $_SESSION['USER']['mail'] ?? $_SESSION['USER']['email'] ?? null;
-                    $nombreUsuario = $_SESSION['USER']['name'] ?? $_SESSION['USER']['nombre'] ?? 'Cliente';
-
+                    $nombreUsuario = trim(($_SESSION['USER']['nombre'] ?? $_SESSION['USER']['name'] ?? '') . ' ' . ($_SESSION['USER']['apellido'] ?? '')) ?: 'Cliente';
                    // Construimos la URL absoluta limpia hacia el Login (o cambiá "account/login" por "home")
                     $protocolo = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
                     $host      = $_SERVER['HTTP_HOST'] ?? 'localhost';

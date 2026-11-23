@@ -23,10 +23,9 @@ class HomeController extends Controller
 	public function actionIndex($var = null)
 	{
 		SessionController::onlyUsers();		
-
+		static::path();
 		$ruta = self::$path;
 
-		static::path();
 		$nombre_de_archivoDeVista = 'home';
         $parametros_de_vista = [
             "head" => SiteController::head(),

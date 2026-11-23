@@ -12,17 +12,21 @@ class Controller
 	protected static $ruta;
 
     public static function ruta(){
+        $host   = $_SERVER["HTTP_HOST"] ?? 'localhost';
+        $uri    = $_SERVER["REQUEST_URI"] ?? '';
+        $camino = $host . $uri;
+        $camino = str_replace('?', '&', $camino);
 
-		$camino = $_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"];
-		$camino = str_replace('?', '&', $camino);
-		$removerUrl = $_SERVER['QUERY_STRING'];
+        $removerUrl = $_SERVER['QUERY_STRING'] ?? '';
+        $removerUrl = str_replace('url=', '', $removerUrl);
+        if (!empty($removerUrl)) {
+            $camino = str_replace($removerUrl, '', $camino);
+        }
 
-		$removerUrl = str_replace('url=','', $removerUrl);
-		$camino = str_replace($removerUrl,'', $camino);
+        $scheme = $_SERVER["REQUEST_SCHEME"] 
+            ?? ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http');
 
-		$camino = $_SERVER["REQUEST_SCHEME"].'://'.$camino;
-
-		self::$ruta = $camino;
+        self::$ruta = $scheme . '://' . $camino;
     }
 
 

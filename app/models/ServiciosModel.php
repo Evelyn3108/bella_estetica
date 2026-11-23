@@ -47,30 +47,27 @@ class ServiciosModel extends Model
         }
     }
 
-    public static function getServicioById($id)
+    public static function getServicioById($id, $soloActivos = true)
     {
+        $filtroEstado = $soloActivos ? "AND s.estado = 1" : "AND s.estado != -1";
         $sql = "SELECT s.*, 
                        e.nombre AS esp_nombre, 
                        e.apellido AS esp_apellido,
                        e.especialidad 
                 FROM servicios s
-                INNER JOIN especialista e ON s.id_especialista = e.id
-                WHERE s.id = :id AND s.estado = 1";
+                LEFT JOIN especialista e ON s.id_especialista = e.id
+                WHERE s.id = :id {$filtroEstado}";
 
         return DataBase::getRecord($sql, [':id' => $id]);
     }
 
-    public static function obtenerPorId($id)
+    public static function obtenerPorId($id, $soloActivos = false)
     {
-        return self::getServicioById($id);
+        return self::getServicioById($id, $soloActivos);
     }
-
-
     
    /**
      * Catálogo del Administrador:
-     * Trae TODOS los servicios (activos e inactivos) para poder gestionarlos,
-     * auditarlos y reactivarlos desde el panel.
      */
     public static function listarTodosAdmin()
     {
@@ -80,6 +77,8 @@ class ServiciosModel extends Model
                            e.estado AS especialista_estado
                     FROM servicios s
                     LEFT JOIN especialista e ON s.id_especialista = e.id
+                    WHERE s.estado != -1
+                      AND COALESCE(e.estado, 1) != -1
                     ORDER BY s.id DESC";
 
             $res = \DataBase::getRecords($sql);

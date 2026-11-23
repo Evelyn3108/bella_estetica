@@ -6,7 +6,7 @@
     <title>Catálogo de Servicios - Bella Estética</title>
     
     <!-- Hoja de estilos centralizada -->
-    <link rel="stylesheet" href="../css/estilos.css?v=31">
+    <link rel="stylesheet" href="<?= $ruta; ?>css/estilos.css?v=31">
 </head>
 <body class="bg-light d-flex flex-column min-vh-100">
 

@@ -103,8 +103,10 @@
                     $boxActual     = $srv['consultorio'] ?? 'Consultorio 1';
                     $diasActuales  = explode(',', $srv['dias_atencion'] ?? '1,2,3,4,5,6');
                     
-                    // Horarios específicos cargados (si hay una lista en dias_atencion/hora_inicio o valor por defecto)
-                    $horariosGuardados = !empty($srv['hora_inicio']) ? explode(',', $srv['hora_inicio']) : ['09:00', '10:30', '14:00', '16:30'];
+                    // Horarios específicos cargados (si hay una lista en dias_atencion/hora_inicio o valor por defecto sin duplicados)
+                    $horariosGuardados = !empty($srv['hora_inicio']) 
+                        ? array_values(array_unique(array_filter(array_map('trim', explode(',', $srv['hora_inicio']))))) 
+                        : ['09:00', '10:30', '14:00', '16:30'];
                     $fDesdeActual  = !empty($srv['fecha_desde']) ? $srv['fecha_desde'] : date('Y-m-d');
                     $fHastaActual  = !empty($srv['fecha_hasta']) ? $srv['fecha_hasta'] : date('Y-m-d', strtotime('+1 year'));
                     $imagenActual  = $srv['imagen'] ?? '';
@@ -302,7 +304,7 @@
                                 Horarios Habilitados de Atención *
                             </label>
                             <small class="text-muted d-block mb-2">
-                                Podés agregar todas las franjas horarias que atienda la profesional (ej: 10:30, 13:00, 16:30) para que el cliente elija directamente entre ellas.
+                                Podés agregar todas las franjas horarias que atienda la profesional (ej: 10:30, 13:00, 16:30) para que el cliente elija directamente entre ellas. No se admiten horarios repetidos.
                             </small>
 
                             <!-- Contenedor dinámico de horarios -->
@@ -311,7 +313,7 @@
                                     <?php $hLimpia = trim(substr($h, 0, 5)); if (empty($hLimpia)) continue; ?>
                                     <div class="input-group input-group-sm horario-item" style="width: 145px;">
                                         <span class="input-group-text bg-white"><i class="bi bi-clock text-muted"></i></span>
-                                        <input type="time" name="horarios[]" class="form-control text-center shadow-none" value="<?= $hLimpia; ?>" required>
+                                        <input type="time" name="horarios[]" class="form-control text-center shadow-none input-horario" value="<?= $hLimpia; ?>" required onchange="validarHorariosDuplicados()" oninput="validarHorariosDuplicados()">
                                         <button type="button" class="btn btn-outline-danger" onclick="eliminarHorario(this)" title="Quitar horario">
                                             <i class="bi bi-x"></i>
                                         </button>
@@ -319,7 +321,13 @@
                                 <?php endforeach; ?>
                             </div>
 
-                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-3 px-3 py-1" onclick="agregarHorario()">
+                            <!-- Alerta en tiempo real de horarios duplicados -->
+                            <div id="alerta-horarios-duplicados" class="alert alert-danger py-2 px-3 small mt-2 d-none rounded-3 align-items-center gap-2">
+                                <i class="bi bi-exclamation-triangle-fill text-danger fs-6"></i>
+                                <span id="alerta-horarios-duplicados-texto"></span>
+                            </div>
+
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-3 px-3 py-1 mt-1" onclick="agregarHorario()">
                                 <i class="bi bi-plus-lg me-1"></i> Agregar otro horario
                             </button>
                         </div>
@@ -359,29 +367,124 @@
         </div>
     </main>
 
-    <!-- JavaScript para agregar/quitar franjas horarias -->
+    <!-- SweetAlert2 y Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JavaScript para agregar/quitar y validar franjas horarias únicas -->
     <script>
+        function obtenerHorariosActuales() {
+            const inputs = document.querySelectorAll('input[name="horarios[]"]');
+            const valores = [];
+            inputs.forEach(inp => {
+                const v = inp.value.trim().substring(0, 5);
+                if (v) valores.push(v);
+            });
+            return valores;
+        }
+
+        function sugerirSiguienteHorario() {
+            const actuales = obtenerHorariosActuales();
+            if (actuales.length === 0) return '09:00';
+
+            // Tomar el último horario cargado
+            let ultimo = actuales[actuales.length - 1];
+            let [h, m] = ultimo.split(':').map(Number);
+            if (isNaN(h)) h = 9;
+            if (isNaN(m)) m = 0;
+
+            // Buscar la siguiente hora libre para evitar duplicar el valor inicial
+            for (let i = 1; i <= 24; i++) {
+                let nuevoH = (h + i) % 24;
+                let cand = `${String(nuevoH).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                if (!actuales.includes(cand)) {
+                    return cand;
+                }
+            }
+            return '15:00';
+        }
+
+        function validarHorariosDuplicados() {
+            const inputs = Array.from(document.querySelectorAll('input[name="horarios[]"]'));
+            const conteo = {};
+            const duplicados = new Set();
+
+            // Limpiar estados de error previos
+            inputs.forEach(inp => {
+                inp.classList.remove('is-invalid', 'border-danger');
+                inp.style.borderColor = 'var(--borde-suave)';
+            });
+
+            inputs.forEach(inp => {
+                const v = inp.value.trim().substring(0, 5);
+                if (!v) return;
+                conteo[v] = (conteo[v] || 0) + 1;
+                if (conteo[v] > 1) {
+                    duplicados.add(v);
+                }
+            });
+
+            const alerta = document.getElementById('alerta-horarios-duplicados');
+            const alertaTexto = document.getElementById('alerta-horarios-duplicados-texto');
+
+            if (duplicados.size > 0) {
+                const listaDup = Array.from(duplicados).join(', ');
+                inputs.forEach(inp => {
+                    const v = inp.value.trim().substring(0, 5);
+                    if (duplicados.has(v)) {
+                        inp.classList.add('is-invalid', 'border-danger');
+                        inp.style.borderColor = '#dc3545';
+                    }
+                });
+
+                if (alerta && alertaTexto) {
+                    alertaTexto.innerHTML = `No se pueden ingresar dos horarios iguales. El horario <strong>${listaDup} hs</strong> ya está en la lista. Por favor, cambiá o eliminá el duplicado para no generar conflicto con los clientes.`;
+                    alerta.classList.remove('d-none');
+                    alerta.classList.add('d-flex');
+                }
+                return false;
+            } else {
+                if (alerta) {
+                    alerta.classList.add('d-none');
+                    alerta.classList.remove('d-flex');
+                }
+                return true;
+            }
+        }
+
         function agregarHorario() {
             const contenedor = document.getElementById('contenedor-horarios');
+            const sugerido = sugerirSiguienteHorario();
             const div = document.createElement('div');
             div.className = 'input-group input-group-sm horario-item';
             div.style.width = '145px';
             div.innerHTML = `
                 <span class="input-group-text bg-white"><i class="bi bi-clock text-muted"></i></span>
-                <input type="time" name="horarios[]" class="form-control text-center shadow-none" value="12:00" required>
+                <input type="time" name="horarios[]" class="form-control text-center shadow-none input-horario" value="${sugerido}" required onchange="validarHorariosDuplicados()" oninput="validarHorariosDuplicados()">
                 <button type="button" class="btn btn-outline-danger" onclick="eliminarHorario(this)" title="Quitar horario">
                     <i class="bi bi-x"></i>
                 </button>
             `;
             contenedor.appendChild(div);
+            validarHorariosDuplicados();
         }
 
         function eliminarHorario(btn) {
             const items = document.querySelectorAll('.horario-item');
             if (items.length > 1) {
                 btn.closest('.horario-item').remove();
+                validarHorariosDuplicados();
             } else {
-                alert('Debe haber al menos un horario habilitado.');
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Atención',
+                        text: 'Debe haber al menos un horario habilitado para el servicio.',
+                        confirmButtonColor: '#b2614a'
+                    });
+                } else {
+                    alert('Debe haber al menos un horario habilitado.');
+                }
             }
         }
 
@@ -401,15 +504,61 @@
                 reader.readAsDataURL(input.files[0]);
             }
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Validación inicial al cargar el formulario
+            validarHorariosDuplicados();
+
+            const form = document.querySelector('form[action*="guardarServicio"]');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    if (!validarHorariosDuplicados()) {
+                        e.preventDefault();
+
+                        const inputs = Array.from(document.querySelectorAll('input[name="horarios[]"]'));
+                        const conteo = {};
+                        const dup = new Set();
+                        inputs.forEach(inp => {
+                            const v = inp.value.trim().substring(0, 5);
+                            if (v) {
+                                conteo[v] = (conteo[v] || 0) + 1;
+                                if (conteo[v] > 1) dup.add(v);
+                            }
+                        });
+                        const dupStr = Array.from(dup).join(', ');
+
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Horarios Duplicados',
+                                html: `No podés guardar el servicio con horarios repetidos.<br><br>Detectamos duplicado el horario: <strong>${dupStr} hs</strong>.<br>Por favor, cambiá o eliminá el horario duplicado para no generar conflicto con los clientes al agendar turnos.`,
+                                confirmButtonColor: '#b2614a'
+                            });
+                        } else {
+                            alert(`No se pueden poner dos horarios iguales (${dupStr} hs). Por favor, cambie o elimine el duplicado.`);
+                        }
+
+                        const cont = document.getElementById('contenedor-horarios');
+                        if (cont) {
+                            cont.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+
+                        const primerDup = inputs.find(inp => dup.has(inp.value.trim().substring(0, 5)));
+                        if (primerDup) {
+                            primerDup.focus();
+                        }
+
+                        return false;
+                    }
+                });
+            }
+        });
     </script>
 
     <!-- FOOTER INSTITUCIONAL -->
     <footer class="footer-canvas py-3 text-center small mt-auto border-top" style="border-color: var(--borde-suave) !important;">
         Bella Estética &copy; <?= date('Y'); ?> &bull; Panel de Gestión Administrativa
     </footer>
-
-    <!-- Bootstrap 5 JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- SCRIPT DE AUTOCOMPLETADO SENCILLO -->
     <script>

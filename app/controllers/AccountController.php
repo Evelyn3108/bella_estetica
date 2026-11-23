@@ -4,7 +4,6 @@ namespace app\controllers;
 require_once __DIR__ . '/../librerias/Mailer.php';
 
 use app\controllers\UserController;
-use app\controllers\EquiposController;
 use app\models\UserModel;
 use \Controller;
 use \Response;
@@ -99,7 +98,7 @@ class AccountController extends Controller
                     
                     // Si es administrador puede ir a su panel, si es cliente a su catálogo
                     if (isset($_SESSION['USER']['type']) && $_SESSION['USER']['type'] === 'administrador') {
-                        $ruta = self::$path . 'admin/panelServicio';
+                        $ruta = self::$path . 'admin/panel';
                     } else {
                         $ruta = self::$path . 'home/homeServicios';
                     }
@@ -162,17 +161,22 @@ class AccountController extends Controller
             $pass       = $datos['password'];
             $passRepeat = $datos['password_repeat'];
 
-            // 1. Validar campos obligatorios vacíos
+          // 1. Validar campos obligatorios vacíos
             if (empty($nombre) || empty($apellido) || empty($email) || empty($pass) || empty($passRepeat)) {
                 $error = true;
                 $error_msg['email'] = 'Por favor, completá todos los campos obligatorios.';
             } 
+            // 1.5 Validar formato estricto de correo electrónico (exige @, dominio y extensión con punto)
+            elseif (!filter_var($email, FILTER_VALIDATE_EMAIL) || !preg_match('/^[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}$/', $email)) {
+                $error = true;
+                $error_msg['email'] = 'Ingresá un correo electrónico válido (ej: nombre@dominio.com).';
+            }
             // 2. Validar que las contraseñas coincidan
             elseif ($pass !== $passRepeat) {
                 $error = true;
                 $error_msg['email'] = 'Las contraseñas no coinciden.';
-            } 
-            // 3. Validar complejidad (8-15 chars, mayúscula, número, especial)
+            }
+            // 4. Validar complejidad (8-15 chars, mayúscula, número, especial)
             elseif (!preg_match('/^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,15}$/', $pass)) {
                 $error = true;
                 $error_msg['email'] = 'La contraseña debe tener entre 8 y 15 caracteres, al menos una mayúscula, un número y un carácter especial.';
@@ -185,18 +189,12 @@ class AccountController extends Controller
                     $error = true;
                     $error_msg['email'] = 'El correo electrónico ya se encuentra registrado.';
                 } else {
-                    // 5. Registramos al nuevo cliente
+                    // 6. Registramos al nuevo cliente y redirigimos al login
                     $guardado = UserModel::registrarCliente($nombre, $apellido, $email, $pass, $telefono);
                     if ($guardado) {
-                        $exito = '¡Cuenta creada con éxito! Ya podés iniciar sesión.';
-                        $datos = [
-                            'nombre'          => '', 
-                            'apellido'        => '', 
-                            'email'           => '', 
-                            'telefono'        => '', 
-                            'password'        => '', 
-                            'password_repeat' => ''
-                        ];
+                        static::path();
+                        header("Location: " . self::$path . "account/login?registro=ok");
+                        exit;
                     } else {
                         $error = true;
                         $error_msg['email'] = 'Ocurrió un error al guardar los datos.';
@@ -390,8 +388,10 @@ class AccountController extends Controller
         }
 
         // 3. Destruir sesión en el servidor
-        session_destroy();
-
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_destroy();
+        }
+        
         static::path();
         $redir = $esAdmin ? "admin/login" : "account/login";
         header("Location: " . self::$path . $redir);

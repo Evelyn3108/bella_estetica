@@ -6,7 +6,7 @@
     <title>Crear Cuenta - Bella Estética</title>
     
     <!-- Enlace exclusivo a la hoja de estilos unificada -->
-    <link rel="stylesheet" href="../css/estilos.css?v=16">
+    <link rel="stylesheet" href="<?= htmlspecialchars($ruta ?? '../'); ?>css/estilos.css?v=16">
 </head>
 <body class="d-flex align-items-center justify-content-center min-vh-100 py-5">
 
@@ -54,7 +54,7 @@
                     <?php endif; ?>
 
                     <!-- Formulario de Registro -->
-                    <form action="registro" method="POST">
+                    <form action="<?= htmlspecialchars($ruta ?? ''); ?>account/registro" method="POST">
                         
                         <div class="row g-2 mb-3">
                             <!-- Nombre -->
@@ -97,7 +97,9 @@
                                        class="form-control" 
                                        id="email" 
                                        name="email" 
-                                       placeholder="ejemplo@correo.com" 
+                                       placeholder="ejemplo@correo.com o .com.ar"
+                                       pattern=".+@.+\.[cC][oO][mM](\.[aA][rR])?"
+                                       title="Ingresá un correo completo terminado en .com o .com.ar."
                                        value="<?= htmlspecialchars($datos['email'] ?? ''); ?>" 
                                        required>
                             </div>
@@ -176,7 +178,7 @@
                     <!-- Pie de Tarjeta -->
                     <div class="text-center mt-4 pt-3 border-top" style="border-color: var(--borde-suave) !important;">
                         <span class="text-muted small">¿Ya tenés una cuenta?</span> 
-                        <a href="login" class="link-terracota ms-1 small">
+                        <a href="<?= htmlspecialchars($ruta ?? ''); ?>account/login" class="link-terracota ms-1 small">
                             Iniciá sesión acá
                         </a>
                     </div>
@@ -185,7 +187,7 @@
 
                 <!-- Volver al Inicio -->
                 <div class="text-center mt-3">
-                    <a href="../home" class="text-muted small text-decoration-none d-inline-flex align-items-center">
+                    <a href="<?= htmlspecialchars($ruta ?? '../'); ?>home" class="text-muted small text-decoration-none d-inline-flex align-items-center">
                         <i class="bi bi-arrow-left me-1"></i> Volver a la página principal
                     </a>
                 </div>
@@ -212,7 +214,5 @@
             }
         }
     </script>
-</body>
-</html>
 </body>
 </html>

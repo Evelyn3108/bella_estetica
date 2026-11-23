@@ -76,12 +76,11 @@ class SessionController extends Controller
 
 
     public static function onlyUsers(){
-        static::path();
-        $continuar = false;
-
-        if(!isset(self::$sessionStatus)){
-            echo 'Error en verificacion de sesiones';
-        }  
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+        self::$sessionStatus = self::sessionVerificacion();
+        return self::$sessionStatus;
     }
 
     public static function onlyLogin(){

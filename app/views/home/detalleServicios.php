@@ -64,9 +64,9 @@
         $consultorio    = $arrServ['consultorio'] ?? 'Consultorio 1';
         $diasAtencion   = !empty($arrServ['dias_atencion']) ? $arrServ['dias_atencion'] : '1,2,3,4,5,6';
 
-        // Horarios configurados por el administrador
+        // Horarios configurados por el administrador (garantizando slots únicos sin duplicados)
         $cadenaHorarios = !empty($arrServ['hora_inicio']) ? $arrServ['hora_inicio'] : '09:30,10:30,11:30,12:30,14:00,15:00';
-        $listaHorarios  = explode(',', $cadenaHorarios);
+        $listaHorarios  = array_values(array_unique(array_filter(array_map('trim', explode(',', $cadenaHorarios)))));
 
         // Especialista a cargo
         $nombreEsp = trim(($arrServ['esp_nombre'] ?? $arrServ['nombre_especialista'] ?? '') . ' ' . ($arrServ['esp_apellido'] ?? $arrServ['apellido_especialista'] ?? ''));

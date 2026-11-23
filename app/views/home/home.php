@@ -6,14 +6,14 @@
     <title>Bella Estética - Centro de Cuidado & Bienestar</title>
     
     <!-- Enlace a estilos -->
-    <link rel="stylesheet" href="css/estilos.css?v=13">
+    <link rel="stylesheet" href="<?= $ruta; ?>css/estilos.css?v=13">
 </head>
 <body class="d-flex flex-column min-vh-100">
 
     <!--  NAVBAR -->
     <nav class="navbar navbar-expand-lg bg-white shadow-sm py-3 mb-4">
         <div class="container-fluid px-4 px-lg-5">
-            <a class="navbar-brand d-flex align-items-center text-dark text-decoration-none gap-2" href="home">
+            <a class="navbar-brand d-flex align-items-center text-dark text-decoration-none gap-2" href="<?= $ruta; ?>home">
                 <i class="bi bi-flower1 fs-2" style="color: var(--terracota-principal) !important;"></i>
                 <div class="d-flex flex-column justify-content-center">
                     <span class="brand-title">BELLA ESTÉTICA</span>
@@ -28,7 +28,7 @@
             <div class="collapse navbar-collapse" id="menuLanding">
                 <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-3">
                     <li class="nav-item">
-                        <a class="nav-link nav-link-custom active border-bottom border-2 pb-1" style="border-color: var(--terracota-principal) !important;" href="home">Inicio</a>
+                        <a class="nav-link nav-link-custom active border-bottom border-2 pb-1" style="border-color: var(--terracota-principal) !important;" href="<?= $ruta; ?>home">Inicio</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link nav-link-custom" href="#servicios">Tratamientos</a>
@@ -38,10 +38,10 @@
                     </li>
                 </ul>
                 <div class="d-flex gap-2 align-items-center">
-                    <a href="account/login" class="btn-solid-terracota">
+                    <a href="<?= $ruta; ?>account/login" class="btn-solid-terracota">
                         <i class="bi bi-person me-1"></i> Iniciar sesión
                     </a>
-                    <a href="account/registro" class="btn-outline-terracota">
+                    <a href="<?= $ruta; ?>account/registro" class="btn-outline-terracota">
                         <i class="bi bi-person-plus me-1"></i> Registrarse
                     </a>
                 </div>
@@ -69,7 +69,7 @@
                     </p>
                     
                    <div>
-                        <a href="account/registro" class="btn-solid-terracota py-3 px-4 fs-6 shadow-sm">
+                        <a href="<?= $ruta; ?>account/registro" class="btn-solid-terracota py-3 px-4 fs-6 shadow-sm">
                             <i class="bi bi-calendar-check me-2"></i> Agendar Turno
                         </a>
                     </div>
@@ -78,7 +78,7 @@
                 <!-- Columna Derecha: Imagen fotográfica armónica -->
                 <div class="col-lg-6 text-center d-flex justify-content-center justify-content-lg-end">
                     <div class="hero-image-frame">
-                        <img src="img/home_facial.jpg" alt="Tratamiento de estética profesional">
+                        <img src="<?= $ruta; ?>img/home_facial.jpg" alt="Tratamiento de estética profesional">
                     </div>
                 </div>
 
@@ -100,7 +100,7 @@
                 <div class="col-md-6 col-lg-3">
                     <div class="card-treatment h-100">
                         <div class="treatment-img-box">
-                            <img src="img/limpiezaFacial.jpg" alt="Limpieza Facial">
+                            <img src="<?= $ruta; ?>img/limpiezaFacial.jpg" alt="Limpieza Facial">
                         </div>
                         <div class="p-4">
                             <h5 class="fw-bold mb-2">Limpieza Facial</h5>
@@ -115,7 +115,7 @@
                 <div class="col-md-6 col-lg-3">
                     <div class="card-treatment h-100">
                         <div class="treatment-img-box">
-                            <img src="img/masaje.jpg" alt="Masaje Terapéutico">
+                            <img src="<?= $ruta; ?>img/masaje.jpg" alt="Masaje Terapéutico">
                         </div>
                         <div class="p-4">
                             <h5 class="fw-bold mb-2">Masaje Relajante</h5>
@@ -130,7 +130,7 @@
                 <div class="col-md-6 col-lg-3">
                     <div class="card-treatment h-100">
                         <div class="treatment-img-box">
-                            <img src="img/manicura.jpg" alt="Spa de Manos">
+                            <img src="<?= $ruta; ?>img/manicura.jpg" alt="Spa de Manos">
                         </div>
                         <div class="p-4">
                            <h5 class="fw-bold mb-2">Manicuria</h5>
@@ -145,7 +145,7 @@
                 <div class="col-md-6 col-lg-3">
                     <div class="card-treatment h-100">
                         <div class="treatment-img-box">
-                            <img src="img/Lifting.jpg" alt="Lifting y Nutrición de Pestañas">
+                            <img src="<?= $ruta; ?>img/Lifting.jpg" alt="Lifting y Nutrición de Pestañas">
                         </div>
                         <div class="p-4">
                             <h5 class="fw-bold mb-2">Lifting de Pestañas</h5>

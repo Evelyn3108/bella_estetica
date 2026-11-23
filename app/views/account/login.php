@@ -24,6 +24,14 @@
                         <p class="text-muted small mb-0">Ingresá tu correo y contraseña para continuar</p>
                     </div>
 
+                    <!-- Mensaje de éxito tras registrarse -->
+                    <?php if (isset($_GET['registro']) && $_GET['registro'] === 'ok'): ?>
+                        <div class="alert alert-success py-2 px-3 small d-flex align-items-center mb-4 rounded-3" role="alert">
+                            <i class="bi bi-check-circle-fill me-2 fs-6"></i>
+                            <div>¡Cuenta creada con éxito! Ya podés iniciar sesión con tus credenciales.</div>
+                        </div>
+                    <?php endif; ?>
+
                     <!-- Mensaje de éxito tras recuperar contraseña -->
                     <?php if (isset($_GET['recupero']) && $_GET['recupero'] === 'ok'): ?>
                         <div class="alert alert-success py-2 px-3 small d-flex align-items-center mb-4 rounded-3" role="alert">

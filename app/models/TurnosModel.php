@@ -307,14 +307,13 @@ class TurnosModel extends Model
         }
     }
 
-   /**
-     * Obtiene la agenda para el Admin:
-     * - Si se pasa una fecha (YYYY-MM-DD), filtra por ese día.
-     * - Si viene vacío o null, trae todos los turnos.
-     */
-    public static function obtenerAgendaAdmin($fecha = null)
+    // * Obtiene la agenda para el Admin filtrando opcionalmente por fecha y/o especialista//
+    public static function obtenerAgendaAdmin($fecha = null, $idEspecialista = null)
     {
         try {
+            // Actualizamos primero cualquier turno ya vencido
+            self::actualizarTurnosVencidos();
+
             $sql = "SELECT t.id, 
                            t.fecha, 
                            t.hora, 
@@ -322,6 +321,7 @@ class TurnosModel extends Model
                            COALESCE(u.nombre, 'Cliente') AS cliente_nombre, 
                            COALESCE(u.apellido, '') AS cliente_apellido, 
                            COALESCE(u.telefono, '-') AS cliente_telefono,
+                           COALESCE(u.email, '-') AS cliente_email,
                            COALESCE(s.nombre_servicio, 'Tratamiento') AS nombre_servicio, 
                            COALESCE(s.consultorio, 'Consultorio 1') AS consultorio,
                            COALESCE(e.nombre, '') AS esp_nombre, 
@@ -331,11 +331,21 @@ class TurnosModel extends Model
                     LEFT JOIN servicios s ON t.id_servicio = s.id
                     LEFT JOIN especialista e ON t.id_especialista = e.id";
 
-            $params = [];
+            $condiciones = [];
+            $params      = [];
 
             if (!empty($fecha)) {
-                $sql .= " WHERE DATE(t.fecha) = :fecha";
+                $condiciones[]    = "DATE(t.fecha) = :fecha";
                 $params[':fecha'] = $fecha;
+            }
+
+            if (!empty($idEspecialista)) {
+                $condiciones[]      = "t.id_especialista = :id_esp";
+                $params[':id_esp']  = (int)$idEspecialista;
+            }
+
+            if (!empty($condiciones)) {
+                $sql .= " WHERE " . implode(" AND ", $condiciones);
             }
 
             $sql .= " ORDER BY t.fecha DESC, t.hora ASC";
