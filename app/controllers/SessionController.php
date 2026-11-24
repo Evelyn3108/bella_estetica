@@ -36,10 +36,14 @@ class SessionController extends Controller
 
         // 2. Buscamos el usuario en el modelo de forma compatible
         $resultado = null;
-        if (method_exists(UserModel::class, 'getUserByEmail')) {
-            $resultado = UserModel::getUserByEmail($userEmailOrID);
-        } elseif (method_exists(UserModel::class, 'findEmail')) {
+        if (method_exists(UserModel::class, 'findEmail')) {
             $resultado = UserModel::findEmail($userEmailOrID);
+        } elseif (method_exists(UserModel::class, 'getUserByEmail')) {
+            $resultado = UserModel::getUserByEmail($userEmailOrID);
+        }
+
+        if (is_array($resultado) && isset($resultado['resultado'])) {
+            $resultado = $resultado['resultado'];
         }
 
         // Si vino en array indexado [0], tomamos el primer elemento

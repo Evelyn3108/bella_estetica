@@ -22,6 +22,7 @@ class Mailer
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = (int)($_ENV['SMTP_PORT'] ?? 587);
         $mail->CharSet    = 'UTF-8';
+        $mail->Timeout    = 5;
 
         // Evita que Brevo reescriba los enlaces con sendibt2.com (rompe URLs en localhost)
         $mail->addCustomHeader('X-Mailin-Track-Clicks', '0');

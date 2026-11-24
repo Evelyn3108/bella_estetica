@@ -29,7 +29,11 @@ class UserModel extends Model
     {
         $sql = "SELECT * FROM usuario WHERE email = :email LIMIT 1";
         $params = [":email" => $email];
-        return DataBase::getRecords($sql, $params);
+        $res = DataBase::getRecords($sql, $params);
+        if (is_array($res) && isset($res['resultado'])) {
+            return $res['resultado'];
+        }
+        return is_array($res) ? $res : [];
     }
 
     /**
