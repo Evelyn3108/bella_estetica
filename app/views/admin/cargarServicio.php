@@ -4,16 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= !empty($servicio) ? 'Modificar Servicio' : 'Nuevo Servicio'; ?> - Bella Estética</title>
-    <!-- Estilos generales unificados del proyecto -->
+
     <link rel="stylesheet" href="<?= $ruta; ?>css/estilos.css?v=25">
 </head>
 <body class="d-flex flex-column min-vh-100">
-
-    <!-- NAVBAR ADMINISTRACIÓN UNIFICADO -->
     <nav class="navbar navbar-expand-lg bg-white border-bottom py-2 shadow-sm sticky-top" style="border-color: var(--borde-suave) !important;">
         <div class="container-fluid px-4">
             
-            <!-- Logo con Identidad Terracota -->
             <a class="navbar-brand d-flex align-items-center me-4" href="<?= $ruta; ?>admin/agenda">
                 <i class="bi bi-flower1 fs-3 me-2" style="color: var(--terracota-principal, #b2614a);"></i>
                 <div>
@@ -25,22 +22,18 @@
                 </div>
             </a>
 
-            <!-- Botón Responsive Mobile -->
             <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#menuAdminNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
-            <!-- Enlaces Centrales y Acciones -->
             <div class="collapse navbar-collapse" id="menuAdminNav">
                 <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-1">
-                    <!-- 1. Agenda -->
                     <li class="nav-item">
                         <a class="nav-link px-3 py-2 text-secondary d-flex align-items-center gap-1" href="<?= $ruta; ?>admin/agenda">
                             <i class="bi bi-calendar3"></i> Agenda
                         </a>
                     </li>
 
-                    <!-- 2. Servicios (Activo) -->
                     <li class="nav-item">
                         <a class="nav-link px-3 py-2 fw-semibold d-flex align-items-center gap-1 active border-bottom border-2" 
                         style="color: var(--terracota-principal, #b2614a) !important; border-color: var(--terracota-principal, #b2614a) !important;" 
@@ -49,14 +42,12 @@
                         </a>
                     </li>
 
-                    <!-- 3. Especialistas -->
                     <li class="nav-item">
                         <a class="nav-link px-3 py-2 text-secondary d-flex align-items-center gap-1" href="<?= $ruta; ?>admin/especialistas">
                             <i class="bi bi-person-badge"></i> Especialistas
                         </a>
                     </li>
 
-                    <!-- 4. Usuarios -->
                     <li class="nav-item">
                         <a class="nav-link px-3 py-2 text-secondary d-flex align-items-center gap-1" href="<?= $ruta; ?>admin/usuarios">
                             <i class="bi bi-people"></i> Usuarios
@@ -64,7 +55,6 @@
                     </li>
                 </ul>
 
-                <!-- Sección Derecha: Usuario Admin y Cerrar Sesión -->
                 <div class="d-flex align-items-center gap-3">
                     <span class="small fw-semibold text-secondary d-flex align-items-center gap-1">
                         <i class="bi bi-person-circle fs-5" style="color: var(--terracota-principal, #b2614a);"></i>
@@ -86,7 +76,6 @@
         <div class="row justify-content-center">
             <div class="col-12 col-lg-10 col-xl-9">
 
-                <!-- Botón de regreso -->
                 <div class="mb-3 text-start">
                     <a href="<?= $ruta; ?>admin/servicios" class="small text-muted text-decoration-none d-inline-flex align-items-center">
                         <i class="bi bi-arrow-left me-1"></i> Volver a la lista de servicios
@@ -103,17 +92,16 @@
                     $boxActual     = $srv['consultorio'] ?? 'Consultorio 1';
                     $diasActuales  = explode(',', $srv['dias_atencion'] ?? '1,2,3,4,5,6');
                     
-                    // Horarios específicos cargados (si hay una lista en dias_atencion/hora_inicio o valor por defecto sin duplicados)
+                    // Horarios específicos cargados
                     $horariosGuardados = !empty($srv['hora_inicio']) 
                         ? array_values(array_unique(array_filter(array_map('trim', explode(',', $srv['hora_inicio']))))) 
-                        : ['09:00', '10:30', '14:00', '16:30'];
+                        : ['09:00'];
                     $fDesdeActual  = !empty($srv['fecha_desde']) ? $srv['fecha_desde'] : date('Y-m-d');
                     $fHastaActual  = !empty($srv['fecha_hasta']) ? $srv['fecha_hasta'] : date('Y-m-d', strtotime('+1 year'));
                     $imagenActual  = $srv['imagen'] ?? '';
                     $descripcionActual = $srv['descripcion'] ?? '';
                 ?>
 
-                <!-- Tarjeta del Formulario (Lienzo Terracota) -->
                 <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white" style="border: 1px solid var(--borde-suave) !important;">
                     
                     <div class="text-center mb-4 pb-2 border-bottom" style="border-color: var(--borde-suave) !important;">
@@ -127,8 +115,7 @@
                             Completá la información del tratamiento, subí una foto representativa y definí los días y horarios específicos de atención.
                         </p>
                     </div>
-
-                    <!-- Formulario hacia el Controller con soporte para subida de archivos (enctype) -->
+                    
                     <form action="<?= $ruta; ?>admin/guardarServicio" method="POST" enctype="multipart/form-data">
                         
                         <?php if (!empty($idActual)): ?>
@@ -136,13 +123,12 @@
                         <?php endif; ?>
                         <input type="hidden" name="imagen_actual" value="<?= htmlspecialchars($imagenActual); ?>">
 
-                        <!-- SECCIÓN 1: INFORMACIÓN DEL TRATAMIENTO -->
                         <h6 class="fw-bold text-uppercase mb-3 d-flex align-items-center" style="color: var(--terracota-principal) !important; font-size: 0.85rem; letter-spacing: 0.03em;">
                             <i class="bi bi-tag me-2"></i> 1. Información del Tratamiento
                         </h6>
 
                         <div class="row g-3 mb-4 text-start">
-                            <!-- Nombre del Servicio: Input libre de texto -->
+
                             <div class="col-md-7">
                                 <label for="nombre_servicio" class="form-label small fw-bold text-dark">Nombre del Servicio / Tratamiento *</label>
                                 <input type="text" id="nombre_servicio" name="nombre_servicio" 
@@ -152,7 +138,6 @@
                                        value="<?= htmlspecialchars($nombreActual); ?>" required>
                             </div>
 
-                            <!-- Especialista Asignado (mantiene el select dinámico) -->
                          <div class="col-md-5">
                             <label for="id_especialista" class="form-label small fw-bold text-dark">Especialista Asignado *</label>
                             <select id="id_especialista" name="id_especialista" class="form-select rounded-3 shadow-none" style="border-color: var(--borde-suave);" required>
@@ -173,7 +158,6 @@
                             </select>
                          </div>
 
-                         <!-- Descripción del Servicio: Texto explicativo para el usuario -->
                          <div class="col-12">
                              <label for="descripcion" class="form-label small fw-bold text-dark">Descripción del Servicio / Tratamiento</label>
                              <textarea id="descripcion" name="descripcion" rows="3" 
@@ -182,9 +166,8 @@
                                        placeholder="Detallá los beneficios, características o metodología del tratamiento que verán los clientes en la web..."><?= htmlspecialchars($descripcionActual); ?></textarea>
                          </div>
 
-                            <!-- Precio -->
                             <div class="col-md-4">
-                                <label for="precio" class="form-label small fw-bold text-dark">Precio ($ ARS) *</label>
+                                <label for="precio" class="form-label small fw-bold text-dark">Precio </label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-white text-muted" style="border-color: var(--borde-suave);">$</span>
                                     <input type="number" step="0.01" id="precio" name="precio" class="form-control shadow-none rounded-end-3" 
@@ -193,7 +176,6 @@
                                 </div>
                             </div>
 
-                            <!-- Duración -->
                             <div class="col-md-4">
                                 <label for="duracion" class="form-label small fw-bold text-dark">Duración estimada *</label>
                                 <div class="input-group">
@@ -204,15 +186,24 @@
                                 </div>
                             </div>
 
-                            <!-- Consultorio -->
                             <div class="col-md-4">
-                                <label for="consultorio" class="form-label small fw-bold text-dark">Consultorio / Box *</label>
-                                <input type="text" id="consultorio" name="consultorio" class="form-control shadow-none rounded-3" 
-                                       style="border-color: var(--borde-suave);" 
-                                       placeholder="Consultorio 1" value="<?= htmlspecialchars($boxActual); ?>" required>
+                                <label for="consultorio" class="form-label small fw-bold text-dark">Consultorio</label>
+                                <select id="consultorio" name="consultorio" class="form-select rounded-3 shadow-none" 
+                                        style="border-color: var(--borde-suave);" required>
+                                    <?php 
+                                        $consultorios = ['Consultorio 1', 'Consultorio 2', 'Consultorio 3', 'Consultorio 4'];
+                                        if (!empty($boxActual) && !in_array($boxActual, $consultorios)) {
+                                            $consultorios[] = $boxActual;
+                                        }
+                                        foreach ($consultorios as $c): 
+                                    ?>
+                                        <option value="<?= htmlspecialchars($c); ?>" <?= ($boxActual === $c) ? 'selected' : ''; ?>>
+                                            <?= htmlspecialchars($c); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
                             </div>
 
-                            <!-- Imagen del Servicio / Portada -->
                             <div class="col-12 mt-3">
                                 <label for="imagen" class="form-label small fw-bold text-dark d-flex align-items-center gap-1">
                                     <i class="bi bi-image" style="color: var(--terracota-principal);"></i> Imagen Ilustrativa del Servicio
@@ -220,7 +211,7 @@
                                 </label>
                                 
                                 <div class="d-flex flex-wrap align-items-center gap-3 p-3 bg-light rounded-3 border" style="border-color: var(--borde-suave) !important;">
-                                    <!-- Previsualización de Imagen -->
+
                                     <div id="contenedor-preview" class="rounded-3 overflow-hidden border d-flex align-items-center justify-content-center bg-white shadow-xs" style="width: 120px; height: 85px; min-width: 120px;">
                                         <?php if (!empty($imagenActual)): ?>
                                             <?php 
@@ -242,7 +233,6 @@
                                         <?php endif; ?>
                                     </div>
 
-                                    <!-- Selector de archivo -->
                                     <div class="flex-grow-1">
                                         <input type="file" id="imagen" name="imagen" class="form-control rounded-3 shadow-none form-control-sm mb-1" 
                                                accept="image/jpeg,image/png,image/webp,image/jpg" onchange="previsualizarImagen(event)" 
@@ -255,7 +245,6 @@
                             </div>
                         </div>
 
-                        <!-- SECCIÓN 2: DISPONIBILIDAD Y HORARIOS -->
                         <h6 class="fw-bold text-uppercase mb-3 mt-4 pt-3 border-top d-flex align-items-center" style="border-color: var(--borde-suave) !important; color: var(--terracota-principal) !important; font-size: 0.85rem; letter-spacing: 0.03em;">
                             <i class="bi bi-clock-history me-2"></i> 2. Disponibilidad y Horarios de Atención
                         </h6>
@@ -301,7 +290,7 @@
                         <!-- Horarios Puntuales de Atención -->
                         <div class="mb-4 text-start">
                             <label class="form-label small fw-bold text-dark d-block mb-1">
-                                Horarios Habilitados de Atención *
+                                Horarios Habilitados de Atención 
                             </label>
                             <small class="text-muted d-block mb-2">
                                 Podés agregar todas las franjas horarias que atienda la profesional (ej: 10:30, 13:00, 16:30) para que el cliente elija directamente entre ellas. No se admiten horarios repetidos.
@@ -321,7 +310,6 @@
                                 <?php endforeach; ?>
                             </div>
 
-                            <!-- Alerta en tiempo real de horarios duplicados -->
                             <div id="alerta-horarios-duplicados" class="alert alert-danger py-2 px-3 small mt-2 d-none rounded-3 align-items-center gap-2">
                                 <i class="bi bi-exclamation-triangle-fill text-danger fs-6"></i>
                                 <span id="alerta-horarios-duplicados-texto"></span>
@@ -332,7 +320,6 @@
                             </button>
                         </div>
 
-                        <!-- Vigencia del Servicio (opcional) -->
                         <div class="row g-3 mb-4 text-start">
                             <div class="col-md-6 col-sm-6">
                                 <label for="fecha_desde" class="form-label small fw-bold text-dark">Vigencia Desde </label>
@@ -349,7 +336,6 @@
                             </div>
                         </div>
 
-                        <!-- Botones de Acción -->
                         <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top" style="border-color: var(--borde-suave) !important;">
                             <a href="<?= $ruta; ?>admin/servicios" class="btn btn-outline-secondary px-4 rounded-3 small fw-semibold">
                                 Cancelar

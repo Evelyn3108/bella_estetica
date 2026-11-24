@@ -147,9 +147,33 @@
                             </li>
                         </ul>
                     </div>
+                    <button type="button" class="btn btn-sm text-white fw-semibold rounded-3 d-inline-flex align-items-center gap-1 shadow-sm" 
+                            style="background-color: var(--terracota-principal);" 
+                            data-bs-toggle="modal" data-bs-target="#modalNuevoTurnoManual">
+                        <i class="bi bi-plus-circle"></i> Nuevo Turno
+                    </button>
                 </form>
             </div>
         </div>
+
+        <!-- ALERTAS DE TURNO MANUAL -->
+        <?php $status = $_GET['status'] ?? null; ?>
+        <?php if ($status === 'turno_creado'): ?>
+            <div class="alert alert-success alert-dismissible fade show rounded-3 small py-2 px-3 border-0 shadow-sm mb-4" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i> El turno manual fue agendado y confirmado con éxito.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php elseif ($status === 'horario_ocupado'): ?>
+            <div class="alert alert-warning alert-dismissible fade show rounded-3 small py-2 px-3 border-0 shadow-sm mb-4" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> No se pudo agendar: el especialista o el cliente ya tienen un turno ocupado en esa fecha y horario.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php elseif ($status === 'error'): ?>
+            <div class="alert alert-danger alert-dismissible fade show rounded-3 small py-2 px-3 border-0 shadow-sm mb-4" role="alert">
+                <i class="bi bi-x-circle-fill me-2"></i> Ocurrió un error al intentar registrar el turno. Verificá los datos.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
 
         <!-- TABLA DE TURNOS -->
         <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="border: 1px solid var(--borde-suave) !important;">
@@ -274,6 +298,111 @@
     <footer class="footer-canvas py-3 text-center small mt-auto border-top" style="border-color: var(--borde-suave) !important;">
         Bella Estética &copy; <?= date('Y'); ?> &bull; Panel de Gestión Administrativa
     </footer>
+
+   <!-- MODAL: AGENDAR TURNO MANUAL -->
+    <div class="modal fade" id="modalNuevoTurnoManual" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow-lg">
+                <div class="modal-header border-bottom-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold text-dark">
+                        <i class="bi bi-calendar-plus me-2" style="color: var(--terracota-principal);"></i>
+                        Nuevo Turno Manual
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <form action="<?= $ruta; ?>admin/agendarTurnoManual" method="POST">
+                    <div class="modal-body px-4 pb-3">
+                        <!-- 1. Cliente -->
+                        <div class="mb-3">
+                            <label for="selectCliente" class="form-label small fw-bold text-dark">Cliente *</label>
+                            <select id="selectCliente" name="id_usuario" class="form-select rounded-3 shadow-none" style="border-color: var(--borde-suave);" required>
+                                <option value="" selected disabled>-- Seleccioná un cliente registrado --</option>
+                                <?php foreach (($clientes ?? []) as $cli): ?>
+                                    <?php $c = is_object($cli) ? (array)$cli : $cli; ?>
+                                    <option value="<?= htmlspecialchars($c['id']); ?>">
+                                        <?= htmlspecialchars(($c['apellido'] ?? '') . ', ' . ($c['nombre'] ?? '') . ' (' . ($c['email'] ?? '') . ')'); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <div class="form-text small">
+                                ¿Cliente nuevo? Crealo primero desde la pestaña <a href="<?= $ruta; ?>admin/usuarios" style="color: var(--terracota-principal);">Usuarios</a>.
+                            </div>
+                        </div>
+
+                        <!-- 2. Servicio -->
+                        <div class="mb-3">
+                            <label for="selectServicioManual" class="form-label small fw-bold text-dark">Tratamiento / Servicio *</label>
+                            <select id="selectServicioManual" name="id_servicio" class="form-select rounded-3 shadow-none" style="border-color: var(--borde-suave);" required onchange="cargarHorariosServicio(this)">
+                                <option value="" selected disabled>-- Seleccioná un servicio --</option>
+                                <?php foreach (($servicios ?? []) as $srv): ?>
+                                    <?php 
+                                        $s = is_object($srv) ? (array)$srv : $srv;
+                                        if (($s['estado'] ?? 1) == 0) continue; // Solo servicios activos
+
+                                        // Toma los horarios reales guardados en hora_inicio (ej: "10:30,13:00,16:30")
+                                        $horariosStr = !empty($s['hora_inicio']) 
+                                            ? $s['hora_inicio'] 
+                                            : (!empty($s['horarios_disponibles']) ? $s['horarios_disponibles'] : '09:00,10:00,11:00,14:00,15:00,16:00,17:00');
+
+                                        // Toma el especialista independientemente de cómo lo devuelva ServiciosModel
+                                        $espFull = trim($s['especialista_nombre'] ?? (($s['esp_nombre'] ?? '') . ' ' . ($s['esp_apellido'] ?? '')));
+                                    ?>
+                                    <option value="<?= htmlspecialchars($s['id']); ?>" data-horarios="<?= htmlspecialchars($horariosStr); ?>">
+                                        <?= htmlspecialchars($s['nombre_servicio']); ?><?= !empty($espFull) ? ' — (Prof. ' . htmlspecialchars($espFull) . ')' : ''; ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="row g-3">
+                            <!-- 3. Fecha -->
+                            <div class="col-md-6">
+                                <label for="fechaManual" class="form-label small fw-bold text-dark">Fecha *</label>
+                                <input type="date" id="fechaManual" name="fecha" class="form-control rounded-3 shadow-none" style="border-color: var(--borde-suave);" min="<?= date('Y-m-d'); ?>" required>
+                            </div>
+
+                            <!-- 4. Horario -->
+                            <div class="col-md-6">
+                                <label for="horaManual" class="form-label small fw-bold text-dark">Horario *</label>
+                                <select id="horaManual" name="hora" class="form-select rounded-3 shadow-none" style="border-color: var(--borde-suave);" required>
+                                    <option value="" selected disabled>-- Elegí servicio --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-top-0 px-4 pb-4">
+                        <button type="button" class="btn btn-light rounded-3 px-3" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn text-white fw-semibold rounded-3 px-4" style="background-color: var(--terracota-principal);">
+                            Confirmar Turno
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function cargarHorariosServicio(selectElem) {
+            const option = selectElem.options[selectElem.selectedIndex];
+            const horariosRaw = option.getAttribute('data-horarios') || '09:00,10:00,11:00,14:00,15:00,16:00,17:00';
+            const listaHoras = horariosRaw.split(',');
+            const selectHora = document.getElementById('horaManual');
+
+            selectHora.innerHTML = '<option value="" selected disabled>-- Elegí hora --</option>';
+
+            listaHoras.forEach(h => {
+                const limpia = h.trim().substring(0, 5);
+                if (limpia) {
+                    const opt = document.createElement('option');
+                    opt.value = limpia + ':00';
+                    opt.textContent = limpia + ' hs';
+                    selectHora.appendChild(opt);
+                }
+            });
+        }
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>

@@ -95,49 +95,51 @@ class AdminController extends Controller
         Response::render('admin/', 'login', $parametros);
     }
 
-    /**
-     * Dashboard principal: Agenda de turnos
-     * Ruta: /admin/panel
-     */
     public function actionPanel()
-    {
-        SessionController::onlyAdmins();
-        static::path();
+        {
+            SessionController::onlyAdmins();
+            static::path();
 
-        $fechaFiltro        = trim($_GET['fecha'] ?? '');
-        $especialistaFiltro = trim($_GET['especialista'] ?? '');
-        $especialistas      = \app\models\EspecialistaModel::listarTodos();
+            $fechaFiltro        = trim($_GET['fecha'] ?? '');
+            $especialistaFiltro = trim($_GET['especialista'] ?? '');
+            $especialistas      = \app\models\EspecialistaModel::listarTodos();
 
-        $turnos = TurnosModel::obtenerAgendaAdmin(
-            !empty($fechaFiltro) ? $fechaFiltro : null,
-            !empty($especialistaFiltro) ? $especialistaFiltro : null
-        );
+            $turnos = TurnosModel::obtenerAgendaAdmin(
+                !empty($fechaFiltro) ? $fechaFiltro : null,
+                !empty($especialistaFiltro) ? $especialistaFiltro : null
+            );
 
-        $especialistaNombreFiltro = '';
-        if (!empty($especialistaFiltro)) {
-            foreach ($especialistas as $esp) {
-                $eArr = is_object($esp) ? (array)$esp : $esp;
-                if (($eArr['id'] ?? 0) == $especialistaFiltro || trim(($eArr['nombre'] ?? '') . ' ' . ($eArr['apellido'] ?? '')) === $especialistaFiltro) {
-                    $especialistaNombreFiltro = trim(($eArr['nombre'] ?? '') . ' ' . ($eArr['apellido'] ?? ''));
-                    break;
+            $especialistaNombreFiltro = '';
+            if (!empty($especialistaFiltro)) {
+                foreach ($especialistas as $esp) {
+                    $eArr = is_object($esp) ? (array)$esp : $esp;
+                    if (($eArr['id'] ?? 0) == $especialistaFiltro || trim(($eArr['nombre'] ?? '') . ' ' . ($eArr['apellido'] ?? '')) === $especialistaFiltro) {
+                        $especialistaNombreFiltro = trim(($eArr['nombre'] ?? '') . ' ' . ($eArr['apellido'] ?? ''));
+                        break;
+                    }
+                }
+                if (empty($especialistaNombreFiltro)) {
+                    $especialistaNombreFiltro = $especialistaFiltro;
                 }
             }
-            if (empty($especialistaNombreFiltro)) {
-                $especialistaNombreFiltro = $especialistaFiltro;
-            }
+
+            // Nuevas líneas para alimentar el modal de Nuevo Turno Manual
+            $clientes  = UserModel::listarClientesParaTurno();
+            $servicios = ServiciosModel::listarTodosAdmin();
+
+            $parametros = [
+                "ruta"                     => self::$path,
+                "turnos"                   => $turnos,
+                "fechaFiltro"              => $fechaFiltro,
+                "especialistaFiltro"       => $especialistaFiltro,
+                "especialistaNombreFiltro" => $especialistaNombreFiltro,
+                "especialistas"            => $especialistas,
+                "clientes"                 => $clientes,
+                "servicios"                => $servicios
+            ];
+
+            Response::render('admin/', 'panelTurnos', $parametros);
         }
-
-        $parametros = [
-            "ruta"                     => self::$path,
-            "turnos"                   => $turnos,
-            "fechaFiltro"              => $fechaFiltro,
-            "especialistaFiltro"       => $especialistaFiltro,
-            "especialistaNombreFiltro" => $especialistaNombreFiltro,
-            "especialistas"            => $especialistas
-        ];
-
-        Response::render('admin/', 'panelTurnos', $parametros);
-    }
 
     /**
      * Actualiza el estado del turno (pendiente, confirmado, cancelado, asistido)
@@ -405,7 +407,7 @@ class AdminController extends Controller
                 $horariosTexto = implode(',', $horariosArray);
                 $ultimoHorario = !empty($horariosArray) ? end($horariosArray) : '18:00';
             } else {
-                $horariosTexto = trim($_POST['hora_inicio'] ?? '09:30');
+                $horariosTexto = trim($_POST['hora_inicio'] ?? '09:00');
                 $ultimoHorario = trim($_POST['hora_fin'] ?? '15:00');
             }
 
@@ -725,6 +727,55 @@ class AdminController extends Controller
         }
 
         header("Location: " . self::$path . "admin/usuarios");
+        exit;
+    }
+
+    /**
+     * Crea un turno manual desde el panel del administrador
+     * Ruta: /admin/agendarTurnoManual (POST)
+     */
+    public function actionAgendarTurnoManual()
+    {
+        SessionController::onlyAdmins();
+        static::path();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id_usuario  = filter_input(INPUT_POST, 'id_usuario', FILTER_VALIDATE_INT);
+            $id_servicio = filter_input(INPUT_POST, 'id_servicio', FILTER_VALIDATE_INT);
+            $fecha       = trim($_POST['fecha'] ?? '');
+            $hora        = trim($_POST['hora'] ?? '');
+            $id_admin    = $_SESSION['USER']['id_usuario'] ?? 1;
+
+            if ($id_usuario && $id_servicio && !empty($fecha) && !empty($hora)) {
+                // Obtenemos el especialista asociado al servicio
+                $serv = ServiciosModel::getServicioById($id_servicio);
+                if (is_array($serv) && isset($serv[0])) {
+                    $serv = $serv[0];
+                }
+                $arrServ = is_object($serv) ? (array)$serv : ($serv ?? []);
+                $id_especialista = (int)($arrServ['id_especialista'] ?? 1);
+
+                // Normalizamos hora a HH:MM:00
+                $horaSql = strlen($hora) === 5 ? $hora . ':00' : $hora;
+
+                // Validamos que el especialista esté libre y que el cliente no tenga doble reserva
+                $libreEspecialista = TurnosModel::comprobarDisponibilidad($id_especialista, $fecha, $horaSql);
+                $sinSuperposicion  = !TurnosModel::tieneTurnoMismoHorario($id_usuario, $fecha, $horaSql);
+
+                if ($libreEspecialista && $sinSuperposicion) {
+                    // Guardamos el turno confirmado directamente
+                    TurnosModel::insertarTurno($id_usuario, $id_servicio, $id_especialista, $fecha, $horaSql);
+
+                    header("Location: " . self::$path . "admin/panel?status=turno_creado");
+                    exit;
+                } else {
+                    header("Location: " . self::$path . "admin/panel?status=horario_ocupado");
+                    exit;
+                }
+            }
+        }
+
+        header("Location: " . self::$path . "admin/panel?status=error");
         exit;
     }
 

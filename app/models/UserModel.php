@@ -57,9 +57,6 @@ class UserModel extends Model
         }
     }
 
-    /**
-     * Actualiza la contraseña hasheada del usuario
-     */
     public static function actualizarPassword($id, $nuevaPassword)
     {
         try {
@@ -77,9 +74,6 @@ class UserModel extends Model
         }
     }
 
-    /**
-     * Actualiza el correo y teléfono del usuario
-     */
     public static function actualizarContacto($id, $email, $telefono)
     {
         try {
@@ -121,9 +115,6 @@ class UserModel extends Model
         }
     }
 
-    /**
-     * Lista todos los usuarios registrados para el panel de administración
-     */
     public static function listarUsuariosAdmin()
     {
         try {
@@ -141,9 +132,6 @@ class UserModel extends Model
         }
     }
 
-    /**
-     * Obtiene los datos de un usuario por su ID
-     */
     public static function getUsuarioById($id)
     {
         try {
@@ -156,9 +144,6 @@ class UserModel extends Model
         }
     }
 
-   /**
-     * Permite al administrador editar los datos de un usuario y opcionalmente su contraseña
-     */
     public static function actualizarUsuarioAdmin($id, $nombre, $apellido, $email, $telefono, $rol, $passwordNueva = null)
     {
         try {
@@ -184,7 +169,7 @@ class UserModel extends Model
                     ':id'       => $id
                 ]);
             } else {
-                // Si la dejó vacía, se conservan los datos sin alterar la clave actual
+
                 $sql = "UPDATE usuario 
                         SET nombre = :nombre, 
                             apellido = :apellido, 
@@ -207,9 +192,6 @@ class UserModel extends Model
         }
     }
 
-    /**
-     * Elimina un usuario por su ID
-     */
     public static function eliminarUsuario($id)
     {
         try {
@@ -217,6 +199,24 @@ class UserModel extends Model
             return \DataBase::execute($sql, [':id' => $id]);
         } catch (\Throwable $e) {
             return false;
+        }
+    }
+
+    public static function listarClientesParaTurno()
+    {
+        try {
+            $sql = "SELECT id, nombre, apellido, email, telefono 
+                    FROM usuario 
+                    WHERE rol = 'cliente' 
+                    ORDER BY apellido ASC, nombre ASC";
+
+            $res = \DataBase::getRecords($sql);
+            if (is_array($res) && isset($res['resultado'])) {
+                $res = $res['resultado'];
+            }
+            return is_array($res) ? $res : [];
+        } catch (\Throwable $e) {
+            return [];
         }
     }
 }
