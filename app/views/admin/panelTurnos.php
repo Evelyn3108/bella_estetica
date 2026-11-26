@@ -168,6 +168,11 @@
                 <i class="bi bi-exclamation-triangle-fill me-2"></i> No se pudo agendar: el especialista o el cliente ya tienen un turno ocupado en esa fecha y horario.
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
+        <?php elseif ($status === 'dia_no_disponible'): ?>
+            <div class="alert alert-warning alert-dismissible fade show rounded-3 small py-2 px-3 border-0 shadow-sm mb-4" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> No se pudo agendar: el especialista no atiende en el día de la semana seleccionado para ese tratamiento.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
         <?php elseif ($status === 'error'): ?>
             <div class="alert alert-danger alert-dismissible fade show rounded-3 small py-2 px-3 border-0 shadow-sm mb-4" role="alert">
                 <i class="bi bi-x-circle-fill me-2"></i> Ocurrió un error al intentar registrar el turno. Verificá los datos.
@@ -311,7 +316,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
 
-                <form action="<?= $ruta; ?>admin/agendarTurnoManual" method="POST">
+                <form id="formTurnoManual" action="<?= $ruta; ?>admin/agendarTurnoManual" method="POST">
                     <div class="modal-body px-4 pb-3">
                         <!-- 1. Cliente -->
                         <div class="mb-3">
@@ -345,14 +350,21 @@
                                             ? $s['hora_inicio'] 
                                             : (!empty($s['horarios_disponibles']) ? $s['horarios_disponibles'] : '09:00,10:00,11:00,14:00,15:00,16:00,17:00');
 
+                                        // Días de atención configurados (1 = Lun, 2 = Mar, ..., 6 = Sab)
+                                        $diasStr = !empty($s['dias_atencion']) ? $s['dias_atencion'] : '1,2,3,4,5,6';
+
                                         // Toma el especialista independientemente de cómo lo devuelva ServiciosModel
                                         $espFull = trim($s['especialista_nombre'] ?? (($s['esp_nombre'] ?? '') . ' ' . ($s['esp_apellido'] ?? '')));
                                     ?>
-                                    <option value="<?= htmlspecialchars($s['id']); ?>" data-horarios="<?= htmlspecialchars($horariosStr); ?>">
+                                    <option value="<?= htmlspecialchars($s['id']); ?>" data-horarios="<?= htmlspecialchars($horariosStr); ?>" data-dias="<?= htmlspecialchars($diasStr); ?>">
                                         <?= htmlspecialchars($s['nombre_servicio']); ?><?= !empty($espFull) ? ' — (Prof. ' . htmlspecialchars($espFull) . ')' : ''; ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
+                            <div id="infoDiasServicio" class="form-text small mt-1 text-muted d-none">
+                                <i class="bi bi-calendar-check me-1" style="color: var(--terracota-principal);"></i>
+                                <span id="textoInfoDias"></span>
+                            </div>
                         </div>
 
                         <div class="row g-3">
@@ -360,6 +372,10 @@
                             <div class="col-md-6">
                                 <label for="fechaManual" class="form-label small fw-bold text-dark">Fecha *</label>
                                 <input type="date" id="fechaManual" name="fecha" class="form-control rounded-3 shadow-none" style="border-color: var(--borde-suave);" min="<?= date('Y-m-d'); ?>" required>
+                                <div id="alerta-dia-manual" class="alert alert-danger py-1 px-2 small mt-2 d-none align-items-center gap-1 rounded-3 border-0" role="alert">
+                                    <i class="bi bi-exclamation-triangle-fill text-danger me-1"></i>
+                                    <span id="texto-alerta-dia"></span>
+                                </div>
                             </div>
 
                             <!-- 4. Horario -->
@@ -384,11 +400,95 @@
     </div>
     
     <script>
+        const DIAS_SEMANA_MAP = {
+            1: 'Lunes',
+            2: 'Martes',
+            3: 'Miércoles',
+            4: 'Jueves',
+            5: 'Viernes',
+            6: 'Sábado',
+            0: 'Domingo'
+        };
+
+        function formatearTextoDias(diasStr) {
+            if (!diasStr || diasStr === '1,2,3,4,5,6') return 'Lunes a Sábado';
+            if (diasStr === '1,2,3,4,5') return 'Lunes a Viernes';
+            const partes = diasStr.split(',').map(d => d.trim()).filter(Boolean);
+            if (partes.length === 0) return 'Sin días configurados';
+            return partes.map(d => DIAS_SEMANA_MAP[d] || d).join(', ');
+        }
+
+        function validarDiaAtencionServicio() {
+            const selectServicio = document.getElementById('selectServicioManual');
+            const inputFecha = document.getElementById('fechaManual');
+            const alertaDia = document.getElementById('alerta-dia-manual');
+            const textoAlerta = document.getElementById('texto-alerta-dia');
+
+            if (!inputFecha || !alertaDia || !textoAlerta) return true;
+
+            const fechaVal = inputFecha.value;
+            if (!fechaVal) {
+                inputFecha.classList.remove('is-invalid');
+                alertaDia.classList.add('d-none');
+                alertaDia.classList.remove('d-flex');
+                return true;
+            }
+
+            // Desglosar año, mes, día para evitar desfases de zona horaria UTC
+            const partes = fechaVal.split('-');
+            if (partes.length !== 3) return true;
+            const fechaObj = new Date(parseInt(partes[0], 10), parseInt(partes[1], 10) - 1, parseInt(partes[2], 10));
+            const diaSemana = fechaObj.getDay(); // 0 = Domingo, 1 = Lunes, ..., 6 = Sábado
+
+            if (diaSemana === 0) {
+                inputFecha.classList.add('is-invalid');
+                textoAlerta.textContent = 'El centro no atiende los domingos. Por favor seleccioná otro día.';
+                alertaDia.classList.remove('d-none');
+                alertaDia.classList.add('d-flex');
+                return false;
+            }
+
+            if (!selectServicio || selectServicio.selectedIndex <= 0) {
+                inputFecha.classList.remove('is-invalid');
+                alertaDia.classList.add('d-none');
+                alertaDia.classList.remove('d-flex');
+                return true;
+            }
+
+            const option = selectServicio.options[selectServicio.selectedIndex];
+            const diasRaw = option.getAttribute('data-dias') || '1,2,3,4,5,6';
+            const diasPermitidos = diasRaw.split(',').map(d => d.trim());
+
+            if (!diasPermitidos.includes(String(diaSemana))) {
+                inputFecha.classList.add('is-invalid');
+                const diaNombre = DIAS_SEMANA_MAP[diaSemana] || 'el día seleccionado';
+                const diasTexto = formatearTextoDias(diasRaw);
+                textoAlerta.textContent = `El especialista no atiende los ${diaNombre}. Días de atención: ${diasTexto}.`;
+                alertaDia.classList.remove('d-none');
+                alertaDia.classList.add('d-flex');
+                return false;
+            }
+
+            inputFecha.classList.remove('is-invalid');
+            alertaDia.classList.add('d-none');
+            alertaDia.classList.remove('d-flex');
+            return true;
+        }
+
         function cargarHorariosServicio(selectElem) {
             const option = selectElem.options[selectElem.selectedIndex];
             const horariosRaw = option.getAttribute('data-horarios') || '09:00,10:00,11:00,14:00,15:00,16:00,17:00';
+            const diasRaw = option.getAttribute('data-dias') || '1,2,3,4,5,6';
             const listaHoras = horariosRaw.split(',');
             const selectHora = document.getElementById('horaManual');
+
+            // Mostrar días de atención del servicio
+            const infoDias = document.getElementById('infoDiasServicio');
+            const textoInfoDias = document.getElementById('textoInfoDias');
+            if (infoDias && textoInfoDias) {
+                textoInfoDias.textContent = 'Días de atención del especialista: ' + formatearTextoDias(diasRaw);
+                infoDias.classList.remove('d-none');
+            }
 
             selectHora.innerHTML = '<option value="" selected disabled>-- Elegí hora --</option>';
 
@@ -401,7 +501,47 @@
                     selectHora.appendChild(opt);
                 }
             });
+
+            // Revalidar en caso de que ya se haya elegido una fecha antes de cambiar el servicio
+            validarDiaAtencionServicio();
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputFecha = document.getElementById('fechaManual');
+            if (inputFecha) {
+                inputFecha.addEventListener('change', validarDiaAtencionServicio);
+                inputFecha.addEventListener('input', validarDiaAtencionServicio);
+            }
+
+            const formManual = document.getElementById('formTurnoManual');
+            if (formManual) {
+                formManual.addEventListener('submit', function(e) {
+                    if (!validarDiaAtencionServicio()) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const inputF = document.getElementById('fechaManual');
+                        if (inputF) inputF.focus();
+                        return false;
+                    }
+                });
+            }
+
+            // Al cerrar el modal, resetear advertencias visuales
+            const modalEl = document.getElementById('modalNuevoTurnoManual');
+            if (modalEl) {
+                modalEl.addEventListener('hidden.bs.modal', function() {
+                    const alertaDia = document.getElementById('alerta-dia-manual');
+                    const inputFecha = document.getElementById('fechaManual');
+                    const infoDias = document.getElementById('infoDiasServicio');
+                    if (alertaDia) {
+                        alertaDia.classList.add('d-none');
+                        alertaDia.classList.remove('d-flex');
+                    }
+                    if (inputFecha) inputFecha.classList.remove('is-invalid');
+                    if (infoDias) infoDias.classList.add('d-none');
+                });
+            }
+        });
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

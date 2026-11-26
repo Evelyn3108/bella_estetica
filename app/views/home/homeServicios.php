@@ -135,7 +135,6 @@
                                 <div>
                                     <div class="d-flex justify-content-between align-items-center border-top pt-3 mb-3" style="border-color: #f7f1ee !important;">
                                         <div>
-                                            <span class="text-muted small d-block">Inversión</span>
                                             <span class="fw-bold fs-5" style="color: var(--terracota-principal);">$<?= htmlspecialchars($precio); ?></span>
                                         </div>
                                         <span class="badge rounded-pill px-2 py-1 small" style="background-color: var(--caja-suave); color: var(--terracota-principal); font-size: 0.75rem;">

@@ -78,6 +78,11 @@
                 <i class="bi bi-exclamation-triangle-fill me-2"></i> Ocurrió un error al intentar guardar el servicio.
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
+        <?php elseif ($status === 'campos_obligatorios'): ?>
+            <div class="alert alert-warning alert-dismissible fade show rounded-3 small py-2 px-3 border-0 shadow-sm mb-4" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> No se puede guardar un servicio vacío o incompleto. El nombre del tratamiento, el precio y los días de atención son obligatorios.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
         <?php endif; ?>
 
     <!-- CONTENEDOR PRINCIPAL -->

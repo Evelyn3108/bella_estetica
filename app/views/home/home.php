@@ -64,8 +64,10 @@
                         <span style="color: var(--terracota-principal);">en las mejores manos</span>
                     </h1>
                     
-                    <p class="text-muted lead fs-6 mb-4" style="line-height: 1.7; max-width: 580px;">
-                        Espacio dedicado a la estética integral. Tratamientos faciales, corporales y masajes terapéuticos brindados por profesionales en consultorios privados.
+                       <p class="text-muted lead fs-6 mb-4" style="line-height: 1.7; max-width: 580px;">
+                        Espacio dedicado a la estética integral. 
+                        Contamos con especialistas certificadas, protocolos de higiene garantizados y consultorios privados climatizados para ofrecerte tratamientos faciales, masajes terapéuticos, cuidado de manos y estética de la mirada.
+                        Explorá nuestros servicios y reservá tu turno online en segundos, sin esperas ni llamadas
                     </p>
                     
                    <div>
@@ -88,7 +90,7 @@
         <!-- SECCIÓN TRATAMIENTOS: TARJETA CON IMAGEN + QUÉ ES + DESCRIPCIÓN -->
         <section id="servicios" class="pb-5">
             <div class="text-center mb-5">
-                <h2 class="fw-bold mt-2 mb-2 text-dark">Nuestros Tratamientos</h2>
+                <h2 class="fw-bold mt-2 mb-2 text-dark">Algunos de nuestros Tratamientos</h2>
                 <p class="text-muted mx-auto" style="max-width: 600px;">
                     Iniciá sesión o registrate para consultar la disponibilidad de turnos de cada sesión.
                 </p>
@@ -105,7 +107,7 @@
                         <div class="p-4">
                             <h5 class="fw-bold mb-2">Limpieza Facial</h5>
                             <p class="text-muted small mb-0" style="line-height: 1.6;">
-                                Higiene dérmica profunda, extracción de impurezas, exfoliación y nutrición personalizada según tu tipo de piel.
+                                Limpieza facial profunda, extracción de impurezas, exfoliación y nutrición personalizada según tu tipo de piel.
                             </p>
                         </div>
                     </div>

@@ -239,16 +239,16 @@ class AdminController extends Controller
             $totalTurnos  = count($turnos);
 
             echo "========================================================================================================\n";
-            echo "                                BELLA ESTÉTICA - REPORTE DE AGENDA\n";
+            echo "                                BELLA ESTÉTICA -  AGENDA\n";
             echo "========================================================================================================\n";
             echo "Especialista : " . $espDisplay . "\n";
-            echo "Fecha Filtro : " . $fechaDisplay . "\n";
+            echo "Fecha        : " . $fechaDisplay . "\n";
             echo "Generado el  : " . date('d/m/Y H:i') . " hs\n";
             echo "Total Turnos : " . $totalTurnos . "\n";
             echo "========================================================================================================\n\n";
 
             if (empty($turnos)) {
-                echo "No se encontraron turnos registrados para el criterio de búsqueda seleccionado.\n";
+                echo "No se encontraron turnos registrados.\n";
             } else {
                 echo sprintf(
                     "%-11s | %-6s | %-20s | %-22s | %-20s | %-14s | %-12s\n",
@@ -388,10 +388,21 @@ class AdminController extends Controller
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
 
-            // 1. Días de atención seleccionados (1=Lunes, ..., 6=Sábado)
-            $dias = (isset($_POST['dias']) && is_array($_POST['dias'])) 
-                    ? implode(',', $_POST['dias']) 
-                    : '1,2,3,4,5,6';
+            $nombreServicio = trim($_POST['nombre_servicio'] ?? '');
+            $precioFloat    = filter_input(INPUT_POST, 'precio', FILTER_VALIDATE_FLOAT);
+            $diasArray      = (isset($_POST['dias']) && is_array($_POST['dias'])) 
+                              ? array_values(array_filter($_POST['dias'])) 
+                              : [];
+
+            // 1. Validación estricta: Nombre, días y precio son obligatorios (precio > 0)
+            if (empty($nombreServicio) || empty($diasArray) || $precioFloat === false || $precioFloat === null || $precioFloat <= 0) {
+                $idParam = $id ? "&id=" . $id : "";
+                header("Location: " . self::$path . "admin/formServicio?status=campos_obligatorios" . $idParam);
+                exit;
+            }
+
+            // Días de atención seleccionados (1=Lunes, ..., 6=Sábado)
+            $dias = implode(',', $diasArray);
 
             // 2. Horarios puntuales (normalizados, sin duplicados y ordenados cronológicamente)
             if (isset($_POST['horarios']) && is_array($_POST['horarios'])) {
@@ -435,10 +446,10 @@ class AdminController extends Controller
 
             $datos = [
                 'id_especialista' => filter_input(INPUT_POST, 'id_especialista', FILTER_VALIDATE_INT) ?: 1,
-                'nombre_servicio' => trim($_POST['nombre_servicio'] ?? ''),
+                'nombre_servicio' => $nombreServicio,
                 'descripcion'     => trim($_POST['descripcion'] ?? ''),
                 'duracion'        => filter_input(INPUT_POST, 'duracion', FILTER_VALIDATE_INT) ?: 45,
-                'precio'          => filter_input(INPUT_POST, 'precio', FILTER_VALIDATE_FLOAT) ?: 0.0,
+                'precio'          => $precioFloat,
                 'consultorio'     => trim($_POST['consultorio'] ?? 'Consultorio 1'),
                 'dias_atencion'   => $dias, // Guarda el string '1,3,5'
                 'hora_inicio'     => $horariosTexto,
@@ -754,6 +765,18 @@ class AdminController extends Controller
                 }
                 $arrServ = is_object($serv) ? (array)$serv : ($serv ?? []);
                 $id_especialista = (int)($arrServ['id_especialista'] ?? 1);
+
+                // --- 1. VALIDACIÓN ESTRICTA DE DÍAS DE ATENCIÓN ---
+                $diasTexto = $arrServ['dias_atencion'] ?? '1,2,3,4,5,6';
+                $diasHabilitados = !empty($diasTexto) ? explode(',', (string)$diasTexto) : ['1', '2', '3', '4', '5', '6'];
+
+                $diaSemanaSeleccionado = (int)date('w', strtotime($fecha)); // 0 = Domingo, 1 = Lunes, 2 = Martes...
+
+                // Bloquea domingos o días que no atienda el especialista
+                if ($diaSemanaSeleccionado === 0 || !in_array((string)$diaSemanaSeleccionado, $diasHabilitados)) {
+                    header("Location: " . self::$path . "admin/panel?status=dia_no_disponible");
+                    exit;
+                }
 
                 // Normalizamos hora a HH:MM:00
                 $horaSql = strlen($hora) === 5 ? $hora . ':00' : $hora;

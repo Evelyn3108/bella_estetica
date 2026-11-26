@@ -92,7 +92,7 @@
                     $boxActual     = $srv['consultorio'] ?? 'Consultorio 1';
                     $diasActuales  = explode(',', $srv['dias_atencion'] ?? '1,2,3,4,5,6');
                     
-                    // Horarios específicos cargados
+                    // Horarios cargados
                     $horariosGuardados = !empty($srv['hora_inicio']) 
                         ? array_values(array_unique(array_filter(array_map('trim', explode(',', $srv['hora_inicio']))))) 
                         : ['09:00'];
@@ -105,18 +105,22 @@
                 <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white" style="border: 1px solid var(--borde-suave) !important;">
                     
                     <div class="text-center mb-4 pb-2 border-bottom" style="border-color: var(--borde-suave) !important;">
-                        <span class="badge rounded-pill text-uppercase mb-2 px-3 py-2 fw-semibold" style="background-color: var(--caja-suave); color: var(--terracota-principal); font-size: 0.72rem; letter-spacing: 0.05em;">
-                            MÓDULO DE CATÁLOGO
-                        </span>
                         <h2 class="fw-bold text-dark mb-1" style="letter-spacing: -0.02em;">
                             <?= !empty($idActual) ? 'Modificar Servicio' : 'Nuevo Servicio y Agenda'; ?>
                         </h2>
                         <p class="text-muted small mb-0">
-                            Completá la información del tratamiento, subí una foto representativa y definí los días y horarios específicos de atención.
+                            Completá la información del tratamiento, subí una foto y definí los días y horarios específicos de atención.
                         </p>
                     </div>
+
+                    <?php if (($status = $_GET['status'] ?? null) === 'campos_obligatorios'): ?>
+                        <div class="alert alert-warning alert-dismissible fade show rounded-3 small py-2 px-3 border-0 shadow-sm mb-4" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> <strong>Atención:</strong> No se puede guardar un servicio vacío o incompleto. El nombre del tratamiento, el precio (mayor a 0) y al menos un día de atención son obligatorios.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    <?php endif; ?>
                     
-                    <form action="<?= $ruta; ?>admin/guardarServicio" method="POST" enctype="multipart/form-data">
+                    <form id="formServicio" action="<?= $ruta; ?>admin/guardarServicio" method="POST" enctype="multipart/form-data" novalidate>
                         
                         <?php if (!empty($idActual)): ?>
                             <input type="hidden" name="id" value="<?= htmlspecialchars($idActual); ?>">
@@ -136,6 +140,10 @@
                                        style="border-color: var(--borde-suave);" 
                                        placeholder="Ej: Manicura Completa, Limpieza Facial, etc." 
                                        value="<?= htmlspecialchars($nombreActual); ?>" required>
+                                <div id="alerta-nombre" class="alert alert-danger py-1 px-3 small mt-1 d-none align-items-center gap-2 rounded-3 shadow-xs">
+                                    <i class="bi bi-exclamation-triangle-fill text-danger fs-6"></i>
+                                    <span class="fw-semibold">Debés ingresar el nombre del servicio o tratamiento.</span>
+                                </div>
                             </div>
 
                          <div class="col-md-5">
@@ -167,12 +175,16 @@
                          </div>
 
                             <div class="col-md-4">
-                                <label for="precio" class="form-label small fw-bold text-dark">Precio </label>
+                                <label for="precio" class="form-label small fw-bold text-dark">Precio *</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-white text-muted" style="border-color: var(--borde-suave);">$</span>
-                                    <input type="number" step="0.01" id="precio" name="precio" class="form-control shadow-none rounded-end-3" 
+                                    <input type="number" step="0.01" min="0.01" id="precio" name="precio" class="form-control shadow-none rounded-end-3" 
                                            style="border-color: var(--borde-suave);" 
-                                           placeholder="3500.00" value="<?= htmlspecialchars($precioActual); ?>" required>
+                                           placeholder="35000" value="<?= htmlspecialchars($precioActual); ?>" required>
+                                </div>
+                                <div id="alerta-precio" class="alert alert-danger py-1 px-3 small mt-1 d-none align-items-center gap-2 rounded-3 shadow-xs">
+                                    <i class="bi bi-exclamation-triangle-fill text-danger fs-6"></i>
+                                    <span class="fw-semibold">Debes ingresar un precio para el tratamiento.</span>
                                 </div>
                             </div>
 
@@ -191,7 +203,7 @@
                                 <select id="consultorio" name="consultorio" class="form-select rounded-3 shadow-none" 
                                         style="border-color: var(--borde-suave);" required>
                                     <?php 
-                                        $consultorios = ['Consultorio 1', 'Consultorio 2', 'Consultorio 3', 'Consultorio 4'];
+                                        $consultorios = ['Consultorio 1', 'Consultorio 2', 'Consultorio 3', 'Consultorio 4', 'Consultorio 5'];
                                         if (!empty($boxActual) && !in_array($boxActual, $consultorios)) {
                                             $consultorios[] = $boxActual;
                                         }
@@ -206,7 +218,7 @@
 
                             <div class="col-12 mt-3">
                                 <label for="imagen" class="form-label small fw-bold text-dark d-flex align-items-center gap-1">
-                                    <i class="bi bi-image" style="color: var(--terracota-principal);"></i> Imagen Ilustrativa del Servicio
+                                    <i class="bi bi-image" style="color: var(--terracota-principal);"></i> Imagen del Servicio
                                     <span class="text-muted fw-normal">(se mostrará en el catálogo y detalle para el cliente)</span>
                                 </label>
                                 
@@ -285,6 +297,10 @@
                                 <?php endforeach; ?>
                             </div>
                             <small class="text-muted">Desmarcá los días en los que el especialista no atienda este tratamiento.</small>
+                            <div id="alerta-dias" class="alert alert-danger py-1 px-3 small mt-2 d-none align-items-center gap-2 rounded-3 shadow-xs">
+                                <i class="bi bi-exclamation-triangle-fill text-danger fs-6"></i>
+                                <span class="fw-semibold">Debés seleccionar al menos un día de atención semanal.</span>
+                            </div>
                         </div>
 
                         <!-- Horarios Puntuales de Atención -->
@@ -340,7 +356,7 @@
                             <a href="<?= $ruta; ?>admin/servicios" class="btn btn-outline-secondary px-4 rounded-3 small fw-semibold">
                                 Cancelar
                             </a>
-                            <button type="submit" class="btn-solid-terracota px-4 py-2 small fw-semibold rounded-3 shadow-sm border-0">
+                            <button type="submit" id="btnGuardarServicio" class="btn-solid-terracota px-4 py-2 small fw-semibold rounded-3 shadow-sm border-0">
                                 <i class="bi bi-cloud-arrow-up me-1"></i> Guardar Servicio
                             </button>
                         </div>
@@ -495,49 +511,221 @@
             // Validación inicial al cargar el formulario
             validarHorariosDuplicados();
 
-            const form = document.querySelector('form[action*="guardarServicio"]');
-            if (form) {
-                form.addEventListener('submit', function(e) {
-                    if (!validarHorariosDuplicados()) {
-                        e.preventDefault();
+            const form = document.getElementById('formServicio') || document.querySelector('form[action*="guardarServicio"]') || document.querySelector('form');
+            const btnGuardar = document.getElementById('btnGuardarServicio') || form?.querySelector('button[type="submit"]');
 
-                        const inputs = Array.from(document.querySelectorAll('input[name="horarios[]"]'));
-                        const conteo = {};
-                        const dup = new Set();
-                        inputs.forEach(inp => {
-                            const v = inp.value.trim().substring(0, 5);
-                            if (v) {
-                                conteo[v] = (conteo[v] || 0) + 1;
-                                if (conteo[v] > 1) dup.add(v);
-                            }
-                        });
-                        const dupStr = Array.from(dup).join(', ');
-
-                        if (typeof Swal !== 'undefined') {
-                            Swal.fire({
-                                icon: 'warning',
-                                title: 'Horarios Duplicados',
-                                html: `No podés guardar el servicio con horarios repetidos.<br><br>Detectamos duplicado el horario: <strong>${dupStr} hs</strong>.<br>Por favor, cambiá o eliminá el horario duplicado para no generar conflicto con los clientes al agendar turnos.`,
-                                confirmButtonColor: '#b2614a'
-                            });
-                        } else {
-                            alert(`No se pueden poner dos horarios iguales (${dupStr} hs). Por favor, cambie o elimine el duplicado.`);
+            // 1. Monitoreo en tiempo real para Nombre
+            const inputNombre = document.getElementById('nombre_servicio');
+            const alertaNombre = document.getElementById('alerta-nombre');
+            if (inputNombre) {
+                inputNombre.addEventListener('input', function() {
+                    if (this.value.trim()) {
+                        this.classList.remove('is-invalid', 'border-danger');
+                        if (alertaNombre) {
+                            alertaNombre.classList.add('d-none');
+                            alertaNombre.classList.remove('d-flex');
                         }
-
-                        const cont = document.getElementById('contenedor-horarios');
-                        if (cont) {
-                            cont.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }
-
-                        const primerDup = inputs.find(inp => dup.has(inp.value.trim().substring(0, 5)));
-                        if (primerDup) {
-                            primerDup.focus();
-                        }
-
-                        return false;
                     }
                 });
             }
+
+            // 2. Monitoreo en tiempo real para Precio
+            const inputPrecio = document.getElementById('precio');
+            const alertaPrecio = document.getElementById('alerta-precio');
+            if (inputPrecio) {
+                const validarPrecioVisual = function() {
+                    const v = parseFloat(inputPrecio.value);
+                    if (!inputPrecio.value.trim() || isNaN(v) || v <= 0) {
+                        inputPrecio.classList.add('is-invalid', 'border-danger');
+                        if (alertaPrecio) {
+                            alertaPrecio.classList.remove('d-none');
+                            alertaPrecio.classList.add('d-flex');
+                        }
+                    } else {
+                        inputPrecio.classList.remove('is-invalid', 'border-danger');
+                        if (alertaPrecio) {
+                            alertaPrecio.classList.add('d-none');
+                            alertaPrecio.classList.remove('d-flex');
+                        }
+                    }
+                };
+
+                inputPrecio.addEventListener('input', function() {
+                    const v = parseFloat(this.value);
+                    if (this.value.trim() && !isNaN(v) && v > 0) {
+                        this.classList.remove('is-invalid', 'border-danger');
+                        if (alertaPrecio) {
+                            alertaPrecio.classList.add('d-none');
+                            alertaPrecio.classList.remove('d-flex');
+                        }
+                    }
+                });
+                inputPrecio.addEventListener('blur', validarPrecioVisual);
+            }
+
+            // 3. Monitoreo para Días de atención
+            document.querySelectorAll('input[name="dias[]"]').forEach(chk => {
+                chk.addEventListener('change', function() {
+                    const cant = document.querySelectorAll('input[name="dias[]"]:checked').length;
+                    const alertaDias = document.getElementById('alerta-dias');
+                    if (cant > 0 && alertaDias) {
+                        alertaDias.classList.add('d-none');
+                        alertaDias.classList.remove('d-flex');
+                    }
+                });
+            });
+
+            // Función principal de validación antes de guardar
+            function validarFormularioCompleto(e) {
+                // 1. Validar nombre de tratamiento
+                if (!inputNombre || !inputNombre.value.trim()) {
+                    if (e) e.preventDefault();
+                    if (inputNombre) {
+                        inputNombre.classList.add('is-invalid', 'border-danger');
+                        inputNombre.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        inputNombre.focus();
+                    }
+                    if (alertaNombre) {
+                        alertaNombre.classList.remove('d-none');
+                        alertaNombre.classList.add('d-flex');
+                    }
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Nombre requerido',
+                            text: 'Debés ingresar el nombre del servicio o tratamiento.',
+                            confirmButtonColor: '#b2614a'
+                        });
+                    } else {
+                        alert('Debés ingresar el nombre del servicio o tratamiento.');
+                    }
+                    return false;
+                } else {
+                    if (inputNombre) inputNombre.classList.remove('is-invalid', 'border-danger');
+                    if (alertaNombre) {
+                        alertaNombre.classList.add('d-none');
+                        alertaNombre.classList.remove('d-flex');
+                    }
+                }
+
+                // 2. Validar precio obligatorio y mayor a 0
+                const valPrecio = parseFloat(inputPrecio ? inputPrecio.value : 0);
+                if (!inputPrecio || !inputPrecio.value.trim() || isNaN(valPrecio) || valPrecio <= 0) {
+                    if (e) e.preventDefault();
+                    if (inputPrecio) {
+                        inputPrecio.classList.add('is-invalid', 'border-danger');
+                        inputPrecio.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        inputPrecio.focus();
+                    }
+                    if (alertaPrecio) {
+                        alertaPrecio.classList.remove('d-none');
+                        alertaPrecio.classList.add('d-flex');
+                    }
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Debes ingresar un precio',
+                            text: 'El precio del tratamiento es obligatorio y debe ser mayor a 0.',
+                            confirmButtonColor: '#b2614a'
+                        });
+                    } else {
+                        alert('Debes ingresar un precio.');
+                    }
+                    return false;
+                } else {
+                    if (inputPrecio) inputPrecio.classList.remove('is-invalid', 'border-danger');
+                    if (alertaPrecio) {
+                        alertaPrecio.classList.add('d-none');
+                        alertaPrecio.classList.remove('d-flex');
+                    }
+                }
+
+                // 3. Validar al menos un día de atención seleccionado
+                const diasChecked = document.querySelectorAll('input[name="dias[]"]:checked');
+                const alertaDias = document.getElementById('alerta-dias');
+                if (diasChecked.length === 0) {
+                    if (e) e.preventDefault();
+                    if (alertaDias) {
+                        alertaDias.classList.remove('d-none');
+                        alertaDias.classList.add('d-flex');
+                    }
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Días de atención',
+                            text: 'Debés seleccionar al menos un día de atención semanal para el tratamiento.',
+                            confirmButtonColor: '#b2614a'
+                        });
+                    } else {
+                        alert('Debés seleccionar al menos un día de atención semanal.');
+                    }
+                    const primerDia = document.querySelector('input[name="dias[]"]');
+                    if (primerDia) {
+                        primerDia.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        primerDia.focus();
+                    }
+                    return false;
+                } else {
+                    if (alertaDias) {
+                        alertaDias.classList.add('d-none');
+                        alertaDias.classList.remove('d-flex');
+                    }
+                }
+
+                // 4. Validar que no haya horarios duplicados
+                if (!validarHorariosDuplicados()) {
+                    if (e) e.preventDefault();
+
+                    const inputs = Array.from(document.querySelectorAll('input[name="horarios[]"]'));
+                    const conteo = {};
+                    const dup = new Set();
+                    inputs.forEach(inp => {
+                        const v = inp.value.trim().substring(0, 5);
+                        if (v) {
+                            conteo[v] = (conteo[v] || 0) + 1;
+                            if (conteo[v] > 1) dup.add(v);
+                        }
+                    });
+                    const dupStr = Array.from(dup).join(', ');
+
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Horarios Duplicados',
+                            html: `No podés guardar el servicio con horarios repetidos.<br><br>Detectamos duplicado el horario: <strong>${dupStr} hs</strong>.<br>Por favor, cambiá o eliminá el horario duplicado para no generar conflicto con los clientes al agendar turnos.`,
+                            confirmButtonColor: '#b2614a'
+                        });
+                    } else {
+                        alert(`No se pueden poner dos horarios iguales (${dupStr} hs). Por favor, cambie o elimine el duplicado.`);
+                    }
+
+                    const cont = document.getElementById('contenedor-horarios');
+                    if (cont) {
+                        cont.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+
+                    const primerDup = inputs.find(inp => dup.has(inp.value.trim().substring(0, 5)));
+                    if (primerDup) {
+                        primerDup.focus();
+                    }
+
+                    return false;
+                }
+
+                return true;
+            }
+
+            if (form) {
+                form.addEventListener('submit', validarFormularioCompleto);
+            }
+            if (btnGuardar) {
+                btnGuardar.addEventListener('click', function(e) {
+                    if (!validarFormularioCompleto(e)) {
+                        e.preventDefault();
+                    }
+                });
+            }
+        });
         });
     </script>
 
